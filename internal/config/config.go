@@ -15,7 +15,7 @@ type Config struct {
 	} `yaml:"settings"`
 	Database struct {
 		Name             string `yaml:"name"`
-		ConnectionString string `yaml:"connecionString"`
+		ConnectionString string `yaml:"connectionString"`
 		Collections      struct {
 			Users     string `yaml:"users"`
 			Commerces string `yaml:"commerces"`

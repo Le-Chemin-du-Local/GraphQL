@@ -9,10 +9,24 @@ import (
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
+	"chemin-du-local.bzh/graphql/internal/users"
 )
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	// On doit d'abord vérifier que l'email n'est pas déjà prise
+	existingUser, err := users.GetUserByEmail(input.Email)
+
+	if existingUser != nil {
+		return nil, &users.UserEmailAlreadyExistsError{}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	databaseUser := users.Create(input)
+
+	return databaseUser.ToModel(), nil
 }
 
 func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string, error) {

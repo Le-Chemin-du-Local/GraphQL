@@ -7,13 +7,14 @@ scalar Time
 type User {
   id: ID!
   createdAt: Time
+  email: String!
   firstName: String
   lastName: String
-  email: String!
 }
 
 input NewUser {
   email: String!
+  password: String!
   firstName: String
   lastName: String
 }

@@ -1,3 +1,4 @@
+directive @needAuthentication on FIELD_DEFINITION
 scalar Time
 
 ##################
@@ -34,7 +35,7 @@ type Commerce { # Ici on utilise le nom "Commerce"
                 # plutôt que "Store" pour éviter de 
                 # futures conflits
   id: ID!
-  storekeeperID: ID!
+  storekeeperID: User!
   name: String!
 } 
 
@@ -44,7 +45,7 @@ input NewCommerce {
 
 type Query {
   # COMMERCES
-  commerces: [Commerce!]!
+  commerces: [Commerce!]! 
   commerce(id: ID!): Commerce!
 }
 

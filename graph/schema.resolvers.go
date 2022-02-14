@@ -11,11 +11,23 @@ import (
 	"chemin-du-local.bzh/graphql/graph/model"
 )
 
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
+func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) CreateCommerce(ctx context.Context, input model.NewCommerce) (*model.Commerce, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) Commerces(ctx context.Context) ([]*model.Commerce, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) Commerce(ctx context.Context, id string) (*model.Commerce, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 

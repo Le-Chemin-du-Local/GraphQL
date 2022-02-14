@@ -1,28 +1,56 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
+scalar Time
 
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
-}
+##################
+## UTILISATEURS ##
+##################
 
 type User {
   id: ID!
+  createdAt: Time
+  firstName: String
+  lastName: String
+  email: String!
+}
+
+input NewUser {
+  email: String!
+  firstName: String
+  lastName: String
+}
+
+input Login {
+  email: String!
+  password: String!
+}
+
+###############
+## COMMERCE ##
+###############
+
+# COMMERCE
+type Commerce { # Ici on utilise le nom "Commerce"
+                # plutôt que "Store" pour éviter de 
+                # futures conflits
+  id: ID!
+  storekeeperID: ID!
+  name: String!
+} 
+
+input NewCommerce {
   name: String!
 }
 
 type Query {
-  todos: [Todo!]!
-}
-
-input NewTodo {
-  text: String!
-  userId: String!
+  # COMMERCES
+  commerces: [Commerce!]!
+  commerce(id: ID!): Commerce!
 }
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  # UTILISATEURS
+  createUser(input: NewUser!): User!
+  login(input: Login!): String!
+
+  # COMMERCES
+  createCommerce(input: NewCommerce!): Commerce! 
 }

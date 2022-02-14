@@ -11,12 +11,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const USERROLE_ADMIN = "ADMIN"
+const USERROLE_STOREKEEPER = "STOREKEEPER"
+const USERROLE_USER = "USER"
+
 // Type
 
 type User struct {
 	ID           primitive.ObjectID `bson:"_id"`
 	CreatedAt    time.Time          `bson:"createAt"`
 	Email        string             `bson:"email"`
+	Role         string             `bson:"role"`
 	FirstName    *string            `bson:"firstName"`
 	LastName     *string            `bson:"lastName"`
 	PasswordHash string             `bson:"password_hash"`
@@ -27,6 +32,7 @@ func (user *User) ToModel() *model.User {
 		ID:        user.ID.Hex(),
 		CreatedAt: &user.CreatedAt,
 		Email:     user.Email,
+		Role:      user.Role,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 	}
@@ -46,6 +52,7 @@ func Create(input model.NewUser) *User {
 		ID:           primitive.NewObjectID(),
 		CreatedAt:    time.Now(),
 		Email:        input.Email,
+		Role:         USERROLE_USER,
 		FirstName:    input.FirstName,
 		LastName:     input.LastName,
 		PasswordHash: hashedPassword,
@@ -136,6 +143,18 @@ func GetFiltered(filter interface{}) ([]User, error) {
 	}
 
 	return users, nil
+}
+
+// Authentification
+
+func Authenticate(login model.Login) bool {
+	user, err := GetUserByEmail(login.Email)
+
+	if user == nil || err != nil {
+		return false
+	}
+
+	return CheckPasswordHash(login.Password, user.PasswordHash)
 }
 
 // Gestion des mots de passes

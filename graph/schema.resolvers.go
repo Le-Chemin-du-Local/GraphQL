@@ -10,6 +10,7 @@ import (
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/users"
+	"chemin-du-local.bzh/graphql/pkg/jwt"
 )
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
@@ -30,7 +31,27 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 }
 
 func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	// On check d'abord le mot de passe
+	isPasswordCorrect := users.Authenticate(input)
+
+	if !isPasswordCorrect {
+		return "", &users.UserPasswordIncorrect{}
+	}
+
+	// Puis on génère le token
+	user, err := users.GetUserByEmail(input.Email)
+
+	if user == nil || err != nil {
+		return "", err
+	}
+
+	token, err := jwt.GenerateToken(user.ID.Hex(), user.Role)
+
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
 func (r *mutationResolver) CreateCommerce(ctx context.Context, input model.NewCommerce) (*model.Commerce, error) {

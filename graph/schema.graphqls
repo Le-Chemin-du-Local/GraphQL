@@ -8,6 +8,7 @@ type User {
   id: ID!
   createdAt: Time
   email: String!
+  role: String!
   firstName: String
   lastName: String
 }

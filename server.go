@@ -8,6 +8,7 @@ import (
 	"chemin-du-local.bzh/graphql/graph"
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/internal/config"
+	"chemin-du-local.bzh/graphql/internal/database"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 )
@@ -20,12 +21,16 @@ func main() {
 		port = defaultPort
 	}
 
+	// Initialisation des config
 	configPath := "config.yml"
 	if os.Getenv("APP_ENV") == "production" {
 		configPath = "config.production.yml"
 	}
 
 	config.Init(configPath)
+
+	// Initialisation de la base de données
+	database.Init()
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 

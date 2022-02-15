@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/jwt"
 )
@@ -40,7 +39,7 @@ func Middleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), userCtxKey, user.ToModel())
+			ctx := context.WithValue(r.Context(), userCtxKey, user)
 
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
@@ -48,8 +47,8 @@ func Middleware() func(http.Handler) http.Handler {
 	}
 }
 
-func ForContext(ctx context.Context) *model.User {
-	raw, _ := ctx.Value(userCtxKey).(*model.User)
+func ForContext(ctx context.Context) *users.User {
+	raw, _ := ctx.Value(userCtxKey).(*users.User)
 
 	return raw
 }

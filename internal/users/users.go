@@ -86,6 +86,12 @@ func Create(input model.NewUser) *User {
 
 // Getter de base de données
 
+func GetAllUser() ([]User, error) {
+	filter := bson.D{{}}
+
+	return GetFiltered(filter)
+}
+
 func GetUserById(id string) (*User, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 

@@ -81,6 +81,38 @@ func (r *mutationResolver) CreateCommerce(ctx context.Context, input model.NewCo
 	return databaseCommerce.ToModel(), nil
 }
 
+func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
+	databaseUsers, err := users.GetAllUser()
+
+	if err != nil {
+		return nil, err
+	}
+
+	users := []*model.User{}
+
+	for _, databaseUser := range databaseUsers {
+		user := databaseUser.ToModel()
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
+	databaseUser, err := users.GetUserById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseUser == nil {
+		return nil, &users.UserNotFoundError{}
+	}
+
+	return databaseUser.ToModel(), nil
+}
+
 func (r *queryResolver) Commerces(ctx context.Context) ([]*model.Commerce, error) {
 	databaseCommerces, err := commerces.GetAll()
 

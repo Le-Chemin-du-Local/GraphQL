@@ -68,6 +68,10 @@ input NewCommerce {
 }
 
 type Query {
+  # UTILISATEURS
+  users: [User!]!
+  user(id: ID!): User!
+
   # COMMERCES
   commerces: [Commerce!]! 
   commerce(id: ID!): Commerce!

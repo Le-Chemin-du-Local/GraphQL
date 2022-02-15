@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
@@ -83,11 +82,35 @@ func (r *mutationResolver) CreateCommerce(ctx context.Context, input model.NewCo
 }
 
 func (r *queryResolver) Commerces(ctx context.Context) ([]*model.Commerce, error) {
-	panic(fmt.Errorf("not implemented"))
+	databaseCommerces, err := commerces.GetAll()
+
+	if err != nil {
+		return nil, err
+	}
+
+	commerces := []*model.Commerce{}
+
+	for _, datadatabaseCommerce := range databaseCommerces {
+		commerce := datadatabaseCommerce.ToModel()
+
+		commerces = append(commerces, commerce)
+	}
+
+	return commerces, nil
 }
 
 func (r *queryResolver) Commerce(ctx context.Context, id string) (*model.Commerce, error) {
-	panic(fmt.Errorf("not implemented"))
+	databaseCommerce, err := commerces.GetById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseCommerce == nil {
+		return nil, &commerces.CommerceErrorNotFound{}
+	}
+
+	return databaseCommerce.ToModel(), nil
 }
 
 // Commerce returns generated.CommerceResolver implementation.

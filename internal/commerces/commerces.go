@@ -5,7 +5,9 @@ import (
 
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/database"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Commerce struct {
@@ -53,4 +55,67 @@ func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) *Commerce
 	}
 
 	return &databaseCommerce
+}
+
+// Getter de base de données
+
+func GetAll() ([]Commerce, error) {
+	filter := bson.D{{}}
+
+	return GetFiltered(filter, nil)
+}
+
+func GetById(id string) (*Commerce, error) {
+	objectId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.D{
+		primitive.E{
+			Key:   "_id",
+			Value: objectId,
+		},
+	}
+
+	commerces, err := GetFiltered(filter, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(commerces) == 0 {
+		return nil, nil
+	}
+
+	return &commerces[0], nil
+}
+
+func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Commerce, error) {
+	commerces := []Commerce{}
+
+	cursor, err := database.CollectionCommerces.Find(database.MongoContext, filter, opts)
+
+	if err != nil {
+		return commerces, err
+	}
+
+	for cursor.Next(database.MongoContext) {
+		var commerce Commerce
+
+		err := cursor.Decode(&commerce)
+
+		if err != nil {
+			return commerces, err
+		}
+
+		commerces = append(commerces, commerce)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return commerces, err
+	}
+
+	return commerces, nil
 }

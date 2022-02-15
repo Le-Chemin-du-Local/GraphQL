@@ -6,7 +6,7 @@ Vous êtes sur le repository de l'API du Chemin du Local. Cette API est basé su
 
 ## GrapiQL
 
-Ce repository contient un fichier répertoriant l'ensemble des requêtes qui permettent de tester l'API. Vous pourrez trouver ce fichier ici : [GraphiQL.md](https://github.com/Le-Chemin-du-Local/GraphQL/blob/master/README.md)
+Ce repository contient un fichier répertoriant l'ensemble des requêtes qui permettent de tester l'API. Vous pourrez trouver ce fichier ici : [GraphiQL.md](https://github.com/Le-Chemin-du-Local/GraphQL/blob/master/GraphiQL.md)
 
 ### Exemple de requête 
 

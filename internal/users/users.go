@@ -1,7 +1,6 @@
 package users
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -43,8 +42,6 @@ func (user *User) HasRole(role model.Role) bool {
 	if user == nil {
 		return false
 	}
-	fmt.Println(user.Role)
-	fmt.Println(role)
 	if user.Role == USERROLE_USER && role == model.RoleUser {
 		return true
 	}

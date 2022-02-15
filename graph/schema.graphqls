@@ -19,6 +19,8 @@ type User {
   role: String!
   firstName: String
   lastName: String
+
+  commerce: Commerce
 }
 
 input NewUser {

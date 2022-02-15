@@ -92,6 +92,33 @@ func GetById(id string) (*Commerce, error) {
 	return &commerces[0], nil
 }
 
+func GetForUser(userID string) (*Commerce, error) {
+	userObjectId, err := primitive.ObjectIDFromHex(userID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.D{
+		primitive.E{
+			Key:   "storekeeperID",
+			Value: userObjectId,
+		},
+	}
+
+	commerces, err := GetFiltered(filter, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(commerces) == 0 {
+		return nil, nil
+	}
+
+	return &commerces[0], nil
+}
+
 func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Commerce, error) {
 	commerces := []Commerce{}
 

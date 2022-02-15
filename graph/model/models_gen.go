@@ -8,6 +8,22 @@ import (
 	"strconv"
 )
 
+type CommerceConnection struct {
+	Edges    []*CommerceEdge   `json:"edges"`
+	PageInfo *CommercePageInfo `json:"pageInfo"`
+}
+
+type CommerceEdge struct {
+	Cursor string    `json:"cursor"`
+	Node   *Commerce `json:"node"`
+}
+
+type CommercePageInfo struct {
+	StartCursor string `json:"startCursor"`
+	EndCursor   string `json:"endCursor"`
+	HasNextPage bool   `json:"hasNextPage"`
+}
+
 type Login struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`

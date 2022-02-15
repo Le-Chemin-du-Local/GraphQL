@@ -40,6 +40,8 @@ input Login {
 ###############
 
 # COMMERCE
+# Utilisation de la pagination par curseur : https://www.apollographql.com/blog/graphql/pagination/understanding-pagination-rest-graphql-and-relay/
+
 type Commerce { # Ici on utilise le nom "Commerce"
                 # plutôt que "Store" pour éviter de 
                 # futures conflits
@@ -56,6 +58,23 @@ type Commerce { # Ici on utilise le nom "Commerce"
   phone: String!
   email: String!
 } 
+
+# Pagination 
+type CommerceConnection {
+  edges: [CommerceEdge!]!
+  pageInfo: CommercePageInfo!
+}
+
+type CommerceEdge {
+  cursor: ID!
+  node: Commerce
+}
+
+type CommercePageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
 
 input NewCommerce {
   # Descriptif
@@ -75,7 +94,7 @@ type Query {
   user(id: ID!): User!
 
   # COMMERCES
-  commerces: [Commerce!]! 
+  commerces(first: Int = 5, after: ID): CommerceConnection! 
   commerce(id: ID!): Commerce!
 }
 

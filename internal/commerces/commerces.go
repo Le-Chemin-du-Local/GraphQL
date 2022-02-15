@@ -34,6 +34,26 @@ func (commerce *Commerce) ToModel() *model.Commerce {
 	}
 }
 
+func (commerce Commerce) IsLast() bool {
+	filter := bson.D{{}}
+
+	opts := options.FindOptions{}
+	opts.SetLimit(1)
+	opts.SetSort(bson.D{
+		primitive.E{
+			Key: "_id", Value: -1,
+		},
+	})
+
+	lastCommerce, err := GetFiltered(filter, &opts)
+
+	if err != nil || len(lastCommerce) <= 0 {
+		return false
+	}
+
+	return lastCommerce[0].ID == commerce.ID
+}
+
 // Créateur de base de données
 
 func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) *Commerce {
@@ -117,6 +137,33 @@ func GetForUser(userID string) (*Commerce, error) {
 	}
 
 	return &commerces[0], nil
+}
+
+func GetPaginated(startValue *string, first int) ([]Commerce, error) {
+	// On doit faire un filtre spécifique si on veut commencer
+	// le curseur à l'ID de départ
+	var filter interface{}
+
+	if startValue != nil {
+		objectID, err := primitive.ObjectIDFromHex(*startValue)
+
+		if err != nil {
+			return nil, err
+		}
+
+		filter = bson.M{
+			"_id": bson.M{
+				"$gt": objectID,
+			},
+		}
+	} else {
+		filter = bson.D{{}}
+	}
+
+	opts := options.Find()
+	opts.SetLimit(int64(first))
+
+	return GetFiltered(filter, opts)
 }
 
 func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Commerce, error) {

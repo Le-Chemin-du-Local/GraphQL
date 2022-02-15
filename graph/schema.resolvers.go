@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"encoding/base64"
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
@@ -113,22 +114,63 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 	return databaseUser.ToModel(), nil
 }
 
-func (r *queryResolver) Commerces(ctx context.Context) ([]*model.Commerce, error) {
-	databaseCommerces, err := commerces.GetAll()
+func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string) (*model.CommerceConnection, error) {
+	var decodedCursor *string
+
+	if after != nil {
+		bytes, err := base64.StdEncoding.DecodeString(*after)
+
+		if err != nil {
+			return nil, err
+		}
+
+		decodedCursorString := string(bytes)
+		decodedCursor = &decodedCursorString
+	}
+
+	databaseCommerces, err := commerces.GetPaginated(decodedCursor, *first)
 
 	if err != nil {
 		return nil, err
 	}
 
-	commerces := []*model.Commerce{}
+	// On construit les edges
+	edges := []*model.CommerceEdge{}
 
 	for _, datadatabaseCommerce := range databaseCommerces {
-		commerce := datadatabaseCommerce.ToModel()
+		commerceEdge := model.CommerceEdge{
+			Cursor: base64.StdEncoding.EncodeToString([]byte(datadatabaseCommerce.ID.Hex())),
+			Node:   datadatabaseCommerce.ToModel(),
+		}
 
-		commerces = append(commerces, commerce)
+		edges = append(edges, &commerceEdge)
 	}
 
-	return commerces, nil
+	itemCount := len(edges)
+
+	// Si jamais il n'y a pas de commerce, on veut quand même renvoyer un
+	// tableau vide
+	if itemCount == 0 {
+		return &model.CommerceConnection{
+			Edges:    edges,
+			PageInfo: &model.CommercePageInfo{},
+		}, nil
+	}
+
+	hasNextPage := !databaseCommerces[itemCount-1].IsLast()
+
+	pageInfo := model.CommercePageInfo{
+		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
+		EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
+		HasNextPage: hasNextPage,
+	}
+
+	connection := model.CommerceConnection{
+		Edges:    edges[:itemCount],
+		PageInfo: &pageInfo,
+	}
+
+	return &connection, nil
 }
 
 func (r *queryResolver) Commerce(ctx context.Context, id string) (*model.Commerce, error) {

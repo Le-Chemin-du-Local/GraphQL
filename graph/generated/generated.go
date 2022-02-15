@@ -59,6 +59,22 @@ type ComplexityRoot struct {
 		StorekeeperWord func(childComplexity int) int
 	}
 
+	CommerceConnection struct {
+		Edges    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	CommerceEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	CommercePageInfo struct {
+		EndCursor   func(childComplexity int) int
+		HasNextPage func(childComplexity int) int
+		StartCursor func(childComplexity int) int
+	}
+
 	Mutation struct {
 		CreateCommerce func(childComplexity int, input model.NewCommerce) int
 		CreateUser     func(childComplexity int, input model.NewUser) int
@@ -67,7 +83,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Commerce  func(childComplexity int, id string) int
-		Commerces func(childComplexity int) int
+		Commerces func(childComplexity int, first *int, after *string) int
 		User      func(childComplexity int, id string) int
 		Users     func(childComplexity int) int
 	}
@@ -94,7 +110,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
 	User(ctx context.Context, id string) (*model.User, error)
-	Commerces(ctx context.Context) ([]*model.Commerce, error)
+	Commerces(ctx context.Context, first *int, after *string) (*model.CommerceConnection, error)
 	Commerce(ctx context.Context, id string) (*model.Commerce, error)
 }
 type UserResolver interface {
@@ -172,6 +188,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Commerce.StorekeeperWord(childComplexity), true
 
+	case "CommerceConnection.edges":
+		if e.complexity.CommerceConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.CommerceConnection.Edges(childComplexity), true
+
+	case "CommerceConnection.pageInfo":
+		if e.complexity.CommerceConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.CommerceConnection.PageInfo(childComplexity), true
+
+	case "CommerceEdge.cursor":
+		if e.complexity.CommerceEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.CommerceEdge.Cursor(childComplexity), true
+
+	case "CommerceEdge.node":
+		if e.complexity.CommerceEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.CommerceEdge.Node(childComplexity), true
+
+	case "CommercePageInfo.endCursor":
+		if e.complexity.CommercePageInfo.EndCursor == nil {
+			break
+		}
+
+		return e.complexity.CommercePageInfo.EndCursor(childComplexity), true
+
+	case "CommercePageInfo.hasNextPage":
+		if e.complexity.CommercePageInfo.HasNextPage == nil {
+			break
+		}
+
+		return e.complexity.CommercePageInfo.HasNextPage(childComplexity), true
+
+	case "CommercePageInfo.startCursor":
+		if e.complexity.CommercePageInfo.StartCursor == nil {
+			break
+		}
+
+		return e.complexity.CommercePageInfo.StartCursor(childComplexity), true
+
 	case "Mutation.createCommerce":
 		if e.complexity.Mutation.CreateCommerce == nil {
 			break
@@ -225,7 +290,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Commerces(childComplexity), true
+		args, err := ec.field_Query_commerces_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Commerces(childComplexity, args["first"].(*int), args["after"].(*string)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -401,6 +471,8 @@ input Login {
 ###############
 
 # COMMERCE
+# Utilisation de la pagination par curseur : https://www.apollographql.com/blog/graphql/pagination/understanding-pagination-rest-graphql-and-relay/
+
 type Commerce { # Ici on utilise le nom "Commerce"
                 # plutôt que "Store" pour éviter de 
                 # futures conflits
@@ -417,6 +489,23 @@ type Commerce { # Ici on utilise le nom "Commerce"
   phone: String!
   email: String!
 } 
+
+# Pagination 
+type CommerceConnection {
+  edges: [CommerceEdge!]!
+  pageInfo: CommercePageInfo!
+}
+
+type CommerceEdge {
+  cursor: ID!
+  node: Commerce
+}
+
+type CommercePageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
 
 input NewCommerce {
   # Descriptif
@@ -436,7 +525,7 @@ type Query {
   user(id: ID!): User!
 
   # COMMERCES
-  commerces: [Commerce!]! 
+  commerces(first: Int = 5, after: ID): CommerceConnection! 
   commerce(id: ID!): Commerce!
 }
 
@@ -543,6 +632,30 @@ func (ec *executionContext) field_Query_commerce_args(ctx context.Context, rawAr
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_commerces_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["after"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+		arg1, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg1
 	return args, nil
 }
 
@@ -894,6 +1007,248 @@ func (ec *executionContext) _Commerce_email(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _CommerceConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.CommerceConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CommerceEdge)
+	fc.Result = res
+	return ec.marshalNCommerceEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceEdgeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.CommerceConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CommercePageInfo)
+	fc.Result = res
+	return ec.marshalNCommercePageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommercePageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.CommerceEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.CommerceEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Commerce)
+	fc.Result = res
+	return ec.marshalOCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommercePageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.CommercePageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommercePageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommercePageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *model.CommercePageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommercePageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommercePageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.CommercePageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommercePageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasNextPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1137,9 +1492,16 @@ func (ec *executionContext) _Query_commerces(ctx context.Context, field graphql.
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_commerces_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Commerces(rctx)
+		return ec.resolvers.Query().Commerces(rctx, args["first"].(*int), args["after"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1151,9 +1513,9 @@ func (ec *executionContext) _Query_commerces(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Commerce)
+	res := resTmp.(*model.CommerceConnection)
 	fc.Result = res
-	return ec.marshalNCommerce2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceᚄ(ctx, field.Selections, res)
+	return ec.marshalNCommerceConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_commerce(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2891,6 +3253,136 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var commerceConnectionImplementors = []string{"CommerceConnection"}
+
+func (ec *executionContext) _CommerceConnection(ctx context.Context, sel ast.SelectionSet, obj *model.CommerceConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commerceConnectionImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CommerceConnection")
+		case "edges":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceConnection_edges(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pageInfo":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceConnection_pageInfo(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var commerceEdgeImplementors = []string{"CommerceEdge"}
+
+func (ec *executionContext) _CommerceEdge(ctx context.Context, sel ast.SelectionSet, obj *model.CommerceEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commerceEdgeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CommerceEdge")
+		case "cursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceEdge_cursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceEdge_node(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var commercePageInfoImplementors = []string{"CommercePageInfo"}
+
+func (ec *executionContext) _CommercePageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.CommercePageInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commercePageInfoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CommercePageInfo")
+		case "startCursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommercePageInfo_startCursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "endCursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommercePageInfo_endCursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hasNextPage":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommercePageInfo_hasNextPage(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -3604,7 +4096,31 @@ func (ec *executionContext) marshalNCommerce2cheminᚑduᚑlocalᚗbzhᚋgraphql
 	return ec._Commerce(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCommerce2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Commerce) graphql.Marshaler {
+func (ec *executionContext) marshalNCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx context.Context, sel ast.SelectionSet, v *model.Commerce) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Commerce(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCommerceConnection2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceConnection(ctx context.Context, sel ast.SelectionSet, v model.CommerceConnection) graphql.Marshaler {
+	return ec._CommerceConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCommerceConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceConnection(ctx context.Context, sel ast.SelectionSet, v *model.CommerceConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CommerceConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCommerceEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CommerceEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3628,7 +4144,7 @@ func (ec *executionContext) marshalNCommerce2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋg
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx, sel, v[i])
+			ret[i] = ec.marshalNCommerceEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -3648,14 +4164,24 @@ func (ec *executionContext) marshalNCommerce2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋg
 	return ret
 }
 
-func (ec *executionContext) marshalNCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx context.Context, sel ast.SelectionSet, v *model.Commerce) graphql.Marshaler {
+func (ec *executionContext) marshalNCommerceEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceEdge(ctx context.Context, sel ast.SelectionSet, v *model.CommerceEdge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._Commerce(ctx, sel, v)
+	return ec._CommerceEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCommercePageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommercePageInfo(ctx context.Context, sel ast.SelectionSet, v *model.CommercePageInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CommercePageInfo(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
@@ -4055,6 +4581,38 @@ func (ec *executionContext) marshalOCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgrap
 		return graphql.Null
 	}
 	return ec._Commerce(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalID(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalID(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

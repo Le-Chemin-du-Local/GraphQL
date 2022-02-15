@@ -57,6 +57,9 @@ type Commerce { # Ici on utilise le nom "Commerce"
   address: String!
   phone: String!
   email: String!
+
+  # Produits
+  procuts(first: Int = 10, after: ID): ProductConnection!
 } 
 
 # Pagination 
@@ -88,6 +91,50 @@ input NewCommerce {
   email: String!
 }
 
+# PRODUITS
+
+type Product {
+  id: ID!
+  name: String!
+  description: String!
+  price: Float!
+  unit: String!
+  isBreton: Boolean!
+
+  tags: [String!]
+  categories: [String!]!
+}
+
+# Pagination
+type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: ProductPageInfo!
+}
+
+type ProductEdge {
+  cursor: ID!
+  node: Product
+}
+
+type ProductPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+input NewProduct {
+  commerceID: ID
+
+  name: String!
+  description: String!
+  price: Float!
+  unit: String!
+  isBreton: Boolean!
+
+  tags: [String!]
+  categories: [String!]!
+}
+
 type Query {
   # UTILISATEURS
   users: [User!]!
@@ -96,6 +143,7 @@ type Query {
   # COMMERCES
   commerces(first: Int = 5, after: ID): CommerceConnection! 
   commerce(id: ID!): Commerce!
+  product(id: ID!): Product!
 }
 
 type Mutation {
@@ -105,4 +153,5 @@ type Mutation {
 
   # COMMERCES
   createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
+  createProduct(input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
 }

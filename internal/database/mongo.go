@@ -13,6 +13,7 @@ var MongoContext = context.TODO()
 
 var CollectionUsers *mongo.Collection
 var CollectionCommerces *mongo.Collection
+var CollectionProducts *mongo.Collection
 
 // Initialise la base de données à partir des informations données
 // dans la configuration
@@ -42,7 +43,9 @@ func Init() {
 	databaseName := config.Cfg.Database.Name
 	usersCollectionName := config.Cfg.Database.Collections.Users
 	commercesCollectionName := config.Cfg.Database.Collections.Commerces
+	produtsCollectionName := config.Cfg.Database.Collections.Products
 
 	CollectionUsers = client.Database(databaseName).Collection(usersCollectionName)
 	CollectionCommerces = client.Database(databaseName).Collection(commercesCollectionName)
+	CollectionProducts = client.Database(databaseName).Collection(produtsCollectionName)
 }

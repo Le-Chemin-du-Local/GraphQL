@@ -19,6 +19,7 @@ type Config struct {
 		Collections      struct {
 			Users     string `yaml:"users"`
 			Commerces string `yaml:"commerces"`
+			Products  string `yaml:"products"`
 		} `yaml:"collections"`
 	} `yaml:"database"`
 }

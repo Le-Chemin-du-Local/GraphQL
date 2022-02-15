@@ -11,6 +11,7 @@ import (
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/auth"
 	"chemin-du-local.bzh/graphql/internal/commerces"
+	"chemin-du-local.bzh/graphql/internal/products"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/jwt"
 )
@@ -23,6 +24,65 @@ func (r *commerceResolver) Storekeeper(ctx context.Context, obj *model.Commerce)
 	}
 
 	return storekeeper.ToModel(), nil
+}
+
+func (r *commerceResolver) Procuts(ctx context.Context, obj *model.Commerce, first *int, after *string) (*model.ProductConnection, error) {
+	var decodedCursor *string
+
+	if after != nil {
+		bytes, err := base64.StdEncoding.DecodeString(*after)
+
+		if err != nil {
+			return nil, err
+		}
+
+		decodedCursorString := string(bytes)
+		decodedCursor = &decodedCursorString
+	}
+
+	databaseProducts, err := products.GetPaginated(obj.ID, decodedCursor, *first)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// On construit les edges
+	edges := []*model.ProductEdge{}
+
+	for _, datadatabaseProduct := range databaseProducts {
+		productEdge := model.ProductEdge{
+			Cursor: base64.StdEncoding.EncodeToString([]byte(datadatabaseProduct.ID.Hex())),
+			Node:   datadatabaseProduct.ToModel(),
+		}
+
+		edges = append(edges, &productEdge)
+	}
+
+	itemCount := len(edges)
+
+	// Si jamais il n'y a pas de produits, on veut quand même renvoyer un
+	// tableau vide
+	if itemCount == 0 {
+		return &model.ProductConnection{
+			Edges:    edges,
+			PageInfo: &model.ProductPageInfo{},
+		}, nil
+	}
+
+	hasNextPage := !databaseProducts[itemCount-1].IsLast()
+
+	pageInfo := model.ProductPageInfo{
+		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
+		EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
+		HasNextPage: hasNextPage,
+	}
+
+	connection := model.ProductConnection{
+		Edges:    edges[:itemCount],
+		PageInfo: &pageInfo,
+	}
+
+	return &connection, nil
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
@@ -80,6 +140,33 @@ func (r *mutationResolver) CreateCommerce(ctx context.Context, input model.NewCo
 	databaseCommerce := commerces.Create(input, user.ID)
 
 	return databaseCommerce.ToModel(), nil
+}
+
+func (r *mutationResolver) CreateProduct(ctx context.Context, input model.NewProduct) (*model.Product, error) {
+	user := auth.ForContext(ctx)
+
+	if user.Role == users.USERROLE_ADMIN && input.CommerceID == nil {
+		return nil, &products.MustSpecifyCommerceIDError{}
+	}
+
+	// Si l'utilisateur est un commerçant, il doit créer des produits
+	// pour son commerce
+	if user.Role == users.USERROLE_STOREKEEPER {
+		databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+
+		// Cela permet aussi d'éviter qu'un commerçant créer un
+		// produit sans commerce
+		if err != nil {
+			return nil, err
+		}
+
+		commerceID := databaseCommerce.ID.Hex()
+		input.CommerceID = &commerceID
+	}
+
+	databaseProduct := products.Create(input)
+
+	return databaseProduct.ToModel(), nil
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
@@ -185,6 +272,16 @@ func (r *queryResolver) Commerce(ctx context.Context, id string) (*model.Commerc
 	}
 
 	return databaseCommerce.ToModel(), nil
+}
+
+func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product, error) {
+	databaseProduct, err := products.GetById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return databaseProduct.ToModel(), nil
 }
 
 func (r *userResolver) Commerce(ctx context.Context, obj *model.User) (*model.Commerce, error) {

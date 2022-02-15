@@ -38,11 +38,49 @@ type NewCommerce struct {
 	Email           string `json:"email"`
 }
 
+type NewProduct struct {
+	CommerceID  *string  `json:"commerceID"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Price       float64  `json:"price"`
+	Unit        string   `json:"unit"`
+	IsBreton    bool     `json:"isBreton"`
+	Tags        []string `json:"tags"`
+	Categories  []string `json:"categories"`
+}
+
 type NewUser struct {
 	Email     string  `json:"email"`
 	Password  string  `json:"password"`
 	FirstName *string `json:"firstName"`
 	LastName  *string `json:"lastName"`
+}
+
+type Product struct {
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Price       float64  `json:"price"`
+	Unit        string   `json:"unit"`
+	IsBreton    bool     `json:"isBreton"`
+	Tags        []string `json:"tags"`
+	Categories  []string `json:"categories"`
+}
+
+type ProductConnection struct {
+	Edges    []*ProductEdge   `json:"edges"`
+	PageInfo *ProductPageInfo `json:"pageInfo"`
+}
+
+type ProductEdge struct {
+	Cursor string   `json:"cursor"`
+	Node   *Product `json:"node"`
+}
+
+type ProductPageInfo struct {
+	StartCursor string `json:"startCursor"`
+	EndCursor   string `json:"endCursor"`
+	HasNextPage bool   `json:"hasNextPage"`
 }
 
 type Role string

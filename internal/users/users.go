@@ -38,6 +38,18 @@ func (user *User) ToModel() *model.User {
 	}
 }
 
+func (user *User) HasRole(role model.Role) bool {
+	if user.Role == USERROLE_USER && role == model.RoleUser {
+		return true
+	} else if user.Role == USERROLE_STOREKEEPER && (role == model.RoleUser || role == model.RoleStorekeeper) {
+		return true
+	} else if user.Role == USERROLE_ADMIN {
+		return true
+	}
+
+	return false
+}
+
 // Createur de base de données
 
 func Create(input model.NewUser) *User {

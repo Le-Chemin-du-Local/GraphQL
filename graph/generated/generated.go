@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -41,13 +42,14 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	HasRole func(ctx context.Context, obj interface{}, next graphql.Resolver, role model.Role) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
 	Commerce struct {
-		ID            func(childComplexity int) int
-		Name          func(childComplexity int) int
-		StorekeeperID func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Storekeeper func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -110,12 +112,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Commerce.Name(childComplexity), true
 
-	case "Commerce.storekeeperID":
-		if e.complexity.Commerce.StorekeeperID == nil {
+	case "Commerce.storekeeper":
+		if e.complexity.Commerce.Storekeeper == nil {
 			break
 		}
 
-		return e.complexity.Commerce.StorekeeperID(childComplexity), true
+		return e.complexity.Commerce.Storekeeper(childComplexity), true
 
 	case "Mutation.createCommerce":
 		if e.complexity.Mutation.CreateCommerce == nil {
@@ -278,7 +280,15 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "graph/schema.graphqls", Input: `scalar Time
+	{Name: "graph/schema.graphqls", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
+
+enum Role {
+  ADMIN,
+  STOREKEEPER,
+  USER
+}
+
+scalar Time
 
 ##################
 ## UTILISATEURS ##
@@ -314,7 +324,7 @@ type Commerce { # Ici on utilise le nom "Commerce"
                 # plutôt que "Store" pour éviter de 
                 # futures conflits
   id: ID!
-  storekeeperID: ID!
+  storekeeper: User!
   name: String!
 } 
 
@@ -324,7 +334,7 @@ input NewCommerce {
 
 type Query {
   # COMMERCES
-  commerces: [Commerce!]!
+  commerces: [Commerce!]! 
   commerce(id: ID!): Commerce!
 }
 
@@ -334,7 +344,7 @@ type Mutation {
   login(input: Login!): String!
 
   # COMMERCES
-  createCommerce(input: NewCommerce!): Commerce! 
+  createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
 }
 `, BuiltIn: false},
 }
@@ -343,6 +353,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_hasRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.Role
+	if tmp, ok := rawArgs["role"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("role"))
+		arg0, err = ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["role"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createCommerce_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -507,7 +532,7 @@ func (ec *executionContext) _Commerce_id(ctx context.Context, field graphql.Coll
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Commerce_storekeeperID(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+func (ec *executionContext) _Commerce_storekeeper(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -525,7 +550,7 @@ func (ec *executionContext) _Commerce_storekeeperID(ctx context.Context, field g
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.StorekeeperID, nil
+		return obj.Storekeeper, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -537,9 +562,9 @@ func (ec *executionContext) _Commerce_storekeeperID(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Commerce_name(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
@@ -685,8 +710,32 @@ func (ec *executionContext) _Mutation_createCommerce(ctx context.Context, field 
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCommerce(rctx, args["input"].(model.NewCommerce))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateCommerce(rctx, args["input"].(model.NewCommerce))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, "STOREKEEPER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Commerce); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.Commerce`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2310,9 +2359,9 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "storekeeperID":
+		case "storekeeper":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Commerce_storekeeperID(ctx, field, obj)
+				return ec._Commerce_storekeeper(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -3073,6 +3122,16 @@ func (ec *executionContext) unmarshalNNewCommerce2cheminᚑduᚑlocalᚗbzhᚋgr
 func (ec *executionContext) unmarshalNNewUser2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewUser(ctx context.Context, v interface{}) (model.NewUser, error) {
 	res, err := ec.unmarshalInputNewUser(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx context.Context, v interface{}) (model.Role, error) {
+	var res model.Role
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx context.Context, sel ast.SelectionSet, v model.Role) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

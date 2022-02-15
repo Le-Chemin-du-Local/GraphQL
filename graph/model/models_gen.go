@@ -9,19 +9,18 @@ import (
 	"time"
 )
 
-type Commerce struct {
-	ID          string `json:"id"`
-	Storekeeper *User  `json:"storekeeper"`
-	Name        string `json:"name"`
-}
-
 type Login struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 type NewCommerce struct {
-	Name string `json:"name"`
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	StorekeeperWord string `json:"storekeeperWord"`
+	Address         string `json:"address"`
+	Phone           string `json:"phone"`
+	Email           string `json:"email"`
 }
 
 type NewUser struct {

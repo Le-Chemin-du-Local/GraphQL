@@ -43,11 +43,28 @@ type Commerce { # Ici on utilise le nom "Commerce"
                 # futures conflits
   id: ID!
   storekeeper: User!
+  
+  # Descriptif
   name: String!
+  description: String!
+  storekeeperWord: String!
+
+  # Coordonnées
+  address: String!
+  phone: String!
+  email: String!
 } 
 
 input NewCommerce {
+  # Descriptif
   name: String!
+  description: String!
+  storekeeperWord: String!
+
+  # Coordonnées
+  address: String!
+  phone: String!
+  email: String!
 }
 
 type Query {

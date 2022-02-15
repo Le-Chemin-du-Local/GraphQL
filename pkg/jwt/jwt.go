@@ -12,12 +12,11 @@ var (
 	SecretKey = []byte(config.Cfg.Settings.AuthSecret)
 )
 
-func GenerateToken(id string, role string) (string, error) {
+func GenerateToken(id string) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
 	claims["id"] = id
-	claims["role"] = role
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 
 	tokenString, err := token.SignedString(SecretKey)
@@ -29,7 +28,7 @@ func GenerateToken(id string, role string) (string, error) {
 	return tokenString, nil
 }
 
-func ParseToken(tokenString string) (string, string, error) {
+func ParseToken(tokenString string) (string, error) {
 	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -38,10 +37,9 @@ func ParseToken(tokenString string) (string, string, error) {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		id := claims["id"].(string)
-		role := claims["role"].(string)
 
-		return id, role, nil
+		return id, nil
 	} else {
-		return "", "", err
+		return "", err
 	}
 }

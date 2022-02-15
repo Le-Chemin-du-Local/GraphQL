@@ -1,6 +1,7 @@
 package users
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -39,11 +40,18 @@ func (user *User) ToModel() *model.User {
 }
 
 func (user *User) HasRole(role model.Role) bool {
+	if user == nil {
+		return false
+	}
+	fmt.Println(user.Role)
+	fmt.Println(role)
 	if user.Role == USERROLE_USER && role == model.RoleUser {
 		return true
-	} else if user.Role == USERROLE_STOREKEEPER && (role == model.RoleUser || role == model.RoleStorekeeper) {
+	}
+	if user.Role == USERROLE_STOREKEEPER && (role == model.RoleUser || role == model.RoleStorekeeper) {
 		return true
-	} else if user.Role == USERROLE_ADMIN {
+	}
+	if user.Role == USERROLE_ADMIN {
 		return true
 	}
 

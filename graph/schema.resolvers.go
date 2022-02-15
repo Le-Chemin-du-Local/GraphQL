@@ -45,7 +45,7 @@ func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string
 		return "", err
 	}
 
-	token, err := jwt.GenerateToken(user.ID.Hex(), user.Role)
+	token, err := jwt.GenerateToken(user.ID.Hex())
 
 	if err != nil {
 		return "", err

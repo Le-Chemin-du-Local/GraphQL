@@ -1,0 +1,14 @@
+FROM golang
+ARG PORT_NUMBER
+ARG ENV
+ARG CONF_PATH
+
+ENV PORT=$PORT_NUMBER
+ENV APP_ENV=$ENV
+
+WORKDIR /opt
+COPY . .
+COPY $CONF_PATH .
+RUN go mod tidy
+EXPOSE $PORT
+ENTRYPOINT ["go", "run", "server.go"]

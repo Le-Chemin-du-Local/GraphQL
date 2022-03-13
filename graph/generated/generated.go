@@ -50,12 +50,13 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Commerce struct {
 		Address         func(childComplexity int) int
+		Categories      func(childComplexity int) int
 		Description     func(childComplexity int) int
 		Email           func(childComplexity int) int
 		ID              func(childComplexity int) int
 		Name            func(childComplexity int) int
 		Phone           func(childComplexity int) int
-		Procuts         func(childComplexity int, first *int, after *string) int
+		Products        func(childComplexity int, first *int, after *string, filters *model.ProductFilter) int
 		Storekeeper     func(childComplexity int) int
 		StorekeeperWord func(childComplexity int) int
 	}
@@ -81,6 +82,7 @@ type ComplexityRoot struct {
 		CreateProduct  func(childComplexity int, input model.NewProduct) int
 		CreateUser     func(childComplexity int, input model.NewUser) int
 		Login          func(childComplexity int, input model.Login) int
+		UpdateProduct  func(childComplexity int, id string, changes map[string]interface{}) int
 	}
 
 	Product struct {
@@ -111,10 +113,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Commerce  func(childComplexity int, id string) int
+		Commerce  func(childComplexity int, id *string) int
 		Commerces func(childComplexity int, first *int, after *string) int
 		Product   func(childComplexity int, id string) int
-		User      func(childComplexity int, id string) int
+		User      func(childComplexity int, id *string) int
 		Users     func(childComplexity int) int
 	}
 
@@ -132,19 +134,21 @@ type ComplexityRoot struct {
 type CommerceResolver interface {
 	Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error)
 
-	Procuts(ctx context.Context, obj *model.Commerce, first *int, after *string) (*model.ProductConnection, error)
+	Categories(ctx context.Context, obj *model.Commerce) ([]string, error)
+	Products(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.ProductFilter) (*model.ProductConnection, error)
 }
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
 	Login(ctx context.Context, input model.Login) (string, error)
 	CreateCommerce(ctx context.Context, input model.NewCommerce) (*model.Commerce, error)
 	CreateProduct(ctx context.Context, input model.NewProduct) (*model.Product, error)
+	UpdateProduct(ctx context.Context, id string, changes map[string]interface{}) (*model.Product, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
-	User(ctx context.Context, id string) (*model.User, error)
+	User(ctx context.Context, id *string) (*model.User, error)
 	Commerces(ctx context.Context, first *int, after *string) (*model.CommerceConnection, error)
-	Commerce(ctx context.Context, id string) (*model.Commerce, error)
+	Commerce(ctx context.Context, id *string) (*model.Commerce, error)
 	Product(ctx context.Context, id string) (*model.Product, error)
 }
 type UserResolver interface {
@@ -172,6 +176,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Address(childComplexity), true
+
+	case "Commerce.categories":
+		if e.complexity.Commerce.Categories == nil {
+			break
+		}
+
+		return e.complexity.Commerce.Categories(childComplexity), true
 
 	case "Commerce.description":
 		if e.complexity.Commerce.Description == nil {
@@ -208,17 +219,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Commerce.Phone(childComplexity), true
 
-	case "Commerce.procuts":
-		if e.complexity.Commerce.Procuts == nil {
+	case "Commerce.products":
+		if e.complexity.Commerce.Products == nil {
 			break
 		}
 
-		args, err := ec.field_Commerce_procuts_args(context.TODO(), rawArgs)
+		args, err := ec.field_Commerce_products_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Commerce.Procuts(childComplexity, args["first"].(*int), args["after"].(*string)), true
+		return e.complexity.Commerce.Products(childComplexity, args["first"].(*int), args["after"].(*string), args["filters"].(*model.ProductFilter)), true
 
 	case "Commerce.storekeeper":
 		if e.complexity.Commerce.Storekeeper == nil {
@@ -330,6 +341,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.Login)), true
+
+	case "Mutation.updateProduct":
+		if e.complexity.Mutation.UpdateProduct == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateProduct_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateProduct(childComplexity, args["id"].(string), args["changes"].(map[string]interface{})), true
 
 	case "Product.categories":
 		if e.complexity.Product.Categories == nil {
@@ -446,7 +469,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Commerce(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.Commerce(childComplexity, args["id"].(*string)), true
 
 	case "Query.commerces":
 		if e.complexity.Query.Commerces == nil {
@@ -482,7 +505,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.User(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.User(childComplexity, args["id"].(*string)), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -665,7 +688,8 @@ type Commerce { # Ici on utilise le nom "Commerce"
   email: String!
 
   # Produits
-  procuts(first: Int = 10, after: ID): ProductConnection!
+  categories: [String!]!
+  products(first: Int = 10, after: ID, filters: ProductFilter): ProductConnection!
 } 
 
 # Pagination 
@@ -741,14 +765,38 @@ input NewProduct {
   categories: [String!]!
 }
 
+input ChangesProduct {
+  name: String
+  description: String
+  price: Float
+  unit: String
+  isBreton: Boolean
+
+  tags: [String!]
+  categories: [String!]
+}
+
+#############
+## FILTERS ##
+#############
+
+input Filter {
+  key: String!
+  value: String!
+}
+
+input ProductFilter {
+  category: String
+}
+
 type Query {
   # UTILISATEURS
   users: [User!]!
-  user(id: ID!): User!
+  user(id: ID): User!
 
   # COMMERCES
   commerces(first: Int = 5, after: ID): CommerceConnection! 
-  commerce(id: ID!): Commerce!
+  commerce(id: ID): Commerce
   product(id: ID!): Product!
 }
 
@@ -760,6 +808,7 @@ type Mutation {
   # COMMERCES
   createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
   createProduct(input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
+  updateProduct(id: ID!, changes: ChangesProduct): Product! @hasRole(role: STOREKEEPER)
 }
 `, BuiltIn: false},
 }
@@ -784,7 +833,7 @@ func (ec *executionContext) dir_hasRole_args(ctx context.Context, rawArgs map[st
 	return args, nil
 }
 
-func (ec *executionContext) field_Commerce_procuts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Commerce_products_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *int
@@ -805,6 +854,15 @@ func (ec *executionContext) field_Commerce_procuts_args(ctx context.Context, raw
 		}
 	}
 	args["after"] = arg1
+	var arg2 *model.ProductFilter
+	if tmp, ok := rawArgs["filters"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
+		arg2, err = ec.unmarshalOProductFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProductFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filters"] = arg2
 	return args, nil
 }
 
@@ -868,6 +926,30 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updateProduct_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 map[string]interface{}
+	if tmp, ok := rawArgs["changes"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changes"))
+		arg1, err = ec.unmarshalOChangesProduct2map(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["changes"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -886,10 +968,10 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_commerce_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 *string
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -940,10 +1022,10 @@ func (ec *executionContext) field_Query_product_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 *string
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1285,7 +1367,42 @@ func (ec *executionContext) _Commerce_email(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Commerce_procuts(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+func (ec *executionContext) _Commerce_categories(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Commerce().Categories(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_products(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1302,7 +1419,7 @@ func (ec *executionContext) _Commerce_procuts(ctx context.Context, field graphql
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Commerce_procuts_args(ctx, rawArgs)
+	args, err := ec.field_Commerce_products_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1310,7 +1427,7 @@ func (ec *executionContext) _Commerce_procuts(ctx context.Context, field graphql
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Commerce().Procuts(rctx, obj, args["first"].(*int), args["after"].(*string))
+		return ec.resolvers.Commerce().Products(rctx, obj, args["first"].(*int), args["after"].(*string), args["filters"].(*model.ProductFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1746,6 +1863,72 @@ func (ec *executionContext) _Mutation_createProduct(ctx context.Context, field g
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreateProduct(rctx, args["input"].(model.NewProduct))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, "STOREKEEPER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Product); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.Product`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Product)
+	fc.Result = res
+	return ec.marshalNProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateProduct(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateProduct_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateProduct(rctx, args["id"].(string), args["changes"].(map[string]interface{}))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			role, err := ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, "STOREKEEPER")
@@ -2364,7 +2547,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().User(rctx, args["id"].(string))
+		return ec.resolvers.Query().User(rctx, args["id"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2448,21 +2631,18 @@ func (ec *executionContext) _Query_commerce(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Commerce(rctx, args["id"].(string))
+		return ec.resolvers.Query().Commerce(rctx, args["id"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Commerce)
 	fc.Result = res
-	return ec.marshalNCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx, field.Selections, res)
+	return ec.marshalOCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_product(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3940,6 +4120,37 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interface{}) (model.Filter, error) {
+	var it model.Filter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "key":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			it.Key, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			it.Value, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputLogin(ctx context.Context, obj interface{}) (model.Login, error) {
 	var it model.Login
 	asMap := map[string]interface{}{}
@@ -4160,6 +4371,29 @@ func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj inter
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputProductFilter(ctx context.Context, obj interface{}) (model.ProductFilter, error) {
+	var it model.ProductFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "category":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("category"))
+			it.Category, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -4268,7 +4502,7 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "procuts":
+		case "categories":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -4277,7 +4511,27 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Commerce_procuts(ctx, field, obj)
+				res = ec._Commerce_categories(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "products":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Commerce_products(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -4481,6 +4735,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createProduct":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createProduct(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateProduct":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateProduct(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
@@ -4825,9 +5089,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_commerce(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			}
 
@@ -6027,11 +6288,34 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) unmarshalOChangesProduct2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+	if v == nil {
+		return nil, nil
+	}
+	return v.(map[string]interface{}), nil
+}
+
 func (ec *executionContext) marshalOCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx context.Context, sel ast.SelectionSet, v *model.Commerce) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Commerce(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel ast.SelectionSet, v *float64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalFloatContext(*v)
+	return graphql.WrapContextMarshaler(ctx, res)
 }
 
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
@@ -6071,6 +6355,14 @@ func (ec *executionContext) marshalOProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraph
 		return graphql.Null
 	}
 	return ec._Product(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOProductFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProductFilter(ctx context.Context, v interface{}) (*model.ProductFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputProductFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

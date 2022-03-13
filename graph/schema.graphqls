@@ -59,7 +59,8 @@ type Commerce { # Ici on utilise le nom "Commerce"
   email: String!
 
   # Produits
-  procuts(first: Int = 10, after: ID): ProductConnection!
+  categories: [String!]!
+  products(first: Int = 10, after: ID, filters: ProductFilter): ProductConnection!
 } 
 
 # Pagination 
@@ -135,14 +136,38 @@ input NewProduct {
   categories: [String!]!
 }
 
+input ChangesProduct {
+  name: String
+  description: String
+  price: Float
+  unit: String
+  isBreton: Boolean
+
+  tags: [String!]
+  categories: [String!]
+}
+
+#############
+## FILTERS ##
+#############
+
+input Filter {
+  key: String!
+  value: String!
+}
+
+input ProductFilter {
+  category: String
+}
+
 type Query {
   # UTILISATEURS
   users: [User!]!
-  user(id: ID!): User!
+  user(id: ID): User!
 
   # COMMERCES
   commerces(first: Int = 5, after: ID): CommerceConnection! 
-  commerce(id: ID!): Commerce!
+  commerce(id: ID): Commerce
   product(id: ID!): Product!
 }
 
@@ -154,4 +179,5 @@ type Mutation {
   # COMMERCES
   createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
   createProduct(input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
+  updateProduct(id: ID!, changes: ChangesProduct): Product! @hasRole(role: STOREKEEPER)
 }

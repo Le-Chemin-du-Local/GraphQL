@@ -11,9 +11,12 @@ import (
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/auth"
 	"chemin-du-local.bzh/graphql/internal/commerces"
+	"chemin-du-local.bzh/graphql/internal/helper"
 	"chemin-du-local.bzh/graphql/internal/products"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/jwt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (r *commerceResolver) Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error) {
@@ -26,7 +29,39 @@ func (r *commerceResolver) Storekeeper(ctx context.Context, obj *model.Commerce)
 	return storekeeper.ToModel(), nil
 }
 
-func (r *commerceResolver) Procuts(ctx context.Context, obj *model.Commerce, first *int, after *string) (*model.ProductConnection, error) {
+func (r *commerceResolver) Categories(ctx context.Context, obj *model.Commerce) ([]string, error) {
+	commerceObjectID, err := primitive.ObjectIDFromHex(obj.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.D{
+		primitive.E{
+			Key:   "commerceID",
+			Value: commerceObjectID,
+		},
+	}
+
+	databaseProducts, err := products.GetFiltered(filter, nil)
+	categories := []string{}
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, databaseProduct := range databaseProducts {
+		for _, category := range databaseProduct.Categories {
+			if !helper.Contains(categories, category) {
+				categories = append(categories, category)
+			}
+		}
+	}
+
+	return categories, nil
+}
+
+func (r *commerceResolver) Products(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.ProductFilter) (*model.ProductConnection, error) {
 	var decodedCursor *string
 
 	if after != nil {
@@ -40,7 +75,7 @@ func (r *commerceResolver) Procuts(ctx context.Context, obj *model.Commerce, fir
 		decodedCursor = &decodedCursorString
 	}
 
-	databaseProducts, err := products.GetPaginated(obj.ID, decodedCursor, *first)
+	databaseProducts, err := products.GetPaginated(obj.ID, decodedCursor, *first, filters)
 
 	if err != nil {
 		return nil, err
@@ -169,6 +204,28 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.NewPro
 	return databaseProduct.ToModel(), nil
 }
 
+func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, changes map[string]interface{}) (*model.Product, error) {
+	databaseProduct, err := products.GetById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseProduct == nil {
+		return nil, &products.ProductNotFoundError{}
+	}
+
+	helper.ApplyChanges(changes, databaseProduct)
+
+	err = products.Update(databaseProduct)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return databaseProduct.ToModel(), nil
+}
+
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	databaseUsers, err := users.GetAllUser()
 
@@ -187,8 +244,12 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	return users, nil
 }
 
-func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
-	databaseUser, err := users.GetUserById(id)
+func (r *queryResolver) User(ctx context.Context, id *string) (*model.User, error) {
+	if id == nil {
+		return auth.ForContext(ctx).ToModel(), nil
+	}
+
+	databaseUser, err := users.GetUserById(*id)
 
 	if err != nil {
 		return nil, err
@@ -260,15 +321,31 @@ func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string
 	return &connection, nil
 }
 
-func (r *queryResolver) Commerce(ctx context.Context, id string) (*model.Commerce, error) {
-	databaseCommerce, err := commerces.GetById(id)
+func (r *queryResolver) Commerce(ctx context.Context, id *string) (*model.Commerce, error) {
+	if id != nil {
+		databaseCommerce, err := commerces.GetById(*id)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if databaseCommerce == nil {
+			return nil, &commerces.CommerceErrorNotFound{}
+		}
+
+		return databaseCommerce.ToModel(), nil
+	}
+
+	user := auth.ForContext(ctx)
+
+	if user == nil {
+		return nil, &commerces.CommerceErrorNotFound{}
+	}
+
+	databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
 
 	if err != nil {
 		return nil, err
-	}
-
-	if databaseCommerce == nil {
-		return nil, &commerces.CommerceErrorNotFound{}
 	}
 
 	return databaseCommerce.ToModel(), nil

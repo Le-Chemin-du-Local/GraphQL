@@ -94,6 +94,21 @@ func Create(input model.NewProduct) *Product {
 	return &databaseProduct
 }
 
+// Mise à jour de la base de données
+
+func Update(changes *Product) error {
+	filter := bson.D{
+		primitive.E{
+			Key:   "_id",
+			Value: changes.ID,
+		},
+	}
+
+	_, err := database.CollectionProducts.ReplaceOne(database.MongoContext, filter, changes)
+
+	return err
+}
+
 // Getter de base de données
 
 func GetById(id string) (*Product, error) {
@@ -140,7 +155,7 @@ func GetForCommerce(commerceID string) ([]Product, error) {
 	return GetFiltered(filter, nil)
 }
 
-func GetPaginated(commerceID string, startValue *string, first int) ([]Product, error) {
+func GetPaginated(commerceID string, startValue *string, first int, filters *model.ProductFilter) ([]Product, error) {
 	commerceObjectID, err := primitive.ObjectIDFromHex(commerceID)
 
 	if err != nil {
@@ -149,7 +164,7 @@ func GetPaginated(commerceID string, startValue *string, first int) ([]Product, 
 
 	// On doit faire un filtre spécifique si on veut commencer
 	// le curseur à l'ID de départ
-	var filter interface{}
+	var finalFilter bson.D
 
 	if startValue != nil {
 		objectID, err := primitive.ObjectIDFromHex(*startValue)
@@ -158,14 +173,26 @@ func GetPaginated(commerceID string, startValue *string, first int) ([]Product, 
 			return nil, err
 		}
 
-		filter = bson.M{
-			"commerceID": commerceObjectID,
-			"_id": bson.M{
-				"$gt": objectID,
+		// finalFilter = bson.D{
+		// 	"commerceID": ,
+		// 	"_id": bson.M{
+		// 		"$gt": objectID,
+		// 	},
+		// }
+		finalFilter = bson.D{
+			primitive.E{
+				Key:   "commerceID",
+				Value: commerceObjectID,
+			},
+			primitive.E{
+				Key: "_id",
+				Value: bson.M{
+					"$gt": objectID,
+				},
 			},
 		}
 	} else {
-		filter = bson.D{
+		finalFilter = bson.D{
 			primitive.E{
 				Key:   "commerceID",
 				Value: commerceObjectID,
@@ -173,10 +200,19 @@ func GetPaginated(commerceID string, startValue *string, first int) ([]Product, 
 		}
 	}
 
+	if filters != nil {
+		if filters.Category != nil {
+			finalFilter = append(finalFilter, primitive.E{
+				Key:   "categories",
+				Value: filters.Category,
+			})
+		}
+	}
+
 	opts := options.Find()
 	opts.SetLimit(int64(first))
 
-	return GetFiltered(filter, opts)
+	return GetFiltered(finalFilter, opts)
 }
 
 func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Product, error) {

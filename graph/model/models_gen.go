@@ -24,6 +24,11 @@ type CommercePageInfo struct {
 	HasNextPage bool   `json:"hasNextPage"`
 }
 
+type Filter struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type Login struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -75,6 +80,10 @@ type ProductConnection struct {
 type ProductEdge struct {
 	Cursor string   `json:"cursor"`
 	Node   *Product `json:"node"`
+}
+
+type ProductFilter struct {
+	Category *string `json:"category"`
 }
 
 type ProductPageInfo struct {

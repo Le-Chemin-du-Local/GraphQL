@@ -636,6 +636,7 @@ enum Role {
 }
 
 scalar Time
+scalar Upload
 
 ##################
 ## UTILISATEURS ##
@@ -763,6 +764,8 @@ input NewProduct {
 
   tags: [String!]
   categories: [String!]!
+
+  image: Upload
 }
 
 input ChangesProduct {
@@ -774,6 +777,8 @@ input ChangesProduct {
 
   tags: [String!]
   categories: [String!]
+
+  image: Upload
 }
 
 #############
@@ -4318,6 +4323,14 @@ func (ec *executionContext) unmarshalInputNewProduct(ctx context.Context, obj in
 			if err != nil {
 				return it, err
 			}
+		case "image":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
+			it.Image, err = ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -6442,6 +6455,22 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 		return graphql.Null
 	}
 	res := graphql.MarshalTime(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (*graphql.Upload, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalUpload(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v *graphql.Upload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalUpload(*v)
 	return res
 }
 

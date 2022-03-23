@@ -53,8 +53,10 @@ func main() {
 	}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(c))
+	fs := http.FileServer(http.Dir("static"))
 
-	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	router.Handle("/static/*", http.StripPrefix("/static/", fs))
+	router.Handle("/playground", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)

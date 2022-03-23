@@ -7,6 +7,7 @@ enum Role {
 }
 
 scalar Time
+scalar Upload
 
 ##################
 ## UTILISATEURS ##
@@ -134,6 +135,8 @@ input NewProduct {
 
   tags: [String!]
   categories: [String!]!
+
+  image: Upload
 }
 
 input ChangesProduct {
@@ -145,6 +148,8 @@ input ChangesProduct {
 
   tags: [String!]
   categories: [String!]
+
+  image: Upload
 }
 
 #############

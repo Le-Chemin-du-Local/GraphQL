@@ -1,10 +1,14 @@
 package products
 
 import (
-	"log"
+	"bytes"
+	"io/ioutil"
+	"os"
 
 	"chemin-du-local.bzh/graphql/graph/model"
+	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
+	"github.com/99designs/gqlgen/graphql"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -62,19 +66,20 @@ func (product Product) IsLast() bool {
 
 // Créateur de base de données
 
-func Create(input model.NewProduct) *Product {
+func Create(input model.NewProduct) (*Product, error) {
 	if input.CommerceID == nil {
-		log.Fatal("aucun commerce n'a été fourni")
+		return nil, &MustSpecifyCommerceIDError{}
 	}
 
 	commerceObjectID, err := primitive.ObjectIDFromHex(*input.CommerceID)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
+	productObjectID := primitive.NewObjectID()
 	databaseProduct := Product{
-		ID:          primitive.NewObjectID(),
+		ID:          productObjectID,
 		CommerceID:  commerceObjectID,
 		Name:        input.Name,
 		Description: input.Description,
@@ -88,15 +93,32 @@ func Create(input model.NewProduct) *Product {
 	_, err = database.CollectionProducts.InsertOne(database.MongoContext, databaseProduct)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return &databaseProduct
+	if input.Image != nil {
+		fileData := input.Image.File
+
+		buffer := &bytes.Buffer{}
+		buffer.ReadFrom(fileData)
+
+		data := buffer.Bytes()
+
+		folderPath := config.Cfg.Paths.Static + "/products"
+		os.MkdirAll(folderPath, os.ModePerm)
+		err := ioutil.WriteFile(folderPath+"/"+productObjectID.Hex()+".jpg", data, 0644)
+
+		if err != nil {
+			return &databaseProduct, err
+		}
+	}
+
+	return &databaseProduct, nil
 }
 
 // Mise à jour de la base de données
 
-func Update(changes *Product) error {
+func Update(changes *Product, image *graphql.Upload) error {
 	filter := bson.D{
 		primitive.E{
 			Key:   "_id",
@@ -105,6 +127,23 @@ func Update(changes *Product) error {
 	}
 
 	_, err := database.CollectionProducts.ReplaceOne(database.MongoContext, filter, changes)
+
+	if image != nil {
+		fileData := image.File
+
+		buffer := &bytes.Buffer{}
+		buffer.ReadFrom(fileData)
+
+		data := buffer.Bytes()
+
+		folderPath := config.Cfg.Paths.Static + "/products"
+		os.MkdirAll(folderPath, os.ModePerm)
+		err := ioutil.WriteFile(folderPath+"/"+changes.ID.Hex()+".jpg", data, 0644)
+
+		if err != nil {
+			return err
+		}
+	}
 
 	return err
 }

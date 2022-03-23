@@ -15,6 +15,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/products"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/jwt"
+	"github.com/99designs/gqlgen/graphql"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -199,7 +200,11 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.NewPro
 		input.CommerceID = &commerceID
 	}
 
-	databaseProduct := products.Create(input)
+	databaseProduct, err := products.Create(input)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return databaseProduct.ToModel(), nil
 }
@@ -217,7 +222,14 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, changes
 
 	helper.ApplyChanges(changes, databaseProduct)
 
-	err = products.Update(databaseProduct)
+	var image *graphql.Upload
+
+	if changes["image"] != nil {
+		castedImage := changes["image"].(graphql.Upload)
+		image = &castedImage
+	}
+
+	err = products.Update(databaseProduct, image)
 
 	if err != nil {
 		return nil, err

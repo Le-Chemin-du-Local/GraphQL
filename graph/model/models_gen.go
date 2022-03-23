@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+
+	"github.com/99designs/gqlgen/graphql"
 )
 
 type CommerceConnection struct {
@@ -44,14 +46,15 @@ type NewCommerce struct {
 }
 
 type NewProduct struct {
-	CommerceID  *string  `json:"commerceID"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Price       float64  `json:"price"`
-	Unit        string   `json:"unit"`
-	IsBreton    bool     `json:"isBreton"`
-	Tags        []string `json:"tags"`
-	Categories  []string `json:"categories"`
+	CommerceID  *string         `json:"commerceID"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	Price       float64         `json:"price"`
+	Unit        string          `json:"unit"`
+	IsBreton    bool            `json:"isBreton"`
+	Tags        []string        `json:"tags"`
+	Categories  []string        `json:"categories"`
+	Image       *graphql.Upload `json:"image"`
 }
 
 type NewUser struct {

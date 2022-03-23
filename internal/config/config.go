@@ -13,6 +13,9 @@ type Config struct {
 	Settings struct {
 		AuthSecret string `yaml:"authSecret"`
 	} `yaml:"settings"`
+	Paths struct {
+		Static string `yaml:"static"`
+	} `yaml:"paths"`
 	Database struct {
 		Name             string `yaml:"name"`
 		ConnectionString string `yaml:"connectionString"`

@@ -1,6 +1,9 @@
 settings: 
   authSecret: "cbgCqUIVKfZook1AFiFZvFJVbOAYNKD4"
 
+paths:
+  static: "C:/Users/victo/Documents/Projects/CheminDuLocal/chemindulocal_graphql/static"
+
 database: 
   name: "DbCheminDuLocal"
   connectionString: "mongodb://localhost:27017"

@@ -24,6 +24,7 @@ type Config struct {
 			Commerces  string `yaml:"commerces"`
 			Products   string `yaml:"products"`
 			CCCommands string `yaml:"cccommands"`
+			Paniers    string `yaml:"paniers"`
 		} `yaml:"collections"`
 	} `yaml:"database"`
 }

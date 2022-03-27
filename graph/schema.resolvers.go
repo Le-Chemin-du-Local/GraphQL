@@ -14,6 +14,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/helper"
 	"chemin-du-local.bzh/graphql/internal/products"
 	"chemin-du-local.bzh/graphql/internal/services/clickandcollect"
+	"chemin-du-local.bzh/graphql/internal/services/paniers"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/jwt"
 	"github.com/99designs/gqlgen/graphql"
@@ -209,6 +210,65 @@ func (r *commerceResolver) Cccommands(ctx context.Context, obj *model.Commerce, 
 	return &connection, nil
 }
 
+func (r *commerceResolver) Paniers(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.PanierFilter) (*model.PanierConnection, error) {
+	var decodedCursor *string
+
+	if after != nil {
+		bytes, err := base64.StdEncoding.DecodeString(*after)
+
+		if err != nil {
+			return nil, err
+		}
+
+		decodedCursorString := string(bytes)
+		decodedCursor = &decodedCursorString
+	}
+
+	databasePaniers, err := paniers.GetPaginated(obj.ID, decodedCursor, *first, filters)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// On construit les edges
+	edges := []*model.PanierEdge{}
+
+	for _, databasePanier := range databasePaniers {
+		panierEdge := model.PanierEdge{
+			Cursor: base64.StdEncoding.EncodeToString([]byte(databasePanier.ID.Hex())),
+			Node:   databasePanier.ToModel(),
+		}
+
+		edges = append(edges, &panierEdge)
+	}
+
+	itemCount := len(edges)
+
+	// Si jamais il n'y a pas de paniers, on veut quand même renvoyer un
+	// tableau vide
+	if itemCount == 0 {
+		return &model.PanierConnection{
+			Edges:    edges,
+			PageInfo: &model.PanierPageInfo{},
+		}, nil
+	}
+
+	hasNextPage := !databasePaniers[itemCount-1].IsLast()
+
+	pageInfo := model.PanierPageInfo{
+		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
+		EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
+		HasNextPage: hasNextPage,
+	}
+
+	connection := model.PanierConnection{
+		Edges:    edges[:itemCount],
+		PageInfo: &pageInfo,
+	}
+
+	return &connection, nil
+}
+
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
 	// On doit d'abord vérifier que l'email n'est pas déjà prise
 	existingUser, err := users.GetUserByEmail(input.Email)
@@ -358,6 +418,101 @@ func (r *mutationResolver) UpdateCCCommand(ctx context.Context, id string, chang
 	}
 
 	return databaseCommand.ToModel(), nil
+}
+
+func (r *mutationResolver) CreatePanier(ctx context.Context, commerceID *string, input model.NewPanier) (*model.Panier, error) {
+	user := auth.ForContext(ctx)
+
+	var databaseCommerce *commerces.Commerce
+
+	// On a d'abord besoin de trouver le commerce de l'utilisateur ou celui en paramètre
+	if commerceID == nil {
+		userDatabaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+
+		if err != nil {
+			return nil, err
+		}
+
+		databaseCommerce = userDatabaseCommerce
+	} else {
+		commerceDatabaseCommerce, err := commerces.GetById(*commerceID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		databaseCommerce = commerceDatabaseCommerce
+	}
+
+	if databaseCommerce == nil {
+		return nil, &commerces.CommerceErrorNotFound{}
+	}
+
+	databasePanier, err := paniers.Create(databaseCommerce.ID, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return databasePanier.ToModel(), nil
+}
+
+func (r *mutationResolver) UpdatePanier(ctx context.Context, id string, changes map[string]interface{}) (*model.Panier, error) {
+	databasePanier, err := paniers.GetById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databasePanier == nil {
+		return nil, &paniers.PanierNotFoundError{}
+	}
+
+	// On doit faire un traitement spécial pour les produits
+	products := []paniers.PanierProduct{}
+
+	if changes["products"] == nil {
+		products = databasePanier.Products
+	} else {
+		productsChange := changes["products"].([]interface{})
+		for _, product := range productsChange {
+			castedProduct := product.(map[string]interface{})
+
+			productObjectID, err := primitive.ObjectIDFromHex(castedProduct["productID"].(string))
+
+			if err != nil {
+				return nil, err
+			}
+
+			products = append(products, paniers.PanierProduct{
+				ID:        primitive.NewObjectID(),
+				ProductID: productObjectID,
+				Quantity:  int(castedProduct["quantity"].(int64)),
+			})
+		}
+	}
+
+	helper.ApplyChanges(changes, databasePanier)
+	databasePanier.Products = products
+
+	var image *graphql.Upload
+
+	if changes["image"] != nil {
+		castedImage := changes["image"].(graphql.Upload)
+		image = &castedImage
+	}
+
+	err = paniers.Update(databasePanier, image)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return databasePanier.ToModel(), nil
+}
+
+func (r *panierResolver) Products(ctx context.Context, obj *model.Panier) ([]*model.PanierProduct, error) {
+	return paniers.GetProducts(obj.ID)
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
@@ -513,6 +668,20 @@ func (r *queryResolver) Cccommand(ctx context.Context, id string) (*model.CCComm
 	return databaseCCCommand.ToModel(), nil
 }
 
+func (r *queryResolver) Panier(ctx context.Context, id string) (*model.Panier, error) {
+	databasePanier, err := paniers.GetById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databasePanier == nil {
+		return nil, &paniers.PanierNotFoundError{}
+	}
+
+	return databasePanier.ToModel(), nil
+}
+
 func (r *userResolver) Commerce(ctx context.Context, obj *model.User) (*model.Commerce, error) {
 	databaseCommerce, err := commerces.GetForUser(obj.ID)
 
@@ -536,6 +705,9 @@ func (r *Resolver) Commerce() generated.CommerceResolver { return &commerceResol
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
+// Panier returns generated.PanierResolver implementation.
+func (r *Resolver) Panier() generated.PanierResolver { return &panierResolver{r} }
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
@@ -545,5 +717,6 @@ func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 type cCCommandResolver struct{ *Resolver }
 type commerceResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
+type panierResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

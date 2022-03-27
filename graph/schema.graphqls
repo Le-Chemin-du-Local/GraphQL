@@ -69,6 +69,9 @@ type Commerce { # Ici on utilise le nom "Commerce"
 
   # Click and collcet
   cccommands(first: Int = 10, after: ID, filters: CCCommandFilter): CCCommandConnection!
+
+  # Panier
+  paniers(first: Int = 10, after: ID, filters: PanierFilter): PanierConnection!
 } 
 
 # Pagination 
@@ -211,6 +214,78 @@ input ChangesCCCommand {
 }
 
 #############
+## PANIERS ##
+#############
+
+
+type PanierProduct {
+  quantity: Int!
+  product: Product!
+}
+
+type Panier {
+  id: ID!
+  name: String!
+  description: String!
+  category: String!
+
+  quantity: Int!
+  price: Int!
+
+  products: [PanierProduct!]!
+}
+
+# Pagination 
+type PanierConnection {
+  edges: [PanierEdge!]!
+  pageInfo: PanierPageInfo!
+}
+
+type PanierEdge {
+  cursor: ID!
+  node: Panier
+}
+
+type PanierPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+# Edition/création
+
+input NewPanierProduct {
+  quantity: Int!
+  productID: ID!
+}
+
+input NewPanier {
+  name: String!
+  description: String!
+  category: String!
+
+  quantity: Int!
+  price: Int!
+
+  image: Upload
+
+  products: [NewPanierProduct!]
+}
+
+input ChangesPanier {
+  name: String
+  description: String
+  category: String
+
+  quantity: Int
+  price: Int
+
+  image: Upload
+
+  products: [NewPanierProduct!]
+}
+
+#############
 ## FILTERS ##
 #############
 
@@ -227,6 +302,10 @@ input CCCommandFilter {
   status: String
 }
 
+input PanierFilter {
+  category: String
+}
+
 type Query {
   # UTILISATEURS
   users: [User!]!
@@ -237,8 +316,12 @@ type Query {
   commerce(id: ID): Commerce
   product(id: ID!): Product!
 
+  # SERVICES
   # CLICK AND COLLECT
   cccommand(id: ID!): CCCommand! @needAuthentication
+
+  # PANIERS
+  panier(id: ID!): Panier!
 }
 
 type Mutation {
@@ -254,5 +337,9 @@ type Mutation {
   # SERVICES
   # CLICK AND COLLECT
   order(commerceID: ID!, command: NewCCCommand!): CCCommand! @needAuthentication
-  updateCCCommand(id: ID!, changes: ChangesCCCommand): CCCommand @hasRole(role: STOREKEEPER)
+  updateCCCommand(id: ID!, changes: ChangesCCCommand): CCCommand! @hasRole(role: STOREKEEPER)
+
+  # PANIER
+  createPanier(commerceID: ID, input: NewPanier!): Panier! @hasRole(role: STOREKEEPER)
+  updatePanier(id: ID! changes: ChangesPanier!): Panier! @hasRole(role: STOREKEEPER)
 }

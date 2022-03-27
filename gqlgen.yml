@@ -58,3 +58,5 @@ models:
     model: "map[string]interface{}"
   ChangesCCCommand:
     model: "map[string]interface{}"
+  ChangesPanier:
+    model: "map[string]interface{}"

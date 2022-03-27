@@ -81,6 +81,21 @@ type NewCommerce struct {
 	Email           string `json:"email"`
 }
 
+type NewPanier struct {
+	Name        string              `json:"name"`
+	Description string              `json:"description"`
+	Category    string              `json:"category"`
+	Quantity    int                 `json:"quantity"`
+	Price       int                 `json:"price"`
+	Image       *graphql.Upload     `json:"image"`
+	Products    []*NewPanierProduct `json:"products"`
+}
+
+type NewPanierProduct struct {
+	Quantity  int    `json:"quantity"`
+	ProductID string `json:"productID"`
+}
+
 type NewProduct struct {
 	CommerceID  *string         `json:"commerceID"`
 	Name        string          `json:"name"`
@@ -98,6 +113,31 @@ type NewUser struct {
 	Password  string  `json:"password"`
 	FirstName *string `json:"firstName"`
 	LastName  *string `json:"lastName"`
+}
+
+type PanierConnection struct {
+	Edges    []*PanierEdge   `json:"edges"`
+	PageInfo *PanierPageInfo `json:"pageInfo"`
+}
+
+type PanierEdge struct {
+	Cursor string  `json:"cursor"`
+	Node   *Panier `json:"node"`
+}
+
+type PanierFilter struct {
+	Category *string `json:"category"`
+}
+
+type PanierPageInfo struct {
+	StartCursor string `json:"startCursor"`
+	EndCursor   string `json:"endCursor"`
+	HasNextPage bool   `json:"hasNextPage"`
+}
+
+type PanierProduct struct {
+	Quantity int      `json:"quantity"`
+	Product  *Product `json:"product"`
 }
 
 type Product struct {

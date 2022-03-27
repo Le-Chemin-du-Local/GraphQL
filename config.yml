@@ -12,3 +12,4 @@ database:
     commerces: "commerces"
     products: "products"
     cccommands: "cccommands"
+    paniers: "paniers"

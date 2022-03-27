@@ -6,9 +6,35 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 )
+
+type CCCommandConnection struct {
+	Edges    []*CCCommandEdge   `json:"edges"`
+	PageInfo *CCCommandPageInfo `json:"pageInfo"`
+}
+
+type CCCommandEdge struct {
+	Cursor string     `json:"cursor"`
+	Node   *CCCommand `json:"node"`
+}
+
+type CCCommandFilter struct {
+	Status *string `json:"status"`
+}
+
+type CCCommandPageInfo struct {
+	StartCursor string `json:"startCursor"`
+	EndCursor   string `json:"endCursor"`
+	HasNextPage bool   `json:"hasNextPage"`
+}
+
+type CCProduct struct {
+	Quantity int      `json:"quantity"`
+	Product  *Product `json:"product"`
+}
 
 type CommerceConnection struct {
 	Edges    []*CommerceEdge   `json:"edges"`
@@ -34,6 +60,16 @@ type Filter struct {
 type Login struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type NewCCCommand struct {
+	ProductsID []*NewCCProcuct `json:"productsID"`
+	PickupDate time.Time       `json:"pickupDate"`
+}
+
+type NewCCProcuct struct {
+	Quantity  int    `json:"quantity"`
+	ProductID string `json:"productID"`
 }
 
 type NewCommerce struct {

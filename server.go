@@ -44,6 +44,13 @@ func main() {
 
 	// Directives GraphQL
 	c := generated.Config{Resolvers: &graph.Resolver{}}
+	c.Directives.NeedAuthentication = func(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+		if auth.ForContext(ctx) == nil {
+			return nil, &users.UserAccessDenied{}
+		}
+
+		return next(ctx)
+	}
 	c.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role model.Role) (interface{}, error) {
 		if !auth.ForContext(ctx).HasRole(role) {
 			return nil, &users.UserAccessDenied{}

@@ -37,6 +37,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	CCCommand() CCCommandResolver
 	Commerce() CommerceResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
@@ -44,19 +45,51 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	HasRole func(ctx context.Context, obj interface{}, next graphql.Resolver, role model.Role) (res interface{}, err error)
+	HasRole            func(ctx context.Context, obj interface{}, next graphql.Resolver, role model.Role) (res interface{}, err error)
+	NeedAuthentication func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
+	CCCommand struct {
+		ID         func(childComplexity int) int
+		PickupDate func(childComplexity int) int
+		Products   func(childComplexity int) int
+		Status     func(childComplexity int) int
+		User       func(childComplexity int) int
+	}
+
+	CCCommandConnection struct {
+		Edges    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	CCCommandEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	CCCommandPageInfo struct {
+		EndCursor   func(childComplexity int) int
+		HasNextPage func(childComplexity int) int
+		StartCursor func(childComplexity int) int
+	}
+
+	CCProduct struct {
+		Product  func(childComplexity int) int
+		Quantity func(childComplexity int) int
+	}
+
 	Commerce struct {
 		Address         func(childComplexity int) int
 		Categories      func(childComplexity int) int
+		Cccommands      func(childComplexity int, first *int, after *string, filters *model.CCCommandFilter) int
 		Description     func(childComplexity int) int
 		Email           func(childComplexity int) int
 		ID              func(childComplexity int) int
 		Name            func(childComplexity int) int
 		Phone           func(childComplexity int) int
 		Products        func(childComplexity int, first *int, after *string, filters *model.ProductFilter) int
+		Services        func(childComplexity int) int
 		Storekeeper     func(childComplexity int) int
 		StorekeeperWord func(childComplexity int) int
 	}
@@ -78,11 +111,13 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCommerce func(childComplexity int, input model.NewCommerce) int
-		CreateProduct  func(childComplexity int, input model.NewProduct) int
-		CreateUser     func(childComplexity int, input model.NewUser) int
-		Login          func(childComplexity int, input model.Login) int
-		UpdateProduct  func(childComplexity int, id string, changes map[string]interface{}) int
+		CreateCommerce  func(childComplexity int, input model.NewCommerce) int
+		CreateProduct   func(childComplexity int, input model.NewProduct) int
+		CreateUser      func(childComplexity int, input model.NewUser) int
+		Login           func(childComplexity int, input model.Login) int
+		Order           func(childComplexity int, commerceID string, command model.NewCCCommand) int
+		UpdateCCCommand func(childComplexity int, id string, changes map[string]interface{}) int
+		UpdateProduct   func(childComplexity int, id string, changes map[string]interface{}) int
 	}
 
 	Product struct {
@@ -113,6 +148,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Cccommand func(childComplexity int, id string) int
 		Commerce  func(childComplexity int, id *string) int
 		Commerces func(childComplexity int, first *int, after *string) int
 		Product   func(childComplexity int, id string) int
@@ -131,11 +167,18 @@ type ComplexityRoot struct {
 	}
 }
 
+type CCCommandResolver interface {
+	Products(ctx context.Context, obj *model.CCCommand) ([]*model.CCProduct, error)
+
+	User(ctx context.Context, obj *model.CCCommand) (*model.User, error)
+}
 type CommerceResolver interface {
 	Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error)
 
 	Categories(ctx context.Context, obj *model.Commerce) ([]string, error)
 	Products(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.ProductFilter) (*model.ProductConnection, error)
+
+	Cccommands(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.CCCommandFilter) (*model.CCCommandConnection, error)
 }
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
@@ -143,6 +186,8 @@ type MutationResolver interface {
 	CreateCommerce(ctx context.Context, input model.NewCommerce) (*model.Commerce, error)
 	CreateProduct(ctx context.Context, input model.NewProduct) (*model.Product, error)
 	UpdateProduct(ctx context.Context, id string, changes map[string]interface{}) (*model.Product, error)
+	Order(ctx context.Context, commerceID string, command model.NewCCCommand) (*model.CCCommand, error)
+	UpdateCCCommand(ctx context.Context, id string, changes map[string]interface{}) (*model.CCCommand, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
@@ -150,6 +195,7 @@ type QueryResolver interface {
 	Commerces(ctx context.Context, first *int, after *string) (*model.CommerceConnection, error)
 	Commerce(ctx context.Context, id *string) (*model.Commerce, error)
 	Product(ctx context.Context, id string) (*model.Product, error)
+	Cccommand(ctx context.Context, id string) (*model.CCCommand, error)
 }
 type UserResolver interface {
 	Commerce(ctx context.Context, obj *model.User) (*model.Commerce, error)
@@ -170,6 +216,104 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "CCCommand.id":
+		if e.complexity.CCCommand.ID == nil {
+			break
+		}
+
+		return e.complexity.CCCommand.ID(childComplexity), true
+
+	case "CCCommand.pickupDate":
+		if e.complexity.CCCommand.PickupDate == nil {
+			break
+		}
+
+		return e.complexity.CCCommand.PickupDate(childComplexity), true
+
+	case "CCCommand.products":
+		if e.complexity.CCCommand.Products == nil {
+			break
+		}
+
+		return e.complexity.CCCommand.Products(childComplexity), true
+
+	case "CCCommand.status":
+		if e.complexity.CCCommand.Status == nil {
+			break
+		}
+
+		return e.complexity.CCCommand.Status(childComplexity), true
+
+	case "CCCommand.user":
+		if e.complexity.CCCommand.User == nil {
+			break
+		}
+
+		return e.complexity.CCCommand.User(childComplexity), true
+
+	case "CCCommandConnection.edges":
+		if e.complexity.CCCommandConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.CCCommandConnection.Edges(childComplexity), true
+
+	case "CCCommandConnection.pageInfo":
+		if e.complexity.CCCommandConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.CCCommandConnection.PageInfo(childComplexity), true
+
+	case "CCCommandEdge.cursor":
+		if e.complexity.CCCommandEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.CCCommandEdge.Cursor(childComplexity), true
+
+	case "CCCommandEdge.node":
+		if e.complexity.CCCommandEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.CCCommandEdge.Node(childComplexity), true
+
+	case "CCCommandPageInfo.endCursor":
+		if e.complexity.CCCommandPageInfo.EndCursor == nil {
+			break
+		}
+
+		return e.complexity.CCCommandPageInfo.EndCursor(childComplexity), true
+
+	case "CCCommandPageInfo.hasNextPage":
+		if e.complexity.CCCommandPageInfo.HasNextPage == nil {
+			break
+		}
+
+		return e.complexity.CCCommandPageInfo.HasNextPage(childComplexity), true
+
+	case "CCCommandPageInfo.startCursor":
+		if e.complexity.CCCommandPageInfo.StartCursor == nil {
+			break
+		}
+
+		return e.complexity.CCCommandPageInfo.StartCursor(childComplexity), true
+
+	case "CCProduct.product":
+		if e.complexity.CCProduct.Product == nil {
+			break
+		}
+
+		return e.complexity.CCProduct.Product(childComplexity), true
+
+	case "CCProduct.quantity":
+		if e.complexity.CCProduct.Quantity == nil {
+			break
+		}
+
+		return e.complexity.CCProduct.Quantity(childComplexity), true
+
 	case "Commerce.address":
 		if e.complexity.Commerce.Address == nil {
 			break
@@ -183,6 +327,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Categories(childComplexity), true
+
+	case "Commerce.cccommands":
+		if e.complexity.Commerce.Cccommands == nil {
+			break
+		}
+
+		args, err := ec.field_Commerce_cccommands_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Commerce.Cccommands(childComplexity, args["first"].(*int), args["after"].(*string), args["filters"].(*model.CCCommandFilter)), true
 
 	case "Commerce.description":
 		if e.complexity.Commerce.Description == nil {
@@ -230,6 +386,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Products(childComplexity, args["first"].(*int), args["after"].(*string), args["filters"].(*model.ProductFilter)), true
+
+	case "Commerce.services":
+		if e.complexity.Commerce.Services == nil {
+			break
+		}
+
+		return e.complexity.Commerce.Services(childComplexity), true
 
 	case "Commerce.storekeeper":
 		if e.complexity.Commerce.Storekeeper == nil {
@@ -341,6 +504,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.Login)), true
+
+	case "Mutation.order":
+		if e.complexity.Mutation.Order == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_order_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Order(childComplexity, args["commerceID"].(string), args["command"].(model.NewCCCommand)), true
+
+	case "Mutation.updateCCCommand":
+		if e.complexity.Mutation.UpdateCCCommand == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateCCCommand_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateCCCommand(childComplexity, args["id"].(string), args["changes"].(map[string]interface{})), true
 
 	case "Mutation.updateProduct":
 		if e.complexity.Mutation.UpdateProduct == nil {
@@ -458,6 +645,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ProductPageInfo.StartCursor(childComplexity), true
+
+	case "Query.cccommand":
+		if e.complexity.Query.Cccommand == nil {
+			break
+		}
+
+		args, err := ec.field_Query_cccommand_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Cccommand(childComplexity, args["id"].(string)), true
 
 	case "Query.commerce":
 		if e.complexity.Query.Commerce == nil {
@@ -628,6 +827,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "graph/schema.graphqls", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
+directive @needAuthentication on FIELD_DEFINITION
 
 enum Role {
   ADMIN,
@@ -691,6 +891,12 @@ type Commerce { # Ici on utilise le nom "Commerce"
   # Produits
   categories: [String!]!
   products(first: Int = 10, after: ID, filters: ProductFilter): ProductConnection!
+
+  # Services
+  services: [String!]!
+
+  # Click and collcet
+  cccommands(first: Int = 10, after: ID, filters: CCCommandFilter): CCCommandConnection!
 } 
 
 # Pagination 
@@ -781,6 +987,57 @@ input ChangesProduct {
   image: Upload
 }
 
+
+#######################
+## CLICK AND COLLECT ##
+#######################
+
+type CCProduct {
+  quantity: Int!
+  product: Product!
+}
+
+type CCCommand {
+  id: ID!
+  status: String!
+  products: [CCProduct!]!
+
+  pickupDate: Time!
+
+  user: User!
+}
+
+# Pagination 
+type CCCommandConnection {
+  edges: [CCCommandEdge!]!
+  pageInfo: CCCommandPageInfo!
+}
+
+type CCCommandEdge {
+  cursor: ID!
+  node: CCCommand
+}
+
+type CCCommandPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+input NewCCProcuct {
+  quantity: Int!
+  productID: ID!
+}
+
+input NewCCCommand {
+  productsID: [NewCCProcuct!]
+  pickupDate: Time!
+}
+
+input ChangesCCCommand {
+  status: String
+}
+
 #############
 ## FILTERS ##
 #############
@@ -794,6 +1051,10 @@ input ProductFilter {
   category: String
 }
 
+input CCCommandFilter {
+  status: String
+}
+
 type Query {
   # UTILISATEURS
   users: [User!]!
@@ -803,6 +1064,9 @@ type Query {
   commerces(first: Int = 5, after: ID): CommerceConnection! 
   commerce(id: ID): Commerce
   product(id: ID!): Product!
+
+  # CLICK AND COLLECT
+  cccommand(id: ID!): CCCommand! @needAuthentication
 }
 
 type Mutation {
@@ -814,6 +1078,11 @@ type Mutation {
   createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
   createProduct(input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
   updateProduct(id: ID!, changes: ChangesProduct): Product! @hasRole(role: STOREKEEPER)
+
+  # SERVICES
+  # CLICK AND COLLECT
+  order(commerceID: ID!, command: NewCCCommand!): CCCommand! @needAuthentication
+  updateCCCommand(id: ID!, changes: ChangesCCCommand): CCCommand @hasRole(role: STOREKEEPER)
 }
 `, BuiltIn: false},
 }
@@ -835,6 +1104,39 @@ func (ec *executionContext) dir_hasRole_args(ctx context.Context, rawArgs map[st
 		}
 	}
 	args["role"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Commerce_cccommands_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["after"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+		arg1, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg1
+	var arg2 *model.CCCommandFilter
+	if tmp, ok := rawArgs["filters"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
+		arg2, err = ec.unmarshalOCCCommandFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filters"] = arg2
 	return args, nil
 }
 
@@ -931,6 +1233,54 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_order_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["commerceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commerceID"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["commerceID"] = arg0
+	var arg1 model.NewCCCommand
+	if tmp, ok := rawArgs["command"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("command"))
+		arg1, err = ec.unmarshalNNewCCCommand2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCCCommand(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["command"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateCCCommand_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 map[string]interface{}
+	if tmp, ok := rawArgs["changes"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changes"))
+		arg1, err = ec.unmarshalOChangesCCCommand2map(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["changes"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateProduct_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -967,6 +1317,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_cccommand_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -1091,6 +1456,493 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _CCCommand_id(ctx context.Context, field graphql.CollectedField, obj *model.CCCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCCommand_status(ctx context.Context, field graphql.CollectedField, obj *model.CCCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCCommand_products(ctx context.Context, field graphql.CollectedField, obj *model.CCCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CCCommand().Products(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CCProduct)
+	fc.Result = res
+	return ec.marshalNCCProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCProductᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCCommand_pickupDate(ctx context.Context, field graphql.CollectedField, obj *model.CCCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PickupDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCCommand_user(ctx context.Context, field graphql.CollectedField, obj *model.CCCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CCCommand().User(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCCommandConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommandConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CCCommandEdge)
+	fc.Result = res
+	return ec.marshalNCCCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandEdgeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCCommandConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommandConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CCCommandPageInfo)
+	fc.Result = res
+	return ec.marshalNCCCommandPageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCCommandEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommandEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCCommandEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommandEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.CCCommand)
+	fc.Result = res
+	return ec.marshalOCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCCommandPageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandPageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommandPageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCCommandPageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandPageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommandPageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCCommandPageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandPageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCCommandPageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasNextPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCProduct_quantity(ctx context.Context, field graphql.CollectedField, obj *model.CCProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Quantity, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CCProduct_product(ctx context.Context, field graphql.CollectedField, obj *model.CCProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CCProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Product, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Product)
+	fc.Result = res
+	return ec.marshalNProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _Commerce_id(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
 	defer func() {
@@ -1447,6 +2299,83 @@ func (ec *executionContext) _Commerce_products(ctx context.Context, field graphq
 	res := resTmp.(*model.ProductConnection)
 	fc.Result = res
 	return ec.marshalNProductConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProductConnection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_services(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Services, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_cccommands(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Commerce_cccommands_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Commerce().Cccommands(rctx, obj, args["first"].(*int), args["after"].(*string), args["filters"].(*model.CCCommandFilter))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CCCommandConnection)
+	fc.Result = res
+	return ec.marshalNCCCommandConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CommerceConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.CommerceConnection) (ret graphql.Marshaler) {
@@ -1971,6 +2900,131 @@ func (ec *executionContext) _Mutation_updateProduct(ctx context.Context, field g
 	res := resTmp.(*model.Product)
 	fc.Result = res
 	return ec.marshalNProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_order(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_order_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().Order(rctx, args["commerceID"].(string), args["command"].(model.NewCCCommand))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.NeedAuthentication == nil {
+				return nil, errors.New("directive needAuthentication is not implemented")
+			}
+			return ec.directives.NeedAuthentication(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.CCCommand); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.CCCommand`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CCCommand)
+	fc.Result = res
+	return ec.marshalNCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateCCCommand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateCCCommand_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateCCCommand(rctx, args["id"].(string), args["changes"].(map[string]interface{}))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, "STOREKEEPER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.CCCommand); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.CCCommand`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.CCCommand)
+	fc.Result = res
+	return ec.marshalOCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Product_id(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
@@ -2690,6 +3744,68 @@ func (ec *executionContext) _Query_product(ctx context.Context, field graphql.Co
 	res := resTmp.(*model.Product)
 	fc.Result = res
 	return ec.marshalNProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_cccommand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_cccommand_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Cccommand(rctx, args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.NeedAuthentication == nil {
+				return nil, errors.New("directive needAuthentication is not implemented")
+			}
+			return ec.directives.NeedAuthentication(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.CCCommand); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.CCCommand`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CCCommand)
+	fc.Result = res
+	return ec.marshalNCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4125,6 +5241,29 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCCCommandFilter(ctx context.Context, obj interface{}) (model.CCCommandFilter, error) {
+	var it model.CCCommandFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "status":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			it.Status, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interface{}) (model.Filter, error) {
 	var it model.Filter
 	asMap := map[string]interface{}{}
@@ -4178,6 +5317,68 @@ func (ec *executionContext) unmarshalInputLogin(ctx context.Context, obj interfa
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 			it.Password, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNewCCCommand(ctx context.Context, obj interface{}) (model.NewCCCommand, error) {
+	var it model.NewCCCommand
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "productsID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productsID"))
+			it.ProductsID, err = ec.unmarshalONewCCProcuct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCCProcuctᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "pickupDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pickupDate"))
+			it.PickupDate, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNewCCProcuct(ctx context.Context, obj interface{}) (model.NewCCProcuct, error) {
+	var it model.NewCCProcuct
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "quantity":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
+			it.Quantity, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "productID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productID"))
+			it.ProductID, err = ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4415,6 +5616,268 @@ func (ec *executionContext) unmarshalInputProductFilter(ctx context.Context, obj
 
 // region    **************************** object.gotpl ****************************
 
+var cCCommandImplementors = []string{"CCCommand"}
+
+func (ec *executionContext) _CCCommand(ctx context.Context, sel ast.SelectionSet, obj *model.CCCommand) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cCCommandImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CCCommand")
+		case "id":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCCommand_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "status":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCCommand_status(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "products":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CCCommand_products(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "pickupDate":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCCommand_pickupDate(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CCCommand_user(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var cCCommandConnectionImplementors = []string{"CCCommandConnection"}
+
+func (ec *executionContext) _CCCommandConnection(ctx context.Context, sel ast.SelectionSet, obj *model.CCCommandConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cCCommandConnectionImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CCCommandConnection")
+		case "edges":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCCommandConnection_edges(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pageInfo":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCCommandConnection_pageInfo(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var cCCommandEdgeImplementors = []string{"CCCommandEdge"}
+
+func (ec *executionContext) _CCCommandEdge(ctx context.Context, sel ast.SelectionSet, obj *model.CCCommandEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cCCommandEdgeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CCCommandEdge")
+		case "cursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCCommandEdge_cursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCCommandEdge_node(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var cCCommandPageInfoImplementors = []string{"CCCommandPageInfo"}
+
+func (ec *executionContext) _CCCommandPageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.CCCommandPageInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cCCommandPageInfoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CCCommandPageInfo")
+		case "startCursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCCommandPageInfo_startCursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "endCursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCCommandPageInfo_endCursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hasNextPage":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCCommandPageInfo_hasNextPage(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var cCProductImplementors = []string{"CCProduct"}
+
+func (ec *executionContext) _CCProduct(ctx context.Context, sel ast.SelectionSet, obj *model.CCProduct) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cCProductImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CCProduct")
+		case "quantity":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCProduct_quantity(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "product":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CCProduct_product(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var commerceImplementors = []string{"Commerce"}
 
 func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet, obj *model.Commerce) graphql.Marshaler {
@@ -4545,6 +6008,36 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 					}
 				}()
 				res = ec._Commerce_products(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "services":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_services(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "cccommands":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Commerce_cccommands(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -4765,6 +6258,23 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "order":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_order(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateCCCommand":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateCCCommand(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5122,6 +6632,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_product(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "cccommand":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_cccommand(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5673,6 +7206,152 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNCCCommand2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx context.Context, sel ast.SelectionSet, v model.CCCommand) graphql.Marshaler {
+	return ec._CCCommand(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx context.Context, sel ast.SelectionSet, v *model.CCCommand) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CCCommand(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCCCommandConnection2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandConnection(ctx context.Context, sel ast.SelectionSet, v model.CCCommandConnection) graphql.Marshaler {
+	return ec._CCCommandConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCCCommandConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandConnection(ctx context.Context, sel ast.SelectionSet, v *model.CCCommandConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CCCommandConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCCCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CCCommandEdge) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCCCommandEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCCCommandEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandEdge(ctx context.Context, sel ast.SelectionSet, v *model.CCCommandEdge) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CCCommandEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCCCommandPageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.CCCommandPageInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CCCommandPageInfo(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCCProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCProductᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CCProduct) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCCProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCProduct(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCCProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCProduct(ctx context.Context, sel ast.SelectionSet, v *model.CCProduct) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CCProduct(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNCommerce2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx context.Context, sel ast.SelectionSet, v model.Commerce) graphql.Marshaler {
 	return ec._Commerce(ctx, sel, &v)
 }
@@ -5795,9 +7474,34 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNLogin2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐLogin(ctx context.Context, v interface{}) (model.Login, error) {
 	res, err := ec.unmarshalInputLogin(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNewCCCommand2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCCCommand(ctx context.Context, v interface{}) (model.NewCCCommand, error) {
+	res, err := ec.unmarshalInputNewCCCommand(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNewCCProcuct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCCProcuct(ctx context.Context, v interface{}) (*model.NewCCProcuct, error) {
+	res, err := ec.unmarshalInputNewCCProcuct(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNNewCommerce2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCommerce(ctx context.Context, v interface{}) (model.NewCommerce, error) {
@@ -5962,6 +7666,21 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNUser2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
@@ -6301,6 +8020,28 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) marshalOCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx context.Context, sel ast.SelectionSet, v *model.CCCommand) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CCCommand(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOCCCommandFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandFilter(ctx context.Context, v interface{}) (*model.CCCommandFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputCCCommandFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOChangesCCCommand2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+	if v == nil {
+		return nil, nil
+	}
+	return v.(map[string]interface{}), nil
+}
+
 func (ec *executionContext) unmarshalOChangesProduct2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
 	if v == nil {
 		return nil, nil
@@ -6361,6 +8102,26 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalONewCCProcuct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCCProcuctᚄ(ctx context.Context, v interface{}) ([]*model.NewCCProcuct, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.NewCCProcuct, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNNewCCProcuct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCCProcuct(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalOProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx context.Context, sel ast.SelectionSet, v *model.Product) graphql.Marshaler {

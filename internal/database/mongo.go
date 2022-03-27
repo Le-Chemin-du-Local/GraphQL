@@ -14,6 +14,7 @@ var MongoContext = context.TODO()
 var CollectionUsers *mongo.Collection
 var CollectionCommerces *mongo.Collection
 var CollectionProducts *mongo.Collection
+var CollectionCCCommand *mongo.Collection
 
 // Initialise la base de données à partir des informations données
 // dans la configuration
@@ -44,8 +45,10 @@ func Init() {
 	usersCollectionName := config.Cfg.Database.Collections.Users
 	commercesCollectionName := config.Cfg.Database.Collections.Commerces
 	produtsCollectionName := config.Cfg.Database.Collections.Products
+	cccommandeCollectionName := config.Cfg.Database.Collections.CCCommands
 
 	CollectionUsers = client.Database(databaseName).Collection(usersCollectionName)
 	CollectionCommerces = client.Database(databaseName).Collection(commercesCollectionName)
 	CollectionProducts = client.Database(databaseName).Collection(produtsCollectionName)
+	CollectionCCCommand = client.Database(databaseName).Collection(cccommandeCollectionName)
 }

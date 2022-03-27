@@ -19,6 +19,7 @@ type Commerce struct {
 	Address         string             `bson:"address"`
 	Phone           string             `bson:"phone"`
 	Email           string             `bson:"email"`
+	Services        []string           `bson:"services"`
 }
 
 func (commerce *Commerce) ToModel() *model.Commerce {
@@ -31,6 +32,7 @@ func (commerce *Commerce) ToModel() *model.Commerce {
 		Address:         commerce.Address,
 		Phone:           commerce.Phone,
 		Email:           commerce.Email,
+		Services:        commerce.Services,
 	}
 }
 

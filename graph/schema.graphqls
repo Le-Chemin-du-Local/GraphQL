@@ -1,4 +1,5 @@
 directive @hasRole(role: Role!) on FIELD_DEFINITION
+directive @needAuthentication on FIELD_DEFINITION
 
 enum Role {
   ADMIN,
@@ -62,6 +63,12 @@ type Commerce { # Ici on utilise le nom "Commerce"
   # Produits
   categories: [String!]!
   products(first: Int = 10, after: ID, filters: ProductFilter): ProductConnection!
+
+  # Services
+  services: [String!]!
+
+  # Click and collcet
+  cccommands(first: Int = 10, after: ID, filters: CCCommandFilter): CCCommandConnection!
 } 
 
 # Pagination 
@@ -152,6 +159,57 @@ input ChangesProduct {
   image: Upload
 }
 
+
+#######################
+## CLICK AND COLLECT ##
+#######################
+
+type CCProduct {
+  quantity: Int!
+  product: Product!
+}
+
+type CCCommand {
+  id: ID!
+  status: String!
+  products: [CCProduct!]!
+
+  pickupDate: Time!
+
+  user: User!
+}
+
+# Pagination 
+type CCCommandConnection {
+  edges: [CCCommandEdge!]!
+  pageInfo: CCCommandPageInfo!
+}
+
+type CCCommandEdge {
+  cursor: ID!
+  node: CCCommand
+}
+
+type CCCommandPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+input NewCCProcuct {
+  quantity: Int!
+  productID: ID!
+}
+
+input NewCCCommand {
+  productsID: [NewCCProcuct!]
+  pickupDate: Time!
+}
+
+input ChangesCCCommand {
+  status: String
+}
+
 #############
 ## FILTERS ##
 #############
@@ -165,6 +223,10 @@ input ProductFilter {
   category: String
 }
 
+input CCCommandFilter {
+  status: String
+}
+
 type Query {
   # UTILISATEURS
   users: [User!]!
@@ -174,6 +236,9 @@ type Query {
   commerces(first: Int = 5, after: ID): CommerceConnection! 
   commerce(id: ID): Commerce
   product(id: ID!): Product!
+
+  # CLICK AND COLLECT
+  cccommand(id: ID!): CCCommand! @needAuthentication
 }
 
 type Mutation {
@@ -185,4 +250,9 @@ type Mutation {
   createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
   createProduct(input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
   updateProduct(id: ID!, changes: ChangesProduct): Product! @hasRole(role: STOREKEEPER)
+
+  # SERVICES
+  # CLICK AND COLLECT
+  order(commerceID: ID!, command: NewCCCommand!): CCCommand! @needAuthentication
+  updateCCCommand(id: ID!, changes: ChangesCCCommand): CCCommand @hasRole(role: STOREKEEPER)
 }

@@ -20,9 +20,10 @@ type Config struct {
 		Name             string `yaml:"name"`
 		ConnectionString string `yaml:"connectionString"`
 		Collections      struct {
-			Users     string `yaml:"users"`
-			Commerces string `yaml:"commerces"`
-			Products  string `yaml:"products"`
+			Users      string `yaml:"users"`
+			Commerces  string `yaml:"commerces"`
+			Products   string `yaml:"products"`
+			CCCommands string `yaml:"cccommands"`
 		} `yaml:"collections"`
 	} `yaml:"database"`
 }

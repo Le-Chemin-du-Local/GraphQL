@@ -6,12 +6,13 @@ package model
 // qu'ils ne sont pas demandés.
 
 type Commerce struct {
-	ID              string `json:"id"`
-	StorekeeperID   string `json:"storekeeper"`
-	Name            string `json:"name"`
-	Description     string `json:"description"`
-	StorekeeperWord string `json:"storekeeperWord"`
-	Address         string `json:"address"`
-	Phone           string `json:"phone"`
-	Email           string `json:"email"`
+	ID              string   `json:"id"`
+	StorekeeperID   string   `json:"storekeeper"`
+	Name            string   `json:"name"`
+	Description     string   `json:"description"`
+	StorekeeperWord string   `json:"storekeeperWord"`
+	Address         string   `json:"address"`
+	Phone           string   `json:"phone"`
+	Email           string   `json:"email"`
+	Services        []string `json:"services"`
 }

@@ -13,12 +13,41 @@ import (
 	"chemin-du-local.bzh/graphql/internal/commerces"
 	"chemin-du-local.bzh/graphql/internal/helper"
 	"chemin-du-local.bzh/graphql/internal/products"
+	"chemin-du-local.bzh/graphql/internal/services/clickandcollect"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/jwt"
 	"github.com/99designs/gqlgen/graphql"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+func (r *cCCommandResolver) Products(ctx context.Context, obj *model.CCCommand) ([]*model.CCProduct, error) {
+	return clickandcollect.GetProducts(obj.ID)
+}
+
+func (r *cCCommandResolver) User(ctx context.Context, obj *model.CCCommand) (*model.User, error) {
+	databaseCCCommand, err := clickandcollect.GetById(obj.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseCCCommand == nil {
+		return nil, &clickandcollect.CCCommandNotFoundError{}
+	}
+
+	databaseUser, err := users.GetUserById(databaseCCCommand.UserID.Hex())
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseUser == nil {
+		return nil, &users.UserNotFoundError{}
+	}
+
+	return databaseUser.ToModel(), nil
+}
 
 func (r *commerceResolver) Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error) {
 	storekeeper, err := users.GetUserById(obj.StorekeeperID)
@@ -114,6 +143,65 @@ func (r *commerceResolver) Products(ctx context.Context, obj *model.Commerce, fi
 	}
 
 	connection := model.ProductConnection{
+		Edges:    edges[:itemCount],
+		PageInfo: &pageInfo,
+	}
+
+	return &connection, nil
+}
+
+func (r *commerceResolver) Cccommands(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.CCCommandFilter) (*model.CCCommandConnection, error) {
+	var decodedCursor *string
+
+	if after != nil {
+		bytes, err := base64.StdEncoding.DecodeString(*after)
+
+		if err != nil {
+			return nil, err
+		}
+
+		decodedCursorString := string(bytes)
+		decodedCursor = &decodedCursorString
+	}
+
+	databaseCCCommands, err := clickandcollect.GetPaginated(obj.ID, decodedCursor, *first, filters)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// On construit les edges
+	edges := []*model.CCCommandEdge{}
+
+	for _, datadatabaseCCCommand := range databaseCCCommands {
+		cccommandEdge := model.CCCommandEdge{
+			Cursor: base64.StdEncoding.EncodeToString([]byte(datadatabaseCCCommand.ID.Hex())),
+			Node:   datadatabaseCCCommand.ToModel(),
+		}
+
+		edges = append(edges, &cccommandEdge)
+	}
+
+	itemCount := len(edges)
+
+	// Si jamais il n'y a pas de produits, on veut quand même renvoyer un
+	// tableau vide
+	if itemCount == 0 {
+		return &model.CCCommandConnection{
+			Edges:    edges,
+			PageInfo: &model.CCCommandPageInfo{},
+		}, nil
+	}
+
+	hasNextPage := !databaseCCCommands[itemCount-1].IsLast()
+
+	pageInfo := model.CCCommandPageInfo{
+		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
+		EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
+		HasNextPage: hasNextPage,
+	}
+
+	connection := model.CCCommandConnection{
 		Edges:    edges[:itemCount],
 		PageInfo: &pageInfo,
 	}
@@ -238,6 +326,40 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, changes
 	return databaseProduct.ToModel(), nil
 }
 
+func (r *mutationResolver) Order(ctx context.Context, commerceID string, command model.NewCCCommand) (*model.CCCommand, error) {
+	user := auth.ForContext(ctx)
+
+	databaseCommand, err := clickandcollect.Create(user.ID, commerceID, command)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return databaseCommand.ToModel(), nil
+}
+
+func (r *mutationResolver) UpdateCCCommand(ctx context.Context, id string, changes map[string]interface{}) (*model.CCCommand, error) {
+	databaseCommand, err := clickandcollect.GetById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseCommand == nil {
+		return nil, &clickandcollect.CCCommandNotFoundError{}
+	}
+
+	helper.ApplyChanges(changes, databaseCommand)
+
+	err = clickandcollect.Update(databaseCommand)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return databaseCommand.ToModel(), nil
+}
+
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	databaseUsers, err := users.GetAllUser()
 
@@ -360,6 +482,10 @@ func (r *queryResolver) Commerce(ctx context.Context, id *string) (*model.Commer
 		return nil, err
 	}
 
+	if databaseCommerce == nil {
+		return nil, &commerces.CommerceErrorNotFound{}
+	}
+
 	return databaseCommerce.ToModel(), nil
 }
 
@@ -371,6 +497,20 @@ func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product,
 	}
 
 	return databaseProduct.ToModel(), nil
+}
+
+func (r *queryResolver) Cccommand(ctx context.Context, id string) (*model.CCCommand, error) {
+	databaseCCCommand, err := clickandcollect.GetById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseCCCommand == nil {
+		return nil, &clickandcollect.CCCommandNotFoundError{}
+	}
+
+	return databaseCCCommand.ToModel(), nil
 }
 
 func (r *userResolver) Commerce(ctx context.Context, obj *model.User) (*model.Commerce, error) {
@@ -387,6 +527,9 @@ func (r *userResolver) Commerce(ctx context.Context, obj *model.User) (*model.Co
 	return databaseCommerce.ToModel(), nil
 }
 
+// CCCommand returns generated.CCCommandResolver implementation.
+func (r *Resolver) CCCommand() generated.CCCommandResolver { return &cCCommandResolver{r} }
+
 // Commerce returns generated.CommerceResolver implementation.
 func (r *Resolver) Commerce() generated.CommerceResolver { return &commerceResolver{r} }
 
@@ -399,6 +542,7 @@ func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
+type cCCommandResolver struct{ *Resolver }
 type commerceResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

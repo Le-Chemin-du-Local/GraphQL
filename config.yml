@@ -11,3 +11,4 @@ database:
     users: "users"
     commerces: "commerces"
     products: "products"
+    cccommands: "cccommands"

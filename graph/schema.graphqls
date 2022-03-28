@@ -230,7 +230,7 @@ type Panier {
   category: String!
 
   quantity: Int!
-  price: Int!
+  price: Float!
 
   products: [PanierProduct!]!
 }
@@ -265,7 +265,7 @@ input NewPanier {
   category: String!
 
   quantity: Int!
-  price: Int!
+  price: Float!
 
   image: Upload
 
@@ -278,7 +278,7 @@ input ChangesPanier {
   category: String
 
   quantity: Int
-  price: Int
+  price: Float
 
   image: Upload
 

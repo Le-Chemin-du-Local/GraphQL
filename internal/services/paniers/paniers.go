@@ -22,7 +22,7 @@ type Panier struct {
 	Description string             `bson:"description"`
 	Category    string             `bson:"category"`
 	Quantity    int                `bson:"quantity"`
-	Price       int                `bson:"price"`
+	Price       float64            `bson:"price"`
 	Products    []PanierProduct    `bson:"products"`
 }
 

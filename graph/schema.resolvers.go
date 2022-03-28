@@ -6,6 +6,8 @@ package graph
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
+	"fmt"
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
@@ -484,10 +486,17 @@ func (r *mutationResolver) UpdatePanier(ctx context.Context, id string, changes 
 				return nil, err
 			}
 
+			castedQuantity := castedProduct["quantity"].(json.Number)
+			quantity, err := castedQuantity.Int64()
+
+			if err != nil {
+				return nil, err
+			}
+
 			products = append(products, paniers.PanierProduct{
 				ID:        primitive.NewObjectID(),
 				ProductID: productObjectID,
-				Quantity:  int(castedProduct["quantity"].(int64)),
+				Quantity:  int(quantity),
 			})
 		}
 	}
@@ -720,3 +729,13 @@ type mutationResolver struct{ *Resolver }
 type panierResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *panierResolver) Price(ctx context.Context, obj *model.Panier) (float64, error) {
+	panic(fmt.Errorf("not implemented"))
+}

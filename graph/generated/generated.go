@@ -1261,7 +1261,7 @@ type Panier {
   category: String!
 
   quantity: Int!
-  price: Int!
+  price: Float!
 
   products: [PanierProduct!]!
 }
@@ -1296,7 +1296,7 @@ input NewPanier {
   category: String!
 
   quantity: Int!
-  price: Int!
+  price: Float!
 
   image: Upload
 
@@ -1309,7 +1309,7 @@ input ChangesPanier {
   category: String
 
   quantity: Int
-  price: Int
+  price: Float
 
   image: Upload
 
@@ -3795,9 +3795,9 @@ func (ec *executionContext) _Panier_price(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Panier_products(ctx context.Context, field graphql.CollectedField, obj *model.Panier) (ret graphql.Marshaler) {
@@ -6658,7 +6658,7 @@ func (ec *executionContext) unmarshalInputNewPanier(ctx context.Context, obj int
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
-			it.Price, err = ec.unmarshalNInt2int(ctx, v)
+			it.Price, err = ec.unmarshalNFloat2float64(ctx, v)
 			if err != nil {
 				return it, err
 			}

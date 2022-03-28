@@ -86,7 +86,7 @@ type NewPanier struct {
 	Description string              `json:"description"`
 	Category    string              `json:"category"`
 	Quantity    int                 `json:"quantity"`
-	Price       int                 `json:"price"`
+	Price       float64             `json:"price"`
 	Image       *graphql.Upload     `json:"image"`
 	Products    []*NewPanierProduct `json:"products"`
 }

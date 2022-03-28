@@ -1,2 +1,4 @@
 go.sum
 config.production.yml
+
+static/

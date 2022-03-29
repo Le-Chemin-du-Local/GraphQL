@@ -86,7 +86,9 @@ type ComplexityRoot struct {
 		Cccommands      func(childComplexity int, first *int, after *string, filters *model.CCCommandFilter) int
 		Description     func(childComplexity int) int
 		Email           func(childComplexity int) int
+		Facebook        func(childComplexity int) int
 		ID              func(childComplexity int) int
+		Instagram       func(childComplexity int) int
 		Name            func(childComplexity int) int
 		Paniers         func(childComplexity int, first *int, after *string, filters *model.PanierFilter) int
 		Phone           func(childComplexity int) int
@@ -94,6 +96,7 @@ type ComplexityRoot struct {
 		Services        func(childComplexity int) int
 		Storekeeper     func(childComplexity int) int
 		StorekeeperWord func(childComplexity int) int
+		Twitter         func(childComplexity int) int
 	}
 
 	CommerceConnection struct {
@@ -120,6 +123,7 @@ type ComplexityRoot struct {
 		Login           func(childComplexity int, input model.Login) int
 		Order           func(childComplexity int, commerceID string, command model.NewCCCommand) int
 		UpdateCCCommand func(childComplexity int, id string, changes map[string]interface{}) int
+		UpdateCommerce  func(childComplexity int, id string, changes map[string]interface{}) int
 		UpdatePanier    func(childComplexity int, id string, changes map[string]interface{}) int
 		UpdateProduct   func(childComplexity int, id string, changes map[string]interface{}) int
 	}
@@ -222,6 +226,7 @@ type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
 	Login(ctx context.Context, input model.Login) (string, error)
 	CreateCommerce(ctx context.Context, input model.NewCommerce) (*model.Commerce, error)
+	UpdateCommerce(ctx context.Context, id string, changes map[string]interface{}) (*model.Commerce, error)
 	CreateProduct(ctx context.Context, input model.NewProduct) (*model.Product, error)
 	UpdateProduct(ctx context.Context, id string, changes map[string]interface{}) (*model.Product, error)
 	Order(ctx context.Context, commerceID string, command model.NewCCCommand) (*model.CCCommand, error)
@@ -398,12 +403,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Commerce.Email(childComplexity), true
 
+	case "Commerce.facebook":
+		if e.complexity.Commerce.Facebook == nil {
+			break
+		}
+
+		return e.complexity.Commerce.Facebook(childComplexity), true
+
 	case "Commerce.id":
 		if e.complexity.Commerce.ID == nil {
 			break
 		}
 
 		return e.complexity.Commerce.ID(childComplexity), true
+
+	case "Commerce.instagram":
+		if e.complexity.Commerce.Instagram == nil {
+			break
+		}
+
+		return e.complexity.Commerce.Instagram(childComplexity), true
 
 	case "Commerce.name":
 		if e.complexity.Commerce.Name == nil {
@@ -463,6 +482,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.StorekeeperWord(childComplexity), true
+
+	case "Commerce.twitter":
+		if e.complexity.Commerce.Twitter == nil {
+			break
+		}
+
+		return e.complexity.Commerce.Twitter(childComplexity), true
 
 	case "CommerceConnection.edges":
 		if e.complexity.CommerceConnection.Edges == nil {
@@ -596,6 +622,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateCCCommand(childComplexity, args["id"].(string), args["changes"].(map[string]interface{})), true
+
+	case "Mutation.updateCommerce":
+		if e.complexity.Mutation.UpdateCommerce == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateCommerce_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateCommerce(childComplexity, args["id"].(string), args["changes"].(map[string]interface{})), true
 
 	case "Mutation.updatePanier":
 		if e.complexity.Mutation.UpdatePanier == nil {
@@ -1099,6 +1137,10 @@ type Commerce { # Ici on utilise le nom "Commerce"
   phone: String!
   email: String!
 
+  facebook: String
+  twitter: String
+  instagram: String
+
   # Produits
   categories: [String!]!
   products(first: Int = 10, after: ID, filters: ProductFilter): ProductConnection!
@@ -1140,6 +1182,32 @@ input NewCommerce {
   address: String!
   phone: String!
   email: String!
+
+  facebook: String
+  twitter: String
+  instagram: String
+
+  profilePicture: Upload
+  image: Upload
+}
+
+input ChangesCommerce {
+  # Descriptif
+  name: String
+  description: String
+  storekeeperWord: String
+
+  # Coordonnées
+  address: String
+  phone: String
+  email: String
+
+  facebook: String
+  twitter: String
+  instagram: String
+
+  profilePicture: Upload
+  image: Upload
 }
 
 # PRODUITS
@@ -1374,8 +1442,9 @@ type Mutation {
 
   # COMMERCES
   createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
+  updateCommerce(id: ID!, changes: ChangesCommerce!): Commerce! @hasRole(role: STOREKEEPER)
   createProduct(input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
-  updateProduct(id: ID!, changes: ChangesProduct): Product! @hasRole(role: STOREKEEPER)
+  updateProduct(id: ID!, changes: ChangesProduct!): Product! @hasRole(role: STOREKEEPER)
 
   # SERVICES
   # CLICK AND COLLECT
@@ -1640,6 +1709,30 @@ func (ec *executionContext) field_Mutation_updateCCCommand_args(ctx context.Cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updateCommerce_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 map[string]interface{}
+	if tmp, ok := rawArgs["changes"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changes"))
+		arg1, err = ec.unmarshalNChangesCommerce2map(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["changes"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updatePanier_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1679,7 +1772,7 @@ func (ec *executionContext) field_Mutation_updateProduct_args(ctx context.Contex
 	var arg1 map[string]interface{}
 	if tmp, ok := rawArgs["changes"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changes"))
-		arg1, err = ec.unmarshalOChangesProduct2map(ctx, tmp)
+		arg1, err = ec.unmarshalNChangesProduct2map(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2622,6 +2715,102 @@ func (ec *executionContext) _Commerce_email(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Commerce_facebook(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Facebook, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_twitter(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Twitter, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_instagram(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Instagram, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Commerce_categories(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3171,6 +3360,72 @@ func (ec *executionContext) _Mutation_createCommerce(ctx context.Context, field 
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreateCommerce(rctx, args["input"].(model.NewCommerce))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, "STOREKEEPER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Commerce); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.Commerce`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Commerce)
+	fc.Result = res
+	return ec.marshalNCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateCommerce(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateCommerce_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateCommerce(rctx, args["id"].(string), args["changes"].(map[string]interface{}))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			role, err := ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, "STOREKEEPER")
@@ -6651,6 +6906,46 @@ func (ec *executionContext) unmarshalInputNewCommerce(ctx context.Context, obj i
 			if err != nil {
 				return it, err
 			}
+		case "facebook":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("facebook"))
+			it.Facebook, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "twitter":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("twitter"))
+			it.Twitter, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "instagram":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("instagram"))
+			it.Instagram, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "profilePicture":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePicture"))
+			it.ProfilePicture, err = ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "image":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
+			it.Image, err = ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -7317,6 +7612,27 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "facebook":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_facebook(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "twitter":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_twitter(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "instagram":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_instagram(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
 		case "categories":
 			field := field
 
@@ -7590,6 +7906,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createCommerce":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createCommerce(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateCommerce":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateCommerce(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
@@ -9036,7 +9362,15 @@ func (ec *executionContext) marshalNCCProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgra
 	return ec._CCProduct(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNChangesCommerce2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+	return v.(map[string]interface{}), nil
+}
+
 func (ec *executionContext) unmarshalNChangesPanier2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+	return v.(map[string]interface{}), nil
+}
+
+func (ec *executionContext) unmarshalNChangesProduct2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
 	return v.(map[string]interface{}), nil
 }
 
@@ -9880,13 +10214,6 @@ func (ec *executionContext) unmarshalOCCCommandFilter2ᚖcheminᚑduᚑlocalᚗb
 }
 
 func (ec *executionContext) unmarshalOChangesCCCommand2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
-	if v == nil {
-		return nil, nil
-	}
-	return v.(map[string]interface{}), nil
-}
-
-func (ec *executionContext) unmarshalOChangesProduct2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
 	if v == nil {
 		return nil, nil
 	}

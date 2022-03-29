@@ -73,12 +73,17 @@ type NewCCProcuct struct {
 }
 
 type NewCommerce struct {
-	Name            string `json:"name"`
-	Description     string `json:"description"`
-	StorekeeperWord string `json:"storekeeperWord"`
-	Address         string `json:"address"`
-	Phone           string `json:"phone"`
-	Email           string `json:"email"`
+	Name            string          `json:"name"`
+	Description     string          `json:"description"`
+	StorekeeperWord string          `json:"storekeeperWord"`
+	Address         string          `json:"address"`
+	Phone           string          `json:"phone"`
+	Email           string          `json:"email"`
+	Facebook        *string         `json:"facebook"`
+	Twitter         *string         `json:"twitter"`
+	Instagram       *string         `json:"instagram"`
+	ProfilePicture  *graphql.Upload `json:"profilePicture"`
+	Image           *graphql.Upload `json:"image"`
 }
 
 type NewPanier struct {

@@ -60,6 +60,10 @@ type Commerce { # Ici on utilise le nom "Commerce"
   phone: String!
   email: String!
 
+  facebook: String
+  twitter: String
+  instagram: String
+
   # Produits
   categories: [String!]!
   products(first: Int = 10, after: ID, filters: ProductFilter): ProductConnection!
@@ -101,6 +105,32 @@ input NewCommerce {
   address: String!
   phone: String!
   email: String!
+
+  facebook: String
+  twitter: String
+  instagram: String
+
+  profilePicture: Upload
+  image: Upload
+}
+
+input ChangesCommerce {
+  # Descriptif
+  name: String
+  description: String
+  storekeeperWord: String
+
+  # Coordonnées
+  address: String
+  phone: String
+  email: String
+
+  facebook: String
+  twitter: String
+  instagram: String
+
+  profilePicture: Upload
+  image: Upload
 }
 
 # PRODUITS
@@ -335,8 +365,9 @@ type Mutation {
 
   # COMMERCES
   createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
+  updateCommerce(id: ID!, changes: ChangesCommerce!): Commerce! @hasRole(role: STOREKEEPER)
   createProduct(input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
-  updateProduct(id: ID!, changes: ChangesProduct): Product! @hasRole(role: STOREKEEPER)
+  updateProduct(id: ID!, changes: ChangesProduct!): Product! @hasRole(role: STOREKEEPER)
 
   # SERVICES
   # CLICK AND COLLECT

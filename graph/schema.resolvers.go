@@ -324,7 +324,46 @@ func (r *mutationResolver) CreateCommerce(ctx context.Context, input model.NewCo
 		return nil, &users.UserAccessDenied{}
 	}
 
-	databaseCommerce := commerces.Create(input, user.ID)
+	databaseCommerce, err := commerces.Create(input, user.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return databaseCommerce.ToModel(), nil
+}
+
+func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, changes map[string]interface{}) (*model.Commerce, error) {
+	databaseCommerce, err := commerces.GetById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseCommerce == nil {
+		return nil, &commerces.CommerceErrorNotFound{}
+	}
+
+	helper.ApplyChanges(changes, databaseCommerce)
+
+	var image *graphql.Upload
+	var profilePicture *graphql.Upload
+
+	if changes["image"] != nil {
+		castedImage := changes["image"].(graphql.Upload)
+		image = &castedImage
+	}
+
+	if changes["profilePicture"] != nil {
+		castedImage := changes["profilePicture"].(graphql.Upload)
+		profilePicture = &castedImage
+	}
+
+	err = commerces.Update(databaseCommerce, image, profilePicture)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return databaseCommerce.ToModel(), nil
 }

@@ -1,10 +1,14 @@
 package commerces
 
 import (
-	"log"
+	"bytes"
+	"io/ioutil"
+	"os"
 
 	"chemin-du-local.bzh/graphql/graph/model"
+	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
+	"github.com/99designs/gqlgen/graphql"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -19,6 +23,9 @@ type Commerce struct {
 	Address         string             `bson:"address"`
 	Phone           string             `bson:"phone"`
 	Email           string             `bson:"email"`
+	Facebook        *string            `bson:"facebook"`
+	Twitter         *string            `bson:"twitter"`
+	Instagram       *string            `bson:"instagram"`
 	Services        []string           `bson:"services"`
 }
 
@@ -32,6 +39,9 @@ func (commerce *Commerce) ToModel() *model.Commerce {
 		Address:         commerce.Address,
 		Phone:           commerce.Phone,
 		Email:           commerce.Email,
+		Facebook:        commerce.Facebook,
+		Twitter:         commerce.Twitter,
+		Instagram:       commerce.Instagram,
 		Services:        commerce.Services,
 	}
 }
@@ -58,9 +68,11 @@ func (commerce Commerce) IsLast() bool {
 
 // Créateur de base de données
 
-func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) *Commerce {
+func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) (*Commerce, error) {
+	commerceObjectID := primitive.NewObjectID()
+
 	databaseCommerce := Commerce{
-		ID:              primitive.NewObjectID(),
+		ID:              commerceObjectID,
 		StorekeeperID:   storekeeperID,
 		Name:            input.Name,
 		Description:     input.Description,
@@ -68,15 +80,105 @@ func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) *Commerce
 		Address:         input.Address,
 		Phone:           input.Phone,
 		Email:           input.Email,
+		Facebook:        input.Facebook,
+		Twitter:         input.Twitter,
+		Instagram:       input.Instagram,
 	}
 
 	_, err := database.CollectionCommerces.InsertOne(database.MongoContext, databaseCommerce)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return &databaseCommerce
+	// Le header
+	if input.Image != nil {
+		fileData := input.Image.File
+
+		buffer := &bytes.Buffer{}
+		buffer.ReadFrom(fileData)
+
+		data := buffer.Bytes()
+
+		folderPath := config.Cfg.Paths.Static + "/commerces/" + commerceObjectID.Hex()
+		os.MkdirAll(folderPath, os.ModePerm)
+		err := ioutil.WriteFile(folderPath+"/header.jpg", data, 0644)
+
+		if err != nil {
+			return &databaseCommerce, err
+		}
+	}
+
+	// La photo de profil
+	if input.ProfilePicture != nil {
+		fileData := input.Image.File
+
+		buffer := &bytes.Buffer{}
+		buffer.ReadFrom(fileData)
+
+		data := buffer.Bytes()
+
+		folderPath := config.Cfg.Paths.Static + "/commerces/" + commerceObjectID.Hex()
+		os.MkdirAll(folderPath, os.ModePerm)
+		err := ioutil.WriteFile(folderPath+"/profile.jpg", data, 0644)
+
+		if err != nil {
+			return &databaseCommerce, err
+		}
+	}
+
+	return &databaseCommerce, nil
+}
+
+// Mise à jour en base de données
+
+func Update(changes *Commerce, image *graphql.Upload, profilePicture *graphql.Upload) error {
+	filter := bson.D{
+		primitive.E{
+			Key:   "_id",
+			Value: changes.ID,
+		},
+	}
+
+	_, err := database.CollectionCommerces.ReplaceOne(database.MongoContext, filter, changes)
+
+	// Le header
+	if image != nil {
+		fileData := image.File
+
+		buffer := &bytes.Buffer{}
+		buffer.ReadFrom(fileData)
+
+		data := buffer.Bytes()
+
+		folderPath := config.Cfg.Paths.Static + "/commerces/" + changes.ID.Hex()
+		os.MkdirAll(folderPath, os.ModePerm)
+		err := ioutil.WriteFile(folderPath+"/header.jpg", data, 0644)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	// La photo de profil
+	if profilePicture != nil {
+		fileData := profilePicture.File
+
+		buffer := &bytes.Buffer{}
+		buffer.ReadFrom(fileData)
+
+		data := buffer.Bytes()
+
+		folderPath := config.Cfg.Paths.Static + "/commerces/" + changes.ID.Hex()
+		os.MkdirAll(folderPath, os.ModePerm)
+		err := ioutil.WriteFile(folderPath+"/profile.jpg", data, 0644)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return err
 }
 
 // Getter de base de données

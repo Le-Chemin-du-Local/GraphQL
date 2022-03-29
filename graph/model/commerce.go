@@ -14,5 +14,8 @@ type Commerce struct {
 	Address         string   `json:"address"`
 	Phone           string   `json:"phone"`
 	Email           string   `json:"email"`
+	Facebook        *string  `json:"facebook"`
+	Twitter         *string  `json:"twitter"`
+	Instagram       *string  `json:"instagram"`
 	Services        []string `json:"services"`
 }

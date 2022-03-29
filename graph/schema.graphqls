@@ -232,6 +232,8 @@ type Panier {
   quantity: Int!
   price: Float!
 
+  endingDate: Time
+
   products: [PanierProduct!]!
 }
 
@@ -268,6 +270,7 @@ input NewPanier {
   price: Float!
 
   image: Upload
+  endingDate: Time
 
   products: [NewPanierProduct!]
 }
@@ -281,6 +284,7 @@ input ChangesPanier {
   price: Float
 
   image: Upload
+  endingDate: Time
 
   products: [NewPanierProduct!]
 }

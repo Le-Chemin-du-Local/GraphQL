@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/config"
@@ -23,6 +24,7 @@ type Panier struct {
 	Category    string             `bson:"category"`
 	Quantity    int                `bson:"quantity"`
 	Price       float64            `bson:"price"`
+	EndingDate  *time.Time         `bson:"endingDate"`
 	Products    []PanierProduct    `bson:"products"`
 }
 
@@ -39,6 +41,7 @@ func (panier *Panier) ToModel() *model.Panier {
 		Description: panier.Description,
 		Category:    panier.Category,
 		Quantity:    panier.Quantity,
+		EndingDate:  panier.EndingDate,
 		Price:       panier.Price,
 	}
 }
@@ -95,6 +98,7 @@ func Create(commerceID primitive.ObjectID, input model.NewPanier) (*Panier, erro
 		Category:    input.Category,
 		Quantity:    input.Quantity,
 		Price:       input.Price,
+		EndingDate:  input.EndingDate,
 		Products:    products,
 	}
 
@@ -185,23 +189,6 @@ func GetById(id string) (*Panier, error) {
 	return &paniers[0], nil
 }
 
-func GetForCommerce(commerceID string) ([]Panier, error) {
-	commerceObjectId, err := primitive.ObjectIDFromHex(commerceID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	filter := bson.D{
-		primitive.E{
-			Key:   "commerceID",
-			Value: commerceObjectId,
-		},
-	}
-
-	return GetFiltered(filter, nil)
-}
-
 func GetPaginated(commerceID string, startValue *string, first int, filters *model.PanierFilter) ([]Panier, error) {
 	commerceObjectID, err := primitive.ObjectIDFromHex(commerceID)
 
@@ -211,7 +198,7 @@ func GetPaginated(commerceID string, startValue *string, first int, filters *mod
 
 	// On doit faire un filtre spécifique si on veut commencer
 	// le curseur à l'ID de départ
-	var finalFilter bson.D
+	var finalFilter bson.M
 
 	if startValue != nil {
 		objectID, err := primitive.ObjectIDFromHex(*startValue)
@@ -220,33 +207,48 @@ func GetPaginated(commerceID string, startValue *string, first int, filters *mod
 			return nil, err
 		}
 
-		finalFilter = bson.D{
-			primitive.E{
-				Key:   "commerceID",
-				Value: commerceObjectID,
+		finalFilter = bson.M{
+			"commerceID": commerceObjectID,
+			"_id": bson.M{
+				"$gt": objectID,
 			},
-			primitive.E{
-				Key: "_id",
-				Value: bson.M{
-					"$gt": objectID,
+			"$or": []bson.M{
+				{
+					"endingDate": bson.M{
+						"$gte": time.Now(),
+					},
+				},
+				{
+					"category": "PERMANENT",
 				},
 			},
 		}
 	} else {
-		finalFilter = bson.D{
-			primitive.E{
-				Key:   "commerceID",
-				Value: commerceObjectID,
+		finalFilter = bson.M{
+			"commerceID": commerceObjectID,
+			"$or": []bson.M{
+				{
+					"endingDate": bson.M{
+						"$gte": time.Now(),
+					},
+				},
+				{
+					"category": "PERMANENT",
+				},
 			},
 		}
 	}
 
 	if filters != nil {
 		if filters.Category != nil {
-			finalFilter = append(finalFilter, primitive.E{
-				Key:   "category",
-				Value: filters.Category,
-			})
+			finalFilter = bson.M{
+				"$and": []bson.M{
+					finalFilter,
+					{
+						"category": filters.Category,
+					},
+				},
+			}
 		}
 	}
 

@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
@@ -736,6 +737,9 @@ type userResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *panierResolver) EndingDate(ctx context.Context, obj *model.Panier) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented"))
+}
 func (r *panierResolver) Price(ctx context.Context, obj *model.Panier) (float64, error) {
 	panic(fmt.Errorf("not implemented"))
 }

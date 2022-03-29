@@ -127,6 +127,7 @@ type ComplexityRoot struct {
 	Panier struct {
 		Category    func(childComplexity int) int
 		Description func(childComplexity int) int
+		EndingDate  func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Price       func(childComplexity int) int
@@ -633,6 +634,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Panier.Description(childComplexity), true
+
+	case "Panier.endingDate":
+		if e.complexity.Panier.EndingDate == nil {
+			break
+		}
+
+		return e.complexity.Panier.EndingDate(childComplexity), true
 
 	case "Panier.id":
 		if e.complexity.Panier.ID == nil {
@@ -1263,6 +1271,8 @@ type Panier {
   quantity: Int!
   price: Float!
 
+  endingDate: Time
+
   products: [PanierProduct!]!
 }
 
@@ -1299,6 +1309,7 @@ input NewPanier {
   price: Float!
 
   image: Upload
+  endingDate: Time
 
   products: [NewPanierProduct!]
 }
@@ -1312,6 +1323,7 @@ input ChangesPanier {
   price: Float
 
   image: Upload
+  endingDate: Time
 
   products: [NewPanierProduct!]
 }
@@ -3798,6 +3810,38 @@ func (ec *executionContext) _Panier_price(ctx context.Context, field graphql.Col
 	res := resTmp.(float64)
 	fc.Result = res
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Panier_endingDate(ctx context.Context, field graphql.CollectedField, obj *model.Panier) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Panier",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndingDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Panier_products(ctx context.Context, field graphql.CollectedField, obj *model.Panier) (ret graphql.Marshaler) {
@@ -6670,6 +6714,14 @@ func (ec *executionContext) unmarshalInputNewPanier(ctx context.Context, obj int
 			if err != nil {
 				return it, err
 			}
+		case "endingDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endingDate"))
+			it.EndingDate, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "products":
 			var err error
 
@@ -7686,6 +7738,13 @@ func (ec *executionContext) _Panier(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "endingDate":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Panier_endingDate(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
 		case "products":
 			field := field
 

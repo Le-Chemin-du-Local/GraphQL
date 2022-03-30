@@ -21,6 +21,7 @@ type Product struct {
 	Description string             `bson:"description"`
 	Price       float64            `bson:"price"`
 	Unit        string             `bson:"unit"`
+	Tva         float64            `bson:"tva"`
 	IsBreton    bool               `bson:"isBreton"`
 	Tags        []string           `bson:"tags"`
 	Categories  []string           `bson:"categories"`
@@ -33,6 +34,7 @@ func (product *Product) ToModel() *model.Product {
 		Description: product.Description,
 		Price:       product.Price,
 		Unit:        product.Unit,
+		Tva:         product.Tva,
 		IsBreton:    product.IsBreton,
 		Tags:        product.Tags,
 		Categories:  product.Categories,
@@ -85,6 +87,7 @@ func Create(input model.NewProduct) (*Product, error) {
 		Description: input.Description,
 		Price:       input.Price,
 		Unit:        input.Unit,
+		Tva:         input.Tva,
 		IsBreton:    input.IsBreton,
 		Tags:        input.Tags,
 		Categories:  input.Categories,

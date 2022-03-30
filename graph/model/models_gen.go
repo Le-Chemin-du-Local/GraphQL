@@ -108,6 +108,7 @@ type NewProduct struct {
 	Description string          `json:"description"`
 	Price       float64         `json:"price"`
 	Unit        string          `json:"unit"`
+	Tva         float64         `json:"tva"`
 	IsBreton    bool            `json:"isBreton"`
 	Tags        []string        `json:"tags"`
 	Categories  []string        `json:"categories"`
@@ -152,6 +153,7 @@ type Product struct {
 	Description string   `json:"description"`
 	Price       float64  `json:"price"`
 	Unit        string   `json:"unit"`
+	Tva         float64  `json:"tva"`
 	IsBreton    bool     `json:"isBreton"`
 	Tags        []string `json:"tags"`
 	Categories  []string `json:"categories"`

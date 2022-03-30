@@ -141,6 +141,7 @@ type Product {
   description: String!
   price: Float!
   unit: String!
+  tva: Float!
   isBreton: Boolean!
 
   tags: [String!]
@@ -171,6 +172,7 @@ input NewProduct {
   description: String!
   price: Float!
   unit: String!
+  tva: Float!
   isBreton: Boolean!
 
   tags: [String!]
@@ -184,6 +186,7 @@ input ChangesProduct {
   description: String
   price: Float
   unit: String
+  tva: Float
   isBreton: Boolean
 
   tags: [String!]

@@ -168,6 +168,7 @@ type ComplexityRoot struct {
 		Name        func(childComplexity int) int
 		Price       func(childComplexity int) int
 		Tags        func(childComplexity int) int
+		Tva         func(childComplexity int) int
 		Unit        func(childComplexity int) int
 	}
 
@@ -827,6 +828,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Product.Tags(childComplexity), true
 
+	case "Product.tva":
+		if e.complexity.Product.Tva == nil {
+			break
+		}
+
+		return e.complexity.Product.Tva(childComplexity), true
+
 	case "Product.unit":
 		if e.complexity.Product.Unit == nil {
 			break
@@ -1218,6 +1226,7 @@ type Product {
   description: String!
   price: Float!
   unit: String!
+  tva: Float!
   isBreton: Boolean!
 
   tags: [String!]
@@ -1248,6 +1257,7 @@ input NewProduct {
   description: String!
   price: Float!
   unit: String!
+  tva: Float!
   isBreton: Boolean!
 
   tags: [String!]
@@ -1261,6 +1271,7 @@ input ChangesProduct {
   description: String
   price: Float
   unit: String
+  tva: Float
   isBreton: Boolean
 
   tags: [String!]
@@ -4621,6 +4632,41 @@ func (ec *executionContext) _Product_unit(ctx context.Context, field graphql.Col
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Product_tva(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tva, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Product_isBreton(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7111,6 +7157,14 @@ func (ec *executionContext) unmarshalInputNewProduct(ctx context.Context, obj in
 			if err != nil {
 				return it, err
 			}
+		case "tva":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tva"))
+			it.Tva, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "isBreton":
 			var err error
 
@@ -8326,6 +8380,16 @@ func (ec *executionContext) _Product(ctx context.Context, sel ast.SelectionSet, 
 		case "unit":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Product_unit(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "tva":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Product_tva(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

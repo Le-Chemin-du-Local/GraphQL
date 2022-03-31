@@ -166,8 +166,6 @@ type ProductPageInfo {
 }
 
 input NewProduct {
-  commerceID: ID
-
   name: String!
   description: String!
   price: Float!
@@ -369,7 +367,8 @@ type Mutation {
   # COMMERCES
   createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
   updateCommerce(id: ID!, changes: ChangesCommerce!): Commerce! @hasRole(role: STOREKEEPER)
-  createProduct(input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
+  createProduct(commerceID: ID, input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
+  createProducts(commerceID: ID, input: [NewProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
   updateProduct(id: ID!, changes: ChangesProduct!): Product! @hasRole(role: STOREKEEPER)
 
   # SERVICES

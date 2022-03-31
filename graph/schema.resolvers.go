@@ -368,10 +368,10 @@ func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, change
 	return databaseCommerce.ToModel(), nil
 }
 
-func (r *mutationResolver) CreateProduct(ctx context.Context, input model.NewProduct) (*model.Product, error) {
+func (r *mutationResolver) CreateProduct(ctx context.Context, commerceID *string, input model.NewProduct) (*model.Product, error) {
 	user := auth.ForContext(ctx)
 
-	if user.Role == users.USERROLE_ADMIN && input.CommerceID == nil {
+	if user.Role == users.USERROLE_ADMIN && commerceID == nil {
 		return nil, &products.MustSpecifyCommerceIDError{}
 	}
 
@@ -386,17 +386,54 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.NewPro
 			return nil, err
 		}
 
-		commerceID := databaseCommerce.ID.Hex()
-		input.CommerceID = &commerceID
+		databaseCommerceID := databaseCommerce.ID.Hex()
+		commerceID = &databaseCommerceID
 	}
 
-	databaseProduct, err := products.Create(input)
+	databaseProduct, err := products.Create(*commerceID, input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return databaseProduct.ToModel(), nil
+}
+
+func (r *mutationResolver) CreateProducts(ctx context.Context, commerceID *string, input []*model.NewProduct) ([]*model.Product, error) {
+	user := auth.ForContext(ctx)
+
+	if user.Role == users.USERROLE_ADMIN && commerceID == nil {
+		return nil, &products.MustSpecifyCommerceIDError{}
+	}
+
+	// Si l'utilisateur est un commerçant, il doit créer des produits
+	// pour son commerce
+	if user.Role == users.USERROLE_STOREKEEPER {
+		databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+
+		// Cela permet aussi d'éviter qu'un commerçant créer un
+		// produit sans commerce
+		if err != nil {
+			return nil, err
+		}
+
+		databaseCommerceID := databaseCommerce.ID.Hex()
+		commerceID = &databaseCommerceID
+	}
+
+	result := []*model.Product{}
+
+	for _, produdct := range input {
+		databaseProduct, err := products.Create(*commerceID, *produdct)
+
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, databaseProduct.ToModel())
+	}
+
+	return result, nil
 }
 
 func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, changes map[string]interface{}) (*model.Product, error) {

@@ -68,12 +68,8 @@ func (product Product) IsLast() bool {
 
 // Créateur de base de données
 
-func Create(input model.NewProduct) (*Product, error) {
-	if input.CommerceID == nil {
-		return nil, &MustSpecifyCommerceIDError{}
-	}
-
-	commerceObjectID, err := primitive.ObjectIDFromHex(*input.CommerceID)
+func Create(commerceID string, input model.NewProduct) (*Product, error) {
+	commerceObjectID, err := primitive.ObjectIDFromHex(commerceID)
 
 	if err != nil {
 		return nil, err

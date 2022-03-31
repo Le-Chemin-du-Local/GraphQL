@@ -118,7 +118,8 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateCommerce  func(childComplexity int, input model.NewCommerce) int
 		CreatePanier    func(childComplexity int, commerceID *string, input model.NewPanier) int
-		CreateProduct   func(childComplexity int, input model.NewProduct) int
+		CreateProduct   func(childComplexity int, commerceID *string, input model.NewProduct) int
+		CreateProducts  func(childComplexity int, commerceID *string, input []*model.NewProduct) int
 		CreateUser      func(childComplexity int, input model.NewUser) int
 		Login           func(childComplexity int, input model.Login) int
 		Order           func(childComplexity int, commerceID string, command model.NewCCCommand) int
@@ -228,7 +229,8 @@ type MutationResolver interface {
 	Login(ctx context.Context, input model.Login) (string, error)
 	CreateCommerce(ctx context.Context, input model.NewCommerce) (*model.Commerce, error)
 	UpdateCommerce(ctx context.Context, id string, changes map[string]interface{}) (*model.Commerce, error)
-	CreateProduct(ctx context.Context, input model.NewProduct) (*model.Product, error)
+	CreateProduct(ctx context.Context, commerceID *string, input model.NewProduct) (*model.Product, error)
+	CreateProducts(ctx context.Context, commerceID *string, input []*model.NewProduct) ([]*model.Product, error)
 	UpdateProduct(ctx context.Context, id string, changes map[string]interface{}) (*model.Product, error)
 	Order(ctx context.Context, commerceID string, command model.NewCCCommand) (*model.CCCommand, error)
 	UpdateCCCommand(ctx context.Context, id string, changes map[string]interface{}) (*model.CCCommand, error)
@@ -574,7 +576,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateProduct(childComplexity, args["input"].(model.NewProduct)), true
+		return e.complexity.Mutation.CreateProduct(childComplexity, args["commerceID"].(*string), args["input"].(model.NewProduct)), true
+
+	case "Mutation.createProducts":
+		if e.complexity.Mutation.CreateProducts == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createProducts_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateProducts(childComplexity, args["commerceID"].(*string), args["input"].([]*model.NewProduct)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -1251,8 +1265,6 @@ type ProductPageInfo {
 }
 
 input NewProduct {
-  commerceID: ID
-
   name: String!
   description: String!
   price: Float!
@@ -1454,7 +1466,8 @@ type Mutation {
   # COMMERCES
   createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
   updateCommerce(id: ID!, changes: ChangesCommerce!): Commerce! @hasRole(role: STOREKEEPER)
-  createProduct(input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
+  createProduct(commerceID: ID, input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
+  createProducts(commerceID: ID, input: [NewProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
   updateProduct(id: ID!, changes: ChangesProduct!): Product! @hasRole(role: STOREKEEPER)
 
   # SERVICES
@@ -1630,15 +1643,48 @@ func (ec *executionContext) field_Mutation_createPanier_args(ctx context.Context
 func (ec *executionContext) field_Mutation_createProduct_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewProduct
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewProduct2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewProduct(ctx, tmp)
+	var arg0 *string
+	if tmp, ok := rawArgs["commerceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commerceID"))
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["commerceID"] = arg0
+	var arg1 model.NewProduct
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNNewProduct2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewProduct(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createProducts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["commerceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commerceID"))
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["commerceID"] = arg0
+	var arg1 []*model.NewProduct
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNNewProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewProductᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -3502,7 +3548,7 @@ func (ec *executionContext) _Mutation_createProduct(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateProduct(rctx, args["input"].(model.NewProduct))
+			return ec.resolvers.Mutation().CreateProduct(rctx, args["commerceID"].(*string), args["input"].(model.NewProduct))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			role, err := ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, "STOREKEEPER")
@@ -3540,6 +3586,72 @@ func (ec *executionContext) _Mutation_createProduct(ctx context.Context, field g
 	res := resTmp.(*model.Product)
 	fc.Result = res
 	return ec.marshalNProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createProducts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createProducts_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateProducts(rctx, args["commerceID"].(*string), args["input"].([]*model.NewProduct))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, "STOREKEEPER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Product); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*chemin-du-local.bzh/graphql/graph/model.Product`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Product)
+	fc.Result = res
+	return ec.marshalNProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProductᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateProduct(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7117,14 +7229,6 @@ func (ec *executionContext) unmarshalInputNewProduct(ctx context.Context, obj in
 
 	for k, v := range asMap {
 		switch k {
-		case "commerceID":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commerceID"))
-			it.CommerceID, err = ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "name":
 			var err error
 
@@ -7980,6 +8084,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createProduct":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createProduct(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createProducts":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createProducts(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
@@ -9610,6 +9724,28 @@ func (ec *executionContext) unmarshalNNewProduct2cheminᚑduᚑlocalᚗbzhᚋgra
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNNewProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewProductᚄ(ctx context.Context, v interface{}) ([]*model.NewProduct, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.NewProduct, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNNewProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewProduct(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNNewProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewProduct(ctx context.Context, v interface{}) (*model.NewProduct, error) {
+	res, err := ec.unmarshalInputNewProduct(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNNewUser2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewUser(ctx context.Context, v interface{}) (model.NewUser, error) {
 	res, err := ec.unmarshalInputNewUser(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -9763,6 +9899,50 @@ func (ec *executionContext) marshalNPanierProduct2ᚖcheminᚑduᚑlocalᚗbzh�
 
 func (ec *executionContext) marshalNProduct2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx context.Context, sel ast.SelectionSet, v model.Product) graphql.Marshaler {
 	return ec._Product(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProductᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Product) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx context.Context, sel ast.SelectionSet, v *model.Product) graphql.Marshaler {

@@ -77,6 +77,8 @@ type NewCommerce struct {
 	Description     string          `json:"description"`
 	StorekeeperWord string          `json:"storekeeperWord"`
 	Address         string          `json:"address"`
+	Latitude        float64         `json:"latitude"`
+	Longitude       float64         `json:"longitude"`
 	Phone           string          `json:"phone"`
 	Email           string          `json:"email"`
 	Facebook        *string         `json:"facebook"`

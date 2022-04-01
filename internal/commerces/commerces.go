@@ -8,6 +8,7 @@ import (
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
+	"chemin-du-local.bzh/graphql/pkg/geojson"
 	"github.com/99designs/gqlgen/graphql"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,6 +22,7 @@ type Commerce struct {
 	Description     string             `bson:"description"`
 	StorekeeperWord string             `bson:"storekeeperWord"`
 	Address         string             `bson:"address"`
+	AddressGeo      geojson.GeoJSON    `bson:"addressGeo"`
 	Phone           string             `bson:"phone"`
 	Email           string             `bson:"email"`
 	Facebook        *string            `bson:"facebook"`
@@ -37,7 +39,8 @@ func (commerce *Commerce) ToModel() *model.Commerce {
 		Description:     commerce.Description,
 		StorekeeperWord: commerce.StorekeeperWord,
 		Address:         commerce.Address,
-		Phone:           commerce.Phone,
+		Latitude:        commerce.AddressGeo.Coordinates[1],
+		Longitude:       commerce.AddressGeo.Coordinates[0],
 		Email:           commerce.Email,
 		Facebook:        commerce.Facebook,
 		Twitter:         commerce.Twitter,
@@ -78,11 +81,15 @@ func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) (*Commerc
 		Description:     input.Description,
 		StorekeeperWord: input.StorekeeperWord,
 		Address:         input.Address,
-		Phone:           input.Phone,
-		Email:           input.Email,
-		Facebook:        input.Facebook,
-		Twitter:         input.Twitter,
-		Instagram:       input.Instagram,
+		AddressGeo: geojson.GeoJSON{
+			Type:        "Point",
+			Coordinates: []float64{input.Latitude, input.Longitude},
+		},
+		Phone:     input.Phone,
+		Email:     input.Email,
+		Facebook:  input.Facebook,
+		Twitter:   input.Twitter,
+		Instagram: input.Instagram,
 	}
 
 	_, err := database.CollectionCommerces.InsertOne(database.MongoContext, databaseCommerce)
@@ -132,7 +139,8 @@ func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) (*Commerc
 
 // Mise à jour en base de données
 
-func Update(changes *Commerce, image *graphql.Upload, profilePicture *graphql.Upload) error {
+func Update(
+	changes *Commerce, image *graphql.Upload, profilePicture *graphql.Upload) error {
 	filter := bson.D{
 		primitive.E{
 			Key:   "_id",

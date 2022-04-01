@@ -19,6 +19,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/services/clickandcollect"
 	"chemin-du-local.bzh/graphql/internal/services/paniers"
 	"chemin-du-local.bzh/graphql/internal/users"
+	"chemin-du-local.bzh/graphql/pkg/geojson"
 	"chemin-du-local.bzh/graphql/pkg/jwt"
 	"github.com/99designs/gqlgen/graphql"
 	"go.mongodb.org/mongo-driver/bson"
@@ -357,6 +358,24 @@ func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, change
 	if changes["profilePicture"] != nil {
 		castedImage := changes["profilePicture"].(graphql.Upload)
 		profilePicture = &castedImage
+	}
+
+	if changes["latitude"] != nil && changes["longitude"] != nil {
+		castedLatitude := changes["latitude"].(json.Number)
+		castedLongitude := changes["longitude"].(json.Number)
+
+		latitude, err1 := castedLatitude.Float64()
+		longitude, err2 := castedLongitude.Float64()
+
+		if err1 != nil || err2 != nil {
+			return nil, err1
+		}
+
+		databaseCommerce.AddressGeo = geojson.GeoJSON{
+			Type:        "Point",
+			Coordinates: []float64{longitude, latitude},
+		}
+
 	}
 
 	err = commerces.Update(databaseCommerce, image, profilePicture)

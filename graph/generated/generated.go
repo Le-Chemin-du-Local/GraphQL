@@ -89,6 +89,8 @@ type ComplexityRoot struct {
 		Facebook        func(childComplexity int) int
 		ID              func(childComplexity int) int
 		Instagram       func(childComplexity int) int
+		Latitude        func(childComplexity int) int
+		Longitude       func(childComplexity int) int
 		Name            func(childComplexity int) int
 		Paniers         func(childComplexity int, first *int, after *string, filters *model.PanierFilter) int
 		Phone           func(childComplexity int) int
@@ -426,6 +428,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Instagram(childComplexity), true
+
+	case "Commerce.latitude":
+		if e.complexity.Commerce.Latitude == nil {
+			break
+		}
+
+		return e.complexity.Commerce.Latitude(childComplexity), true
+
+	case "Commerce.longitude":
+		if e.complexity.Commerce.Longitude == nil {
+			break
+		}
+
+		return e.complexity.Commerce.Longitude(childComplexity), true
 
 	case "Commerce.name":
 		if e.complexity.Commerce.Name == nil {
@@ -1156,6 +1172,8 @@ type Commerce { # Ici on utilise le nom "Commerce"
 
   # Coordonnées
   address: String!
+  latitude: Float!
+  longitude: Float!
   phone: String!
   email: String!
 
@@ -1202,6 +1220,8 @@ input NewCommerce {
 
   # Coordonnées
   address: String!
+  latitude: Float!
+  longitude: Float!
   phone: String!
   email: String!
 
@@ -1221,6 +1241,8 @@ input ChangesCommerce {
 
   # Coordonnées
   address: String
+  latitude: Float
+  longitude: Float
   phone: String
   email: String
 
@@ -2700,6 +2722,76 @@ func (ec *executionContext) _Commerce_address(ctx context.Context, field graphql
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_latitude(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Latitude, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_longitude(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Longitude, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Commerce_phone(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
@@ -7048,6 +7140,22 @@ func (ec *executionContext) unmarshalInputNewCommerce(ctx context.Context, obj i
 			if err != nil {
 				return it, err
 			}
+		case "latitude":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("latitude"))
+			it.Latitude, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "longitude":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("longitude"))
+			it.Longitude, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "phone":
 			var err error
 
@@ -7743,6 +7851,26 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 		case "address":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Commerce_address(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "latitude":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_latitude(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "longitude":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_longitude(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

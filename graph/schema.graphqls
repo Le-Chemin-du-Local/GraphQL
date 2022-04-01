@@ -57,6 +57,8 @@ type Commerce { # Ici on utilise le nom "Commerce"
 
   # Coordonnées
   address: String!
+  latitude: Float!
+  longitude: Float!
   phone: String!
   email: String!
 
@@ -103,6 +105,8 @@ input NewCommerce {
 
   # Coordonnées
   address: String!
+  latitude: Float!
+  longitude: Float!
   phone: String!
   email: String!
 
@@ -122,6 +126,8 @@ input ChangesCommerce {
 
   # Coordonnées
   address: String
+  latitude: Float
+  longitude: Float
   phone: String
   email: String
 
@@ -328,6 +334,7 @@ input Filter {
   key: String!
   value: String!
 }
+
 
 input ProductFilter {
   category: String

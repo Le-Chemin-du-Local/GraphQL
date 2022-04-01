@@ -41,6 +41,7 @@ func (commerce *Commerce) ToModel() *model.Commerce {
 		Address:         commerce.Address,
 		Latitude:        commerce.AddressGeo.Coordinates[1],
 		Longitude:       commerce.AddressGeo.Coordinates[0],
+		Phone:           commerce.Phone,
 		Email:           commerce.Email,
 		Facebook:        commerce.Facebook,
 		Twitter:         commerce.Twitter,
@@ -251,10 +252,10 @@ func GetForUser(userID string) (*Commerce, error) {
 	return &commerces[0], nil
 }
 
-func GetPaginated(startValue *string, first int) ([]Commerce, error) {
+func GetPaginated(startValue *string, first int, filter *model.CommerceFilter) ([]Commerce, error) {
 	// On doit faire un filtre spécifique si on veut commencer
 	// le curseur à l'ID de départ
-	var filter interface{}
+	var finalFilter bson.M
 
 	if startValue != nil {
 		objectID, err := primitive.ObjectIDFromHex(*startValue)
@@ -263,19 +264,47 @@ func GetPaginated(startValue *string, first int) ([]Commerce, error) {
 			return nil, err
 		}
 
-		filter = bson.M{
+		finalFilter = bson.M{
 			"_id": bson.M{
 				"$gt": objectID,
 			},
 		}
 	} else {
-		filter = bson.D{{}}
+		finalFilter = bson.M{}
+	}
+
+	if filter != nil && filter.NearLatitude != nil && filter.NearLongitude != nil {
+		maxDistance := 20000.0
+
+		if filter.Radius != nil {
+			maxDistance = *filter.Radius
+		}
+
+		finalFilter = bson.M{
+			"$and": []bson.M{
+				finalFilter,
+				{
+					"addressGeo": bson.M{
+						"$near": bson.M{
+							"$geometry": bson.M{
+								"type": "Point",
+								"coordinates": []float64{
+									*filter.NearLongitude,
+									*filter.NearLatitude,
+								},
+							},
+							"$maxDistance": maxDistance,
+						},
+					},
+				},
+			},
+		}
 	}
 
 	opts := options.Find()
 	opts.SetLimit(int64(first))
 
-	return GetFiltered(filter, opts)
+	return GetFiltered(finalFilter, opts)
 }
 
 func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Commerce, error) {

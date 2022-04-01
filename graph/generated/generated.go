@@ -194,7 +194,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Cccommand func(childComplexity int, id string) int
 		Commerce  func(childComplexity int, id *string) int
-		Commerces func(childComplexity int, first *int, after *string) int
+		Commerces func(childComplexity int, first *int, after *string, filter *model.CommerceFilter) int
 		Panier    func(childComplexity int, id string) int
 		Product   func(childComplexity int, id string) int
 		User      func(childComplexity int, id *string) int
@@ -245,7 +245,7 @@ type PanierResolver interface {
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
 	User(ctx context.Context, id *string) (*model.User, error)
-	Commerces(ctx context.Context, first *int, after *string) (*model.CommerceConnection, error)
+	Commerces(ctx context.Context, first *int, after *string, filter *model.CommerceFilter) (*model.CommerceConnection, error)
 	Commerce(ctx context.Context, id *string) (*model.Commerce, error)
 	Product(ctx context.Context, id string) (*model.Product, error)
 	Cccommand(ctx context.Context, id string) (*model.CCCommand, error)
@@ -955,7 +955,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Commerces(childComplexity, args["first"].(*int), args["after"].(*string)), true
+		return e.complexity.Query.Commerces(childComplexity, args["first"].(*int), args["after"].(*string), args["filter"].(*model.CommerceFilter)), true
 
 	case "Query.panier":
 		if e.complexity.Query.Panier == nil {
@@ -1450,6 +1450,13 @@ input Filter {
   value: String!
 }
 
+input CommerceFilter {
+  nearLatitude: Float
+  nearLongitude: Float
+  radius: Float
+}
+
+
 input ProductFilter {
   category: String
 }
@@ -1468,7 +1475,7 @@ type Query {
   user(id: ID): User!
 
   # COMMERCES
-  commerces(first: Int = 5, after: ID): CommerceConnection! 
+  commerces(first: Int = 5, after: ID, filter: CommerceFilter): CommerceConnection! 
   commerce(id: ID): Commerce
   product(id: ID!): Product!
 
@@ -1926,6 +1933,15 @@ func (ec *executionContext) field_Query_commerces_args(ctx context.Context, rawA
 		}
 	}
 	args["after"] = arg1
+	var arg2 *model.CommerceFilter
+	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+		arg2, err = ec.unmarshalOCommerceFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg2
 	return args, nil
 }
 
@@ -5317,7 +5333,7 @@ func (ec *executionContext) _Query_commerces(ctx context.Context, field graphql.
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Commerces(rctx, args["first"].(*int), args["after"].(*string))
+		return ec.resolvers.Query().Commerces(rctx, args["first"].(*int), args["after"].(*string), args["filter"].(*model.CommerceFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6966,6 +6982,45 @@ func (ec *executionContext) unmarshalInputCCCommandFilter(ctx context.Context, o
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
 			it.Status, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCommerceFilter(ctx context.Context, obj interface{}) (model.CommerceFilter, error) {
+	var it model.CommerceFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "nearLatitude":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nearLatitude"))
+			it.NearLatitude, err = ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nearLongitude":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nearLongitude"))
+			it.NearLongitude, err = ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "radius":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("radius"))
+			it.Radius, err = ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10597,6 +10652,14 @@ func (ec *executionContext) marshalOCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgrap
 		return graphql.Null
 	}
 	return ec._Commerce(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOCommerceFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceFilter(ctx context.Context, v interface{}) (*model.CommerceFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputCommerceFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {

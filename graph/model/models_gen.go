@@ -46,6 +46,12 @@ type CommerceEdge struct {
 	Node   *Commerce `json:"node"`
 }
 
+type CommerceFilter struct {
+	NearLatitude  *float64 `json:"nearLatitude"`
+	NearLongitude *float64 `json:"nearLongitude"`
+	Radius        *float64 `json:"radius"`
+}
+
 type CommercePageInfo struct {
 	StartCursor string `json:"startCursor"`
 	EndCursor   string `json:"endCursor"`

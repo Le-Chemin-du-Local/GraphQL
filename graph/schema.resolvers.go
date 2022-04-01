@@ -656,7 +656,7 @@ func (r *queryResolver) User(ctx context.Context, id *string) (*model.User, erro
 	return databaseUser.ToModel(), nil
 }
 
-func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string) (*model.CommerceConnection, error) {
+func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string, filter *model.CommerceFilter) (*model.CommerceConnection, error) {
 	var decodedCursor *string
 
 	if after != nil {
@@ -670,7 +670,7 @@ func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string
 		decodedCursor = &decodedCursorString
 	}
 
-	databaseCommerces, err := commerces.GetPaginated(decodedCursor, *first)
+	databaseCommerces, err := commerces.GetPaginated(decodedCursor, *first, filter)
 
 	if err != nil {
 		return nil, err

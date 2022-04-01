@@ -335,6 +335,12 @@ input Filter {
   value: String!
 }
 
+input CommerceFilter {
+  nearLatitude: Float
+  nearLongitude: Float
+  radius: Float
+}
+
 
 input ProductFilter {
   category: String
@@ -354,7 +360,7 @@ type Query {
   user(id: ID): User!
 
   # COMMERCES
-  commerces(first: Int = 5, after: ID): CommerceConnection! 
+  commerces(first: Int = 5, after: ID, filter: CommerceFilter): CommerceConnection! 
   commerce(id: ID): Commerce
   product(id: ID!): Product!
 

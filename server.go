@@ -13,6 +13,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
 	"chemin-du-local.bzh/graphql/internal/users"
+	"chemin-du-local.bzh/graphql/pkg/stripehandler"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -65,6 +66,7 @@ func main() {
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 	router.Handle("/playground", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
+	router.HandleFunc("/create-payment-intent", stripehandler.HandleCreatePaymentIntent)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))

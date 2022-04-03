@@ -16,19 +16,20 @@ import (
 )
 
 type Commerce struct {
-	ID              primitive.ObjectID `bson:"_id"`
-	StorekeeperID   primitive.ObjectID `bson:"storekeeperID"`
-	Name            string             `bson:"name"`
-	Description     string             `bson:"description"`
-	StorekeeperWord string             `bson:"storekeeperWord"`
-	Address         string             `bson:"address"`
-	AddressGeo      geojson.GeoJSON    `bson:"addressGeo"`
-	Phone           string             `bson:"phone"`
-	Email           string             `bson:"email"`
-	Facebook        *string            `bson:"facebook"`
-	Twitter         *string            `bson:"twitter"`
-	Instagram       *string            `bson:"instagram"`
-	Services        []string           `bson:"services"`
+	ID                                  primitive.ObjectID `bson:"_id"`
+	StorekeeperID                       primitive.ObjectID `bson:"storekeeperID"`
+	Name                                string             `bson:"name"`
+	Description                         string             `bson:"description"`
+	StorekeeperWord                     string             `bson:"storekeeperWord"`
+	Address                             string             `bson:"address"`
+	AddressGeo                          geojson.GeoJSON    `bson:"addressGeo"`
+	Phone                               string             `bson:"phone"`
+	Email                               string             `bson:"email"`
+	Facebook                            *string            `bson:"facebook"`
+	Twitter                             *string            `bson:"twitter"`
+	Instagram                           *string            `bson:"instagram"`
+	Services                            []string           `bson:"services"`
+	ProductsAvailableForClickAndCollect []string           `bson:"productsAvailableForClickAndCollect"`
 }
 
 func (commerce *Commerce) ToModel() *model.Commerce {

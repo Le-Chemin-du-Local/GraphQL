@@ -72,6 +72,7 @@ type Commerce { # Ici on utilise le nom "Commerce"
 
   # Services
   services: [String!]!
+  productsAvailableForClickAndCollect: [Product!]!
 
   # Click and collcet
   cccommands(first: Int = 10, after: ID, filters: CCCommandFilter): CCCommandConnection!
@@ -137,6 +138,8 @@ input ChangesCommerce {
 
   profilePicture: Upload
   image: Upload
+
+  productsAvailableForClickAndCollect: [ID!]
 }
 
 # PRODUITS
@@ -199,6 +202,10 @@ input ChangesProduct {
   image: Upload
 }
 
+input BulkChangesProduct {
+  id: ID!
+  changes: ChangesProduct!
+}
 
 #######################
 ## CLICK AND COLLECT ##
@@ -383,6 +390,7 @@ type Mutation {
   createProduct(commerceID: ID, input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
   createProducts(commerceID: ID, input: [NewProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
   updateProduct(id: ID!, changes: ChangesProduct!): Product! @hasRole(role: STOREKEEPER)
+  updateProducts(changes: [BulkChangesProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
 
   # SERVICES
   # CLICK AND COLLECT

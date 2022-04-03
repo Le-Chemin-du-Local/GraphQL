@@ -11,6 +11,11 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+type BulkChangesProduct struct {
+	ID      string                 `json:"id"`
+	Changes map[string]interface{} `json:"changes"`
+}
+
 type CCCommandConnection struct {
 	Edges    []*CCCommandEdge   `json:"edges"`
 	PageInfo *CCCommandPageInfo `json:"pageInfo"`

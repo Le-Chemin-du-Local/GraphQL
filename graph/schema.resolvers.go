@@ -155,6 +155,33 @@ func (r *commerceResolver) Products(ctx context.Context, obj *model.Commerce, fi
 	return &connection, nil
 }
 
+func (r *commerceResolver) ProductsAvailableForClickAndCollect(ctx context.Context, obj *model.Commerce) ([]*model.Product, error) {
+	databaseCommere, err := commerces.GetById(obj.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseCommere == nil {
+		return nil, &commerces.CommerceErrorNotFound{}
+	}
+
+	productsResult := []*model.Product{}
+	for _, productId := range databaseCommere.ProductsAvailableForClickAndCollect {
+		databaseProduct, err := products.GetById(productId)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if databaseProduct != nil {
+			productsResult = append(productsResult, databaseProduct.ToModel())
+		}
+	}
+
+	return productsResult, nil
+}
+
 func (r *commerceResolver) Cccommands(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.CCCommandFilter) (*model.CCCommandConnection, error) {
 	var decodedCursor *string
 
@@ -482,6 +509,41 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, changes
 	}
 
 	return databaseProduct.ToModel(), nil
+}
+
+func (r *mutationResolver) UpdateProducts(ctx context.Context, changes []*model.BulkChangesProduct) ([]*model.Product, error) {
+	result := []*model.Product{}
+
+	for _, change := range changes {
+		databaseProduct, err := products.GetById(change.ID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if databaseProduct == nil {
+			return nil, &products.ProductNotFoundError{}
+		}
+
+		helper.ApplyChanges(change.Changes, databaseProduct)
+
+		var image *graphql.Upload
+
+		if change.Changes["image"] != nil {
+			castedImage := change.Changes["image"].(graphql.Upload)
+			image = &castedImage
+		}
+
+		err = products.Update(databaseProduct, image)
+
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, databaseProduct.ToModel())
+	}
+
+	return result, nil
 }
 
 func (r *mutationResolver) Order(ctx context.Context, commerceID string, command model.NewCCCommand) (*model.CCCommand, error) {

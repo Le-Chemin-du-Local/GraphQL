@@ -24,6 +24,7 @@ type User struct {
 	Role         string             `bson:"role"`
 	FirstName    *string            `bson:"firstName"`
 	LastName     *string            `bson:"lastName"`
+	StripID      *string            `bson:"stripeID"`
 	PasswordHash string             `bson:"password_hash"`
 }
 
@@ -82,6 +83,21 @@ func Create(input model.NewUser) *User {
 	}
 
 	return &databaseUser
+}
+
+// Mise à jour de la base de données
+
+func Update(changes *User) error {
+	filter := bson.D{
+		primitive.E{
+			Key:   "_id",
+			Value: changes.ID,
+		},
+	}
+
+	_, err := database.CollectionUsers.ReplaceOne(database.MongoContext, filter, changes)
+
+	return err
 }
 
 // Getter de base de données

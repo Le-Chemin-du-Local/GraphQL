@@ -3,13 +3,15 @@ package stripehandler
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 
+	"chemin-du-local.bzh/graphql/internal/auth"
 	"chemin-du-local.bzh/graphql/internal/config"
+	"chemin-du-local.bzh/graphql/internal/users"
 	"github.com/stripe/stripe-go/v72"
+	"github.com/stripe/stripe-go/v72/customer"
 	"github.com/stripe/stripe-go/v72/paymentintent"
 )
 
@@ -18,7 +20,7 @@ type item struct {
 }
 
 func calculateOrderAmount(items []item) int64 {
-	return 4000
+	return 1000
 }
 
 func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
@@ -40,11 +42,43 @@ func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Printf("json.NewDecoder.Decode: %v", err)
 		return
 	}
 
-	fmt.Println(req)
+	// On doit créer le consumer Stripe si nécesaire
+	user := auth.ForContext(r.Context())
+
+	if user == nil {
+		http.Error(w, "access denied", http.StatusForbidden)
+		return
+	}
+
+	var stripeCustomer *string
+
+	if user.StripID == nil {
+		userFullName := *user.FirstName + " " + *user.LastName
+		params := &stripe.CustomerParams{
+			Email: &user.Email,
+			Name:  &userFullName,
+		}
+
+		createdStripeCustomer, err := customer.New(params)
+		stripeCustomer = &createdStripeCustomer.ID
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		user.StripID = stripeCustomer
+		err = users.Update(user)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	} else {
+		stripeCustomer = user.StripID
+	}
+
 	if req.PaymentIntentID != nil {
 		params := &stripe.PaymentIntentConfirmParams{
 			PaymentMethod: req.PaymentMethodID,
@@ -74,6 +108,7 @@ func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 			PaymentMethod:      req.PaymentMethodID,
 			Confirm:            &confirm,
 			ConfirmationMethod: &confirmationMethode,
+			Customer:           stripeCustomer,
 		}
 
 		pi, err := paymentintent.New(params)

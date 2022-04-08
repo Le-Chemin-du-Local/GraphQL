@@ -7,20 +7,114 @@ import (
 	"log"
 	"net/http"
 
+	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/auth"
+	"chemin-du-local.bzh/graphql/internal/commerces"
 	"chemin-du-local.bzh/graphql/internal/config"
+	"chemin-du-local.bzh/graphql/internal/products"
+	"chemin-du-local.bzh/graphql/internal/services/clickandcollect"
+	"chemin-du-local.bzh/graphql/internal/services/paniers"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/customer"
 	"github.com/stripe/stripe-go/v72/paymentintent"
 )
 
-type item struct {
-	id string
+func calculateOrderAmount(basket model.NewBasket) (int64, error) {
+	result := 0
+
+	for _, commerce := range basket.Commerces {
+		databaseCommerce, err := commerces.GetById(commerce.CommerceID)
+
+		if err != nil {
+			return 0, err
+		}
+
+		if databaseCommerce == nil {
+			return 0, &commerces.CommerceErrorNotFound{}
+		}
+
+		for _, product := range commerce.Products {
+			databaseProduct, err := products.GetById(product.ProductID)
+
+			if err != nil {
+				return 0, err
+			}
+
+			if databaseProduct == nil {
+				return 0, &products.ProductNotFoundError{}
+			}
+
+			result = result + int(databaseProduct.Price*product.Quantity*100)
+		}
+
+		for _, panier := range commerce.Paniers {
+			databasePanier, err := paniers.GetById(panier)
+
+			if err != nil {
+				return 0, err
+			}
+
+			if databasePanier == nil {
+				return 0, &paniers.PanierNotFoundError{}
+			}
+
+			result = result + int(databasePanier.Price*100)
+		}
+	}
+
+	return int64(result), nil
 }
 
-func calculateOrderAmount(items []item) int64 {
-	return 1000
+func order(user users.User, basket model.NewBasket) error {
+	for _, commerce := range basket.Commerces {
+		databaseCommerce, err := commerces.GetById(commerce.CommerceID)
+
+		if err != nil {
+			return err
+		}
+
+		if databaseCommerce == nil {
+			return &commerces.CommerceErrorNotFound{}
+		}
+
+		// Click & collect
+		commandProducts := []*model.NewCCProcuct{}
+
+		for _, product := range commerce.Products {
+			commandProducts = append(commandProducts, &model.NewCCProcuct{
+				Quantity:  int(product.Quantity),
+				ProductID: product.ProductID,
+			})
+		}
+
+		command := model.NewCCCommand{
+			PickupDate: *commerce.PickupDate,
+			ProductsID: commandProducts,
+		}
+
+		_, err = clickandcollect.Create(user.ID, commerce.CommerceID, command)
+
+		if err != nil {
+			return err
+		}
+
+		// Paniers
+		for _, panier := range commerce.Paniers {
+			panierCommand := model.NewPanierCommand{
+				PanierID:   panier,
+				PickupDate: command.PickupDate,
+			}
+
+			_, err = paniers.CreateCommand(user.ID, commerce.CommerceID, panierCommand)
+
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
@@ -34,10 +128,10 @@ func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		UseStripeSDK    *bool   `json:"useStripeSKD"`
-		PaymentMethodID *string `json:"paymentMethodId"`
-		PaymentIntentID *string `json:"paymentIntentId"`
-		Items           []item  `json:"items"`
+		UseStripeSDK    *bool           `json:"useStripeSKD"`
+		PaymentMethodID *string         `json:"paymentMethodId"`
+		PaymentIntentID *string         `json:"paymentIntentId"`
+		Basket          model.NewBasket `json:"basket"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -80,6 +174,13 @@ func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.PaymentIntentID != nil {
+		err := order(*user, req.Basket)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		params := &stripe.PaymentIntentConfirmParams{
 			PaymentMethod: req.PaymentMethodID,
 		}
@@ -101,9 +202,18 @@ func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 		// Create a PaymentIntent with amount and currency
 		confirm := true
 		confirmationMethode := "manual"
+		price, err := calculateOrderAmount(req.Basket)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		log.Println(price)
+
 		params := &stripe.PaymentIntentParams{
 			UseStripeSDK:       req.UseStripeSDK,
-			Amount:             stripe.Int64(calculateOrderAmount(req.Items)),
+			Amount:             stripe.Int64(price),
 			Currency:           stripe.String(string(stripe.CurrencyEUR)),
 			PaymentMethod:      req.PaymentMethodID,
 			Confirm:            &confirm,
@@ -118,6 +228,15 @@ func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			log.Printf("pi.New: %v", err)
 			return
+		}
+
+		if pi.Status == stripe.PaymentIntentStatusSucceeded {
+			err := order(*user, req.Basket)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		writeJSON(w, struct {

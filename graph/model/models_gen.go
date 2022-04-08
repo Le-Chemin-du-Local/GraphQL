@@ -11,6 +11,21 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+type Basket struct {
+	Commerces []*BasketCommerce `json:"commerces"`
+}
+
+type BasketCommerce struct {
+	Commerce *Commerce        `json:"commerce"`
+	Products []*BasketProduct `json:"products"`
+	Paniers  []*Panier        `json:"paniers"`
+}
+
+type BasketProduct struct {
+	Quantity float64  `json:"quantity"`
+	Product  *Product `json:"product"`
+}
+
 type BulkChangesProduct struct {
 	ID      string                 `json:"id"`
 	Changes map[string]interface{} `json:"changes"`
@@ -73,6 +88,22 @@ type Login struct {
 	Password string `json:"password"`
 }
 
+type NewBasket struct {
+	Commerces []*NewBasketCommerce `json:"commerces"`
+}
+
+type NewBasketCommerce struct {
+	CommerceID string              `json:"commerceID"`
+	Products   []*NewBasketProduct `json:"products"`
+	Paniers    []string            `json:"paniers"`
+	PickupDate *time.Time          `json:"pickupDate"`
+}
+
+type NewBasketProduct struct {
+	Quantity  float64 `json:"quantity"`
+	ProductID string  `json:"productID"`
+}
+
 type NewCCCommand struct {
 	ProductsID []*NewCCProcuct `json:"productsID"`
 	PickupDate time.Time       `json:"pickupDate"`
@@ -110,6 +141,11 @@ type NewPanier struct {
 	Products    []*NewPanierProduct `json:"products"`
 }
 
+type NewPanierCommand struct {
+	PanierID   string    `json:"panierID"`
+	PickupDate time.Time `json:"pickupDate"`
+}
+
 type NewPanierProduct struct {
 	Quantity  int    `json:"quantity"`
 	ProductID string `json:"productID"`
@@ -132,6 +168,26 @@ type NewUser struct {
 	Password  string  `json:"password"`
 	FirstName *string `json:"firstName"`
 	LastName  *string `json:"lastName"`
+}
+
+type PanierCommandConnection struct {
+	Edges    []*PanierCommandEdge   `json:"edges"`
+	PageInfo *PanierCommandPageInfo `json:"pageInfo"`
+}
+
+type PanierCommandEdge struct {
+	Cursor string         `json:"cursor"`
+	Node   *PanierCommand `json:"node"`
+}
+
+type PanierCommandFilter struct {
+	Status *string `json:"status"`
+}
+
+type PanierCommandPageInfo struct {
+	StartCursor string `json:"startCursor"`
+	EndCursor   string `json:"endCursor"`
+	HasNextPage bool   `json:"hasNextPage"`
 }
 
 type PanierConnection struct {

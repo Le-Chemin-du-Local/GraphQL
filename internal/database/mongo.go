@@ -16,6 +16,7 @@ var CollectionCommerces *mongo.Collection
 var CollectionProducts *mongo.Collection
 var CollectionCCCommand *mongo.Collection
 var CollectionPaniers *mongo.Collection
+var CollectionPanierCommands *mongo.Collection
 
 // Initialise la base de données à partir des informations données
 // dans la configuration
@@ -48,10 +49,12 @@ func Init() {
 	produtsCollectionName := config.Cfg.Database.Collections.Products
 	cccommandeCollectionName := config.Cfg.Database.Collections.CCCommands
 	panierCollectionName := config.Cfg.Database.Collections.Paniers
+	panierCommandsCollectionName := config.Cfg.Database.Collections.PanierCommands
 
 	CollectionUsers = client.Database(databaseName).Collection(usersCollectionName)
 	CollectionCommerces = client.Database(databaseName).Collection(commercesCollectionName)
 	CollectionProducts = client.Database(databaseName).Collection(produtsCollectionName)
 	CollectionCCCommand = client.Database(databaseName).Collection(cccommandeCollectionName)
 	CollectionPaniers = client.Database(databaseName).Collection(panierCollectionName)
+	CollectionPanierCommands = client.Database(databaseName).Collection(panierCommandsCollectionName)
 }

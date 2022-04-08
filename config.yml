@@ -16,3 +16,4 @@ database:
     products: "products"
     cccommands: "cccommands"
     paniers: "paniers"
+    paniercommands: "paniercommands"

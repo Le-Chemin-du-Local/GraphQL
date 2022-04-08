@@ -23,11 +23,12 @@ type Config struct {
 		Name             string `yaml:"name"`
 		ConnectionString string `yaml:"connectionString"`
 		Collections      struct {
-			Users      string `yaml:"users"`
-			Commerces  string `yaml:"commerces"`
-			Products   string `yaml:"products"`
-			CCCommands string `yaml:"cccommands"`
-			Paniers    string `yaml:"paniers"`
+			Users          string `yaml:"users"`
+			Commerces      string `yaml:"commerces"`
+			Products       string `yaml:"products"`
+			CCCommands     string `yaml:"cccommands"`
+			Paniers        string `yaml:"paniers"`
+			PanierCommands string `yaml:"paniercommands"`
 		} `yaml:"collections"`
 	} `yaml:"database"`
 }

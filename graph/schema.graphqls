@@ -23,6 +23,7 @@ type User {
   lastName: String
 
   commerce: Commerce
+  basket: Basket
 }
 
 input NewUser {
@@ -79,6 +80,7 @@ type Commerce { # Ici on utilise le nom "Commerce"
 
   # Panier
   paniers(first: Int = 10, after: ID, filters: PanierFilter): PanierConnection!
+  panierCommands(first: Int = 10, after: ID, filters: PanierCommandFilter): PanierCommandConnection!
 } 
 
 # Pagination 
@@ -333,6 +335,77 @@ input ChangesPanier {
   products: [NewPanierProduct!]
 }
 
+type PanierCommand {
+  id: ID!
+  status: String!
+  panier: Panier!
+
+  pickupDate: Time!
+
+  user: User!
+}
+
+# Pagination 
+type PanierCommandConnection {
+  edges: [PanierCommandEdge!]!
+  pageInfo: PanierCommandPageInfo!
+}
+
+type PanierCommandEdge {
+  cursor: ID!
+  node: PanierCommand
+}
+
+type PanierCommandPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+input NewPanierCommand {
+  panierID: String!
+  pickupDate: Time!
+}
+
+input ChangesPanierCommand {
+  status: String
+}
+
+############
+## BASKET ##
+############
+
+type BasketProduct {
+  quantity: Float!
+  product: Product!
+}
+
+type BasketCommerce {
+  commerce: Commerce!
+  products: [BasketProduct!]!
+  paniers: [Panier]!
+}
+
+type Basket {
+  commerces: [BasketCommerce!]!
+}
+
+input NewBasket {
+  commerces: [NewBasketCommerce!]!
+}
+
+input NewBasketCommerce {
+  commerceID: ID!,
+  products: [NewBasketProduct!]!
+  paniers: [ID!]!
+  pickupDate: Time
+}
+
+input NewBasketProduct {
+  quantity: Float!
+  productID: ID!
+}
+
 #############
 ## FILTERS ##
 #############
@@ -357,6 +430,10 @@ input CCCommandFilter {
   status: String
 }
 
+input PanierCommandFilter {
+  status: String
+}
+
 input PanierFilter {
   category: String
 }
@@ -377,6 +454,7 @@ type Query {
 
   # PANIERS
   panier(id: ID!): Panier!
+  paniercommand(id: ID!): PanierCommand! @needAuthentication
 }
 
 type Mutation {
@@ -394,10 +472,10 @@ type Mutation {
 
   # SERVICES
   # CLICK AND COLLECT
-  order(commerceID: ID!, command: NewCCCommand!): CCCommand! @needAuthentication
   updateCCCommand(id: ID!, changes: ChangesCCCommand): CCCommand! @hasRole(role: STOREKEEPER)
 
   # PANIER
   createPanier(commerceID: ID, input: NewPanier!): Panier! @hasRole(role: STOREKEEPER)
   updatePanier(id: ID! changes: ChangesPanier!): Panier! @hasRole(role: STOREKEEPER)
+  updatePanierCommand(id: ID!, changes: ChangesPanierCommand): PanierCommand! @hasRole(role: STOREKEEPER)
 }

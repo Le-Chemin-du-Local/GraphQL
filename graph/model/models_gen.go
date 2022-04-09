@@ -116,8 +116,8 @@ type NewCCProcuct struct {
 
 type NewCommerce struct {
 	Name            string          `json:"name"`
-	Description     string          `json:"description"`
-	StorekeeperWord string          `json:"storekeeperWord"`
+	Description     *string         `json:"description"`
+	StorekeeperWord *string         `json:"storekeeperWord"`
 	Address         string          `json:"address"`
 	Latitude        float64         `json:"latitude"`
 	Longitude       float64         `json:"longitude"`

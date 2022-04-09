@@ -76,12 +76,23 @@ func (commerce Commerce) IsLast() bool {
 func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) (*Commerce, error) {
 	commerceObjectID := primitive.NewObjectID()
 
+	description := ""
+	storekeeperWord := ""
+
+	if input.Description != nil {
+		description = *input.Description
+	}
+
+	if input.StorekeeperWord != nil {
+		storekeeperWord = *input.StorekeeperWord
+	}
+
 	databaseCommerce := Commerce{
 		ID:              commerceObjectID,
 		StorekeeperID:   storekeeperID,
 		Name:            input.Name,
-		Description:     input.Description,
-		StorekeeperWord: input.StorekeeperWord,
+		Description:     description,
+		StorekeeperWord: storekeeperWord,
 		Address:         input.Address,
 		AddressGeo: geojson.GeoJSON{
 			Type:        "Point",

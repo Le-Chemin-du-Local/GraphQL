@@ -136,7 +136,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCommerce      func(childComplexity int, input model.NewCommerce) int
+		CreateCommerce      func(childComplexity int, userID string, input model.NewCommerce) int
 		CreatePanier        func(childComplexity int, commerceID *string, input model.NewPanier) int
 		CreateProduct       func(childComplexity int, commerceID *string, input model.NewProduct) int
 		CreateProducts      func(childComplexity int, commerceID *string, input []*model.NewProduct) int
@@ -276,7 +276,7 @@ type CommerceResolver interface {
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
 	Login(ctx context.Context, input model.Login) (string, error)
-	CreateCommerce(ctx context.Context, input model.NewCommerce) (*model.Commerce, error)
+	CreateCommerce(ctx context.Context, userID string, input model.NewCommerce) (*model.Commerce, error)
 	UpdateCommerce(ctx context.Context, id string, changes map[string]interface{}) (*model.Commerce, error)
 	CreateProduct(ctx context.Context, commerceID *string, input model.NewProduct) (*model.Product, error)
 	CreateProducts(ctx context.Context, commerceID *string, input []*model.NewProduct) ([]*model.Product, error)
@@ -684,7 +684,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateCommerce(childComplexity, args["input"].(model.NewCommerce)), true
+		return e.complexity.Mutation.CreateCommerce(childComplexity, args["userID"].(string), args["input"].(model.NewCommerce)), true
 
 	case "Mutation.createPanier":
 		if e.complexity.Mutation.CreatePanier == nil {
@@ -1449,8 +1449,8 @@ type CommercePageInfo {
 input NewCommerce {
   # Descriptif
   name: String!
-  description: String!
-  storekeeperWord: String!
+  description: String
+  storekeeperWord: String
 
   # Coordonnées
   address: String!
@@ -1809,7 +1809,7 @@ type Mutation {
   login(input: Login!): String!
 
   # COMMERCES
-  createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
+  createCommerce(userID: ID!, input: NewCommerce!): Commerce! 
   updateCommerce(id: ID!, changes: ChangesCommerce!): Commerce! @hasRole(role: STOREKEEPER)
   createProduct(commerceID: ID, input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
   createProducts(commerceID: ID, input: [NewProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
@@ -1983,15 +1983,24 @@ func (ec *executionContext) field_Commerce_products_args(ctx context.Context, ra
 func (ec *executionContext) field_Mutation_createCommerce_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewCommerce
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewCommerce2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCommerce(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["userID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["userID"] = arg0
+	var arg1 model.NewCommerce
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNNewCommerce2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCommerce(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -4189,32 +4198,8 @@ func (ec *executionContext) _Mutation_createCommerce(ctx context.Context, field 
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateCommerce(rctx, args["input"].(model.NewCommerce))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			role, err := ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, "STOREKEEPER")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, role)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Commerce); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.Commerce`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateCommerce(rctx, args["userID"].(string), args["input"].(model.NewCommerce))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8555,7 +8540,7 @@ func (ec *executionContext) unmarshalInputNewCommerce(ctx context.Context, obj i
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
-			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8563,7 +8548,7 @@ func (ec *executionContext) unmarshalInputNewCommerce(ctx context.Context, obj i
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("storekeeperWord"))
-			it.StorekeeperWord, err = ec.unmarshalNString2string(ctx, v)
+			it.StorekeeperWord, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

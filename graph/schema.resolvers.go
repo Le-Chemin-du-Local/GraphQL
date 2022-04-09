@@ -400,18 +400,27 @@ func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string
 	return token, nil
 }
 
-func (r *mutationResolver) CreateCommerce(ctx context.Context, input model.NewCommerce) (*model.Commerce, error) {
+func (r *mutationResolver) CreateCommerce(ctx context.Context, userID string, input model.NewCommerce) (*model.Commerce, error) {
 	// TODO: s'assurer de n'avoir qu'un seul commerce par commerçant
 
-	// Cas spécifique : seul les commerçant peuvent créer un commerce
-	// pas même les admin
-	user := auth.ForContext(ctx) // NOTE: pas besoin de vérifier le nil ici
+	databaseUser, err := users.GetUserById(userID)
 
-	if user.Role != users.USERROLE_STOREKEEPER {
-		return nil, &users.UserAccessDenied{}
+	if err != nil {
+		return nil, err
 	}
 
-	databaseCommerce, err := commerces.Create(input, user.ID)
+	if databaseUser == nil {
+		return nil, &users.UserNotFoundError{}
+	}
+
+	databaseCommerce, err := commerces.Create(input, databaseUser.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	databaseUser.Role = users.USERROLE_STOREKEEPER
+	err = users.Update(databaseUser)
 
 	if err != nil {
 		return nil, err

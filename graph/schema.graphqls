@@ -103,8 +103,8 @@ type CommercePageInfo {
 input NewCommerce {
   # Descriptif
   name: String!
-  description: String!
-  storekeeperWord: String!
+  description: String
+  storekeeperWord: String
 
   # Coordonnées
   address: String!
@@ -463,7 +463,7 @@ type Mutation {
   login(input: Login!): String!
 
   # COMMERCES
-  createCommerce(input: NewCommerce!): Commerce! @hasRole(role: STOREKEEPER) 
+  createCommerce(userID: ID!, input: NewCommerce!): Commerce! 
   updateCommerce(id: ID!, changes: ChangesCommerce!): Commerce! @hasRole(role: STOREKEEPER)
   createProduct(commerceID: ID, input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
   createProducts(commerceID: ID, input: [NewProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)

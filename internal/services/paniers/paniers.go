@@ -21,9 +21,11 @@ type Panier struct {
 	CommerceID  primitive.ObjectID `bson:"commerceID"`
 	Name        string             `bson:"name"`
 	Description string             `bson:"description"`
+	Type        string             `bson:"type"`
 	Category    string             `bson:"category"`
 	Quantity    int                `bson:"quantity"`
 	Price       float64            `bson:"price"`
+	Reduction   float64            `bons:"reduction"`
 	EndingDate  *time.Time         `bson:"endingDate"`
 	Products    []PanierProduct    `bson:"products"`
 }
@@ -39,10 +41,12 @@ func (panier *Panier) ToModel() *model.Panier {
 		ID:          panier.ID.Hex(),
 		Name:        panier.Name,
 		Description: panier.Description,
+		Type:        panier.Type,
 		Category:    panier.Category,
 		Quantity:    panier.Quantity,
 		EndingDate:  panier.EndingDate,
 		Price:       panier.Price,
+		Reduction:   panier.Reduction,
 	}
 }
 
@@ -95,9 +99,11 @@ func Create(commerceID primitive.ObjectID, input model.NewPanier) (*Panier, erro
 		CommerceID:  commerceID,
 		Name:        input.Name,
 		Description: input.Description,
+		Type:        input.Type,
 		Category:    input.Category,
 		Quantity:    input.Quantity,
 		Price:       input.Price,
+		Reduction:   input.Reduction,
 		EndingDate:  input.EndingDate,
 		Products:    products,
 	}
@@ -219,7 +225,7 @@ func GetPaginated(commerceID string, startValue *string, first int, filters *mod
 					},
 				},
 				{
-					"category": "PERMANENT",
+					"type": "PERMANENT",
 				},
 			},
 		}
@@ -233,19 +239,19 @@ func GetPaginated(commerceID string, startValue *string, first int, filters *mod
 					},
 				},
 				{
-					"category": "PERMANENT",
+					"type": "PERMANENT",
 				},
 			},
 		}
 	}
 
 	if filters != nil {
-		if filters.Category != nil {
+		if filters.Type != nil {
 			finalFilter = bson.M{
 				"$and": []bson.M{
 					finalFilter,
 					{
-						"category": filters.Category,
+						"type": filters.Type,
 					},
 				},
 			}

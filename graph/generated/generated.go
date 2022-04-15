@@ -159,6 +159,8 @@ type ComplexityRoot struct {
 		Price       func(childComplexity int) int
 		Products    func(childComplexity int) int
 		Quantity    func(childComplexity int) int
+		Reduction   func(childComplexity int) int
+		Type        func(childComplexity int) int
 	}
 
 	PanierCommand struct {
@@ -873,6 +875,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Panier.Quantity(childComplexity), true
+
+	case "Panier.reduction":
+		if e.complexity.Panier.Reduction == nil {
+			break
+		}
+
+		return e.complexity.Panier.Reduction(childComplexity), true
+
+	case "Panier.type":
+		if e.complexity.Panier.Type == nil {
+			break
+		}
+
+		return e.complexity.Panier.Type(childComplexity), true
 
 	case "PanierCommand.id":
 		if e.complexity.PanierCommand.ID == nil {
@@ -1619,10 +1635,12 @@ type Panier {
   id: ID!
   name: String!
   description: String!
+  type: String!
   category: String!
 
   quantity: Int!
   price: Float!
+  reduction: Float!
 
   endingDate: Time
 
@@ -1656,10 +1674,12 @@ input NewPanierProduct {
 input NewPanier {
   name: String!
   description: String!
+  type: String!
   category: String!
 
   quantity: Int!
   price: Float!
+  reduction: Float!
 
   image: Upload
   endingDate: Time
@@ -1674,6 +1694,7 @@ input ChangesPanier {
 
   quantity: Int
   price: Float
+  reduction: Float
 
   image: Upload
   endingDate: Time
@@ -1781,7 +1802,7 @@ input PanierCommandFilter {
 }
 
 input PanierFilter {
-  category: String
+  type: String
 }
 
 type Query {
@@ -4915,6 +4936,41 @@ func (ec *executionContext) _Panier_description(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Panier_type(ctx context.Context, field graphql.CollectedField, obj *model.Panier) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Panier",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Panier_category(ctx context.Context, field graphql.CollectedField, obj *model.Panier) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5004,6 +5060,41 @@ func (ec *executionContext) _Panier_price(ctx context.Context, field graphql.Col
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Price, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Panier_reduction(ctx context.Context, field graphql.CollectedField, obj *model.Panier) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Panier",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Reduction, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8663,6 +8754,14 @@ func (ec *executionContext) unmarshalInputNewPanier(ctx context.Context, obj int
 			if err != nil {
 				return it, err
 			}
+		case "type":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			it.Type, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "category":
 			var err error
 
@@ -8684,6 +8783,14 @@ func (ec *executionContext) unmarshalInputNewPanier(ctx context.Context, obj int
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
 			it.Price, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "reduction":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reduction"))
+			it.Reduction, err = ec.unmarshalNFloat2float64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8945,11 +9052,11 @@ func (ec *executionContext) unmarshalInputPanierFilter(ctx context.Context, obj 
 
 	for k, v := range asMap {
 		switch k {
-		case "category":
+		case "type":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("category"))
-			it.Category, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			it.Type, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9977,6 +10084,16 @@ func (ec *executionContext) _Panier(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "type":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Panier_type(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "category":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Panier_category(ctx, field, obj)
@@ -10000,6 +10117,16 @@ func (ec *executionContext) _Panier(ctx context.Context, sel ast.SelectionSet, o
 		case "price":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Panier_price(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "reduction":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Panier_reduction(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

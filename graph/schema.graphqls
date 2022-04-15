@@ -273,10 +273,12 @@ type Panier {
   id: ID!
   name: String!
   description: String!
+  type: String!
   category: String!
 
   quantity: Int!
   price: Float!
+  reduction: Float!
 
   endingDate: Time
 
@@ -310,10 +312,12 @@ input NewPanierProduct {
 input NewPanier {
   name: String!
   description: String!
+  type: String!
   category: String!
 
   quantity: Int!
   price: Float!
+  reduction: Float!
 
   image: Upload
   endingDate: Time
@@ -328,6 +332,7 @@ input ChangesPanier {
 
   quantity: Int
   price: Float
+  reduction: Float
 
   image: Upload
   endingDate: Time
@@ -435,7 +440,7 @@ input PanierCommandFilter {
 }
 
 input PanierFilter {
-  category: String
+  type: String
 }
 
 type Query {

@@ -133,9 +133,11 @@ type NewCommerce struct {
 type NewPanier struct {
 	Name        string              `json:"name"`
 	Description string              `json:"description"`
+	Type        string              `json:"type"`
 	Category    string              `json:"category"`
 	Quantity    int                 `json:"quantity"`
 	Price       float64             `json:"price"`
+	Reduction   float64             `json:"reduction"`
 	Image       *graphql.Upload     `json:"image"`
 	EndingDate  *time.Time          `json:"endingDate"`
 	Products    []*NewPanierProduct `json:"products"`
@@ -201,7 +203,7 @@ type PanierEdge struct {
 }
 
 type PanierFilter struct {
-	Category *string `json:"category"`
+	Type *string `json:"type"`
 }
 
 type PanierPageInfo struct {

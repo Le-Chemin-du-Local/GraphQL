@@ -1690,6 +1690,7 @@ input NewPanier {
 input ChangesPanier {
   name: String
   description: String
+  type: String
   category: String
 
   quantity: Int

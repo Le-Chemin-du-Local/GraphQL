@@ -2,6 +2,7 @@ package users
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"chemin-du-local.bzh/graphql/graph/model"
@@ -69,7 +70,7 @@ func Create(input model.NewUser) *User {
 	databaseUser := User{
 		ID:           primitive.NewObjectID(),
 		CreatedAt:    time.Now(),
-		Email:        input.Email,
+		Email:        strings.ToLower(input.Email),
 		Role:         USERROLE_USER,
 		FirstName:    input.FirstName,
 		LastName:     input.LastName,
@@ -187,7 +188,7 @@ func GetFiltered(filter interface{}) ([]User, error) {
 // Authentification
 
 func Authenticate(login model.Login) bool {
-	user, err := GetUserByEmail(login.Email)
+	user, err := GetUserByEmail(strings.ToLower(login.Email))
 
 	if user == nil || err != nil {
 		return false

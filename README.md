@@ -4,6 +4,10 @@
 
 Vous êtes sur le repository de l'API du Chemin du Local. Cette API est basé sur [GraphQL](https://graphql.org/) et [gqlgen](https://github.com/99designs/gqlgen)
 
+## Notes pour la base de données
+
+Afin de pouvoir gérer la localisation, la table doit avoir un index : `db.shops.createIndex({address: "2dsphere" } )`
+
 ## GrapiQL
 
 Ce repository contient un fichier répertoriant l'ensemble des requêtes qui permettent de tester l'API. Vous pourrez trouver ce fichier ici : [GraphiQL.md](https://github.com/Le-Chemin-du-Local/GraphQL/blob/master/GraphiQL.md)

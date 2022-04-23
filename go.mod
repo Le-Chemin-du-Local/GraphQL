@@ -16,6 +16,7 @@ require (
 
 require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
+	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect

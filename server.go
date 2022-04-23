@@ -43,11 +43,12 @@ func main() {
 
 	// Initialisation des config
 	configPath := "config.yml"
-	if os.Getenv("APP_ENV") == "production" {
-		configPath = "config.production.yml"
-	}
 
-	config.Init(configPath)
+	if os.Getenv("APP_ENV") == "production" {
+		config.InitFromEnv()
+	} else {
+		config.Init(configPath)
+	}
 
 	// Initialisation de la base de données
 	database.Init()
@@ -77,6 +78,6 @@ func main() {
 	router.Handle("/query", srv)
 	router.HandleFunc("/create-payment-intent", stripehandler.HandleCreatePaymentIntent)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Printf("connect to http://localhost:%s/playground for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

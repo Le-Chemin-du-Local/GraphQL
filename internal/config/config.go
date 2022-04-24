@@ -14,6 +14,9 @@ type Config struct {
 	Settings struct {
 		AuthSecret string `yaml:"authSecret"`
 	} `yaml:"settings"`
+	Maps struct {
+		Key string `yaml:"key"`
+	} `yaml:"maps"`
 	Stripe struct {
 		Key string `yaml:"key"`
 	} `yaml:"stripe"`
@@ -62,6 +65,8 @@ func InitFromEnv() {
 	Cfg.Settings.AuthSecret = os.Getenv("AUTH_SECRET")
 
 	Cfg.Stripe.Key = os.Getenv("STRIPE_KEY")
+
+	Cfg.Maps.Key = os.Getenv("MAPS_API_KEY")
 
 	Cfg.Paths.Static = os.Getenv("PATH_STATIC")
 

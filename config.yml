@@ -1,6 +1,9 @@
 settings: 
   authSecret: "cbgCqUIVKfZook1AFiFZvFJVbOAYNKD4"
 
+maps:
+  key: "AIzaSyCaf8YMr87CZrAjLiSDbOAcSbKs_CcAd-0"
+
 stripe:
   key: "sk_test_51Kk7OzKhjFSu7ugoEVC6c1ysZgx992GmddroFiisV2pU5y4hyGXkMb0rthQdqfB3N6LyChNkfVyOy6h118CmZaiG00gmAvHQRL"
 

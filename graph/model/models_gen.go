@@ -31,6 +31,16 @@ type BulkChangesProduct struct {
 	Changes map[string]interface{} `json:"changes"`
 }
 
+type BusinessHours struct {
+	Monday    []*Schedule `json:"monday"`
+	Tuesday   []*Schedule `json:"tuesday"`
+	Wednesday []*Schedule `json:"wednesday"`
+	Thursday  []*Schedule `json:"thursday"`
+	Friday    []*Schedule `json:"friday"`
+	Saturday  []*Schedule `json:"saturday"`
+	Sunday    []*Schedule `json:"sunday"`
+}
+
 type CCCommandConnection struct {
 	Edges    []*CCCommandEdge   `json:"edges"`
 	PageInfo *CCCommandPageInfo `json:"pageInfo"`
@@ -104,6 +114,16 @@ type NewBasketProduct struct {
 	ProductID string  `json:"productID"`
 }
 
+type NewBusinessHours struct {
+	Monday    []*ScheduleInput `json:"monday"`
+	Tuesday   []*ScheduleInput `json:"tuesday"`
+	Wednesday []*ScheduleInput `json:"wednesday"`
+	Thursday  []*ScheduleInput `json:"thursday"`
+	Friday    []*ScheduleInput `json:"friday"`
+	Saturday  []*ScheduleInput `json:"saturday"`
+	Sunday    []*ScheduleInput `json:"sunday"`
+}
+
 type NewCCCommand struct {
 	ProductsID []*NewCCProcuct `json:"productsID"`
 	PickupDate time.Time       `json:"pickupDate"`
@@ -115,19 +135,20 @@ type NewCCProcuct struct {
 }
 
 type NewCommerce struct {
-	Name            string          `json:"name"`
-	Description     *string         `json:"description"`
-	StorekeeperWord *string         `json:"storekeeperWord"`
-	Address         string          `json:"address"`
-	Latitude        float64         `json:"latitude"`
-	Longitude       float64         `json:"longitude"`
-	Phone           string          `json:"phone"`
-	Email           string          `json:"email"`
-	Facebook        *string         `json:"facebook"`
-	Twitter         *string         `json:"twitter"`
-	Instagram       *string         `json:"instagram"`
-	ProfilePicture  *graphql.Upload `json:"profilePicture"`
-	Image           *graphql.Upload `json:"image"`
+	Name            string            `json:"name"`
+	Description     *string           `json:"description"`
+	StorekeeperWord *string           `json:"storekeeperWord"`
+	Address         string            `json:"address"`
+	Latitude        float64           `json:"latitude"`
+	Longitude       float64           `json:"longitude"`
+	Phone           string            `json:"phone"`
+	Email           string            `json:"email"`
+	Facebook        *string           `json:"facebook"`
+	Twitter         *string           `json:"twitter"`
+	Instagram       *string           `json:"instagram"`
+	BusinessHours   *NewBusinessHours `json:"businessHours"`
+	ProfilePicture  *graphql.Upload   `json:"profilePicture"`
+	Image           *graphql.Upload   `json:"image"`
 }
 
 type NewPanier struct {
@@ -247,6 +268,16 @@ type ProductPageInfo struct {
 	StartCursor string `json:"startCursor"`
 	EndCursor   string `json:"endCursor"`
 	HasNextPage bool   `json:"hasNextPage"`
+}
+
+type Schedule struct {
+	Opening string `json:"opening"`
+	Closing string `json:"closing"`
+}
+
+type ScheduleInput struct {
+	Opening string `json:"opening"`
+	Closing string `json:"closing"`
 }
 
 type Role string

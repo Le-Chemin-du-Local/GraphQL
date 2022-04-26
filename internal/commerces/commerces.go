@@ -16,20 +16,21 @@ import (
 )
 
 type Commerce struct {
-	ID                                  primitive.ObjectID `bson:"_id"`
-	StorekeeperID                       primitive.ObjectID `bson:"storekeeperID"`
-	Name                                string             `bson:"name"`
-	Description                         string             `bson:"description"`
-	StorekeeperWord                     string             `bson:"storekeeperWord"`
-	Address                             string             `bson:"address"`
-	AddressGeo                          geojson.GeoJSON    `bson:"addressGeo"`
-	Phone                               string             `bson:"phone"`
-	Email                               string             `bson:"email"`
-	Facebook                            *string            `bson:"facebook"`
-	Twitter                             *string            `bson:"twitter"`
-	Instagram                           *string            `bson:"instagram"`
-	Services                            []string           `bson:"services"`
-	ProductsAvailableForClickAndCollect []string           `bson:"productsAvailableForClickAndCollect"`
+	ID                                  primitive.ObjectID  `bson:"_id"`
+	StorekeeperID                       primitive.ObjectID  `bson:"storekeeperID"`
+	Name                                string              `bson:"name"`
+	Description                         string              `bson:"description"`
+	StorekeeperWord                     string              `bson:"storekeeperWord"`
+	Address                             string              `bson:"address"`
+	AddressGeo                          geojson.GeoJSON     `bson:"addressGeo"`
+	Phone                               string              `bson:"phone"`
+	Email                               string              `bson:"email"`
+	Facebook                            *string             `bson:"facebook"`
+	Twitter                             *string             `bson:"twitter"`
+	Instagram                           *string             `bson:"instagram"`
+	BusinessHours                       model.BusinessHours `bson:"businesHours"`
+	Services                            []string            `bson:"services"`
+	ProductsAvailableForClickAndCollect []string            `bson:"productsAvailableForClickAndCollect"`
 }
 
 func (commerce *Commerce) ToModel() *model.Commerce {
@@ -47,6 +48,7 @@ func (commerce *Commerce) ToModel() *model.Commerce {
 		Facebook:        commerce.Facebook,
 		Twitter:         commerce.Twitter,
 		Instagram:       commerce.Instagram,
+		BusinessHours:   commerce.BusinessHours,
 		Services:        commerce.Services,
 	}
 }
@@ -98,11 +100,12 @@ func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) (*Commerc
 			Type:        "Point",
 			Coordinates: []float64{input.Latitude, input.Longitude},
 		},
-		Phone:     input.Phone,
-		Email:     input.Email,
-		Facebook:  input.Facebook,
-		Twitter:   input.Twitter,
-		Instagram: input.Instagram,
+		Phone:         input.Phone,
+		Email:         input.Email,
+		Facebook:      input.Facebook,
+		Twitter:       input.Twitter,
+		Instagram:     input.Instagram,
+		BusinessHours: *input.BusinessHours.ToModel(),
 	}
 
 	_, err := database.CollectionCommerces.InsertOne(database.MongoContext, databaseCommerce)

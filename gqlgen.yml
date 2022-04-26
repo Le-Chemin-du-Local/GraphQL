@@ -56,6 +56,8 @@ models:
       - github.com/99designs/gqlgen/graphql.Int32
   ChangesCommerce:
     model: "map[string]interface{}"
+  ChangesBusinessHours:
+    model: "map[string]interface{}"
   ChangesProduct:
     model: "map[string]interface{}"
   ChangesCCCommand:

@@ -67,6 +67,16 @@ type ComplexityRoot struct {
 		Quantity func(childComplexity int) int
 	}
 
+	BusinessHours struct {
+		Friday    func(childComplexity int) int
+		Monday    func(childComplexity int) int
+		Saturday  func(childComplexity int) int
+		Sunday    func(childComplexity int) int
+		Thursday  func(childComplexity int) int
+		Tuesday   func(childComplexity int) int
+		Wednesday func(childComplexity int) int
+	}
+
 	CCCommand struct {
 		ID         func(childComplexity int) int
 		PickupDate func(childComplexity int) int
@@ -98,6 +108,7 @@ type ComplexityRoot struct {
 
 	Commerce struct {
 		Address                             func(childComplexity int) int
+		BusinessHours                       func(childComplexity int) int
 		Categories                          func(childComplexity int) int
 		Cccommands                          func(childComplexity int, first *int, after *string, filters *model.CCCommandFilter) int
 		Description                         func(childComplexity int) int
@@ -247,6 +258,11 @@ type ComplexityRoot struct {
 		Users         func(childComplexity int) int
 	}
 
+	Schedule struct {
+		Closing func(childComplexity int) int
+		Opening func(childComplexity int) int
+	}
+
 	User struct {
 		Basket    func(childComplexity int) int
 		Commerce  func(childComplexity int) int
@@ -369,6 +385,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BasketProduct.Quantity(childComplexity), true
 
+	case "BusinessHours.friday":
+		if e.complexity.BusinessHours.Friday == nil {
+			break
+		}
+
+		return e.complexity.BusinessHours.Friday(childComplexity), true
+
+	case "BusinessHours.monday":
+		if e.complexity.BusinessHours.Monday == nil {
+			break
+		}
+
+		return e.complexity.BusinessHours.Monday(childComplexity), true
+
+	case "BusinessHours.saturday":
+		if e.complexity.BusinessHours.Saturday == nil {
+			break
+		}
+
+		return e.complexity.BusinessHours.Saturday(childComplexity), true
+
+	case "BusinessHours.sunday":
+		if e.complexity.BusinessHours.Sunday == nil {
+			break
+		}
+
+		return e.complexity.BusinessHours.Sunday(childComplexity), true
+
+	case "BusinessHours.thursday":
+		if e.complexity.BusinessHours.Thursday == nil {
+			break
+		}
+
+		return e.complexity.BusinessHours.Thursday(childComplexity), true
+
+	case "BusinessHours.tuesday":
+		if e.complexity.BusinessHours.Tuesday == nil {
+			break
+		}
+
+		return e.complexity.BusinessHours.Tuesday(childComplexity), true
+
+	case "BusinessHours.wednesday":
+		if e.complexity.BusinessHours.Wednesday == nil {
+			break
+		}
+
+		return e.complexity.BusinessHours.Wednesday(childComplexity), true
+
 	case "CCCommand.id":
 		if e.complexity.CCCommand.ID == nil {
 			break
@@ -473,6 +538,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Address(childComplexity), true
+
+	case "Commerce.businessHours":
+		if e.complexity.Commerce.BusinessHours == nil {
+			break
+		}
+
+		return e.complexity.Commerce.BusinessHours(childComplexity), true
 
 	case "Commerce.categories":
 		if e.complexity.Commerce.Categories == nil {
@@ -1240,6 +1312,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Users(childComplexity), true
 
+	case "Schedule.closing":
+		if e.complexity.Schedule.Closing == nil {
+			break
+		}
+
+		return e.complexity.Schedule.Closing(childComplexity), true
+
+	case "Schedule.opening":
+		if e.complexity.Schedule.Opening == nil {
+			break
+		}
+
+		return e.complexity.Schedule.Opening(childComplexity), true
+
 	case "User.basket":
 		if e.complexity.User.Basket == nil {
 			break
@@ -1407,6 +1493,47 @@ input Login {
 # COMMERCE
 # Utilisation de la pagination par curseur : https://www.apollographql.com/blog/graphql/pagination/understanding-pagination-rest-graphql-and-relay/
 
+# Business hours related
+type Schedule {
+  opening: String!
+  closing: String!
+}
+
+input ScheduleInput {
+  opening: String!
+  closing: String!
+}
+
+type BusinessHours {
+  monday: [Schedule!]
+  tuesday: [Schedule!]
+  wednesday: [Schedule!]
+  thursday: [Schedule!]
+  friday: [Schedule!]
+  saturday: [Schedule!]
+  sunday: [Schedule!]
+}
+
+input NewBusinessHours {
+  monday: [ScheduleInput!]
+  tuesday: [ScheduleInput!]
+  wednesday: [ScheduleInput!]
+  thursday: [ScheduleInput!]
+  friday: [ScheduleInput!]
+  saturday: [ScheduleInput!]
+  sunday: [ScheduleInput!]
+}
+
+input ChangesBusinessHours {
+  monday: [ScheduleInput!]
+  tuesday: [ScheduleInput!]
+  wednesday: [ScheduleInput!]
+  thursday: [ScheduleInput!]
+  friday: [ScheduleInput!]
+  saturday: [ScheduleInput!]
+  sunday: [ScheduleInput!]
+}
+
 type Commerce { # Ici on utilise le nom "Commerce"
                 # plutôt que "Store" pour éviter de 
                 # futures conflits
@@ -1428,6 +1555,8 @@ type Commerce { # Ici on utilise le nom "Commerce"
   facebook: String
   twitter: String
   instagram: String
+
+  businessHours: BusinessHours!
 
   # Produits
   categories: [String!]!
@@ -1479,6 +1608,8 @@ input NewCommerce {
   twitter: String
   instagram: String
 
+  businessHours: NewBusinessHours
+
   profilePicture: Upload
   image: Upload
 }
@@ -1499,6 +1630,8 @@ input ChangesCommerce {
   facebook: String
   twitter: String
   instagram: String
+
+  businessHours: ChangesBusinessHours
 
   profilePicture: Upload
   image: Upload
@@ -2664,6 +2797,230 @@ func (ec *executionContext) _BasketProduct_product(ctx context.Context, field gr
 	return ec.marshalNProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _BusinessHours_monday(ctx context.Context, field graphql.CollectedField, obj *model.BusinessHours) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "BusinessHours",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Monday, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Schedule)
+	fc.Result = res
+	return ec.marshalOSchedule2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BusinessHours_tuesday(ctx context.Context, field graphql.CollectedField, obj *model.BusinessHours) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "BusinessHours",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tuesday, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Schedule)
+	fc.Result = res
+	return ec.marshalOSchedule2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BusinessHours_wednesday(ctx context.Context, field graphql.CollectedField, obj *model.BusinessHours) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "BusinessHours",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Wednesday, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Schedule)
+	fc.Result = res
+	return ec.marshalOSchedule2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BusinessHours_thursday(ctx context.Context, field graphql.CollectedField, obj *model.BusinessHours) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "BusinessHours",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Thursday, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Schedule)
+	fc.Result = res
+	return ec.marshalOSchedule2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BusinessHours_friday(ctx context.Context, field graphql.CollectedField, obj *model.BusinessHours) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "BusinessHours",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Friday, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Schedule)
+	fc.Result = res
+	return ec.marshalOSchedule2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BusinessHours_saturday(ctx context.Context, field graphql.CollectedField, obj *model.BusinessHours) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "BusinessHours",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Saturday, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Schedule)
+	fc.Result = res
+	return ec.marshalOSchedule2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BusinessHours_sunday(ctx context.Context, field graphql.CollectedField, obj *model.BusinessHours) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "BusinessHours",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sunday, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Schedule)
+	fc.Result = res
+	return ec.marshalOSchedule2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _CCCommand_id(ctx context.Context, field graphql.CollectedField, obj *model.CCCommand) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3595,6 +3952,41 @@ func (ec *executionContext) _Commerce_instagram(ctx context.Context, field graph
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_businessHours(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BusinessHours, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.BusinessHours)
+	fc.Result = res
+	return ec.marshalNBusinessHours2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐBusinessHours(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Commerce_categories(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
@@ -6899,6 +7291,76 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Schedule_opening(ctx context.Context, field graphql.CollectedField, obj *model.Schedule) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Schedule",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Opening, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Schedule_closing(ctx context.Context, field graphql.CollectedField, obj *model.Schedule) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Schedule",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Closing, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -8549,6 +9011,77 @@ func (ec *executionContext) unmarshalInputNewBasketProduct(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNewBusinessHours(ctx context.Context, obj interface{}) (model.NewBusinessHours, error) {
+	var it model.NewBusinessHours
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "monday":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("monday"))
+			it.Monday, err = ec.unmarshalOScheduleInput2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "tuesday":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tuesday"))
+			it.Tuesday, err = ec.unmarshalOScheduleInput2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "wednesday":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("wednesday"))
+			it.Wednesday, err = ec.unmarshalOScheduleInput2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "thursday":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("thursday"))
+			it.Thursday, err = ec.unmarshalOScheduleInput2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "friday":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("friday"))
+			it.Friday, err = ec.unmarshalOScheduleInput2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "saturday":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("saturday"))
+			it.Saturday, err = ec.unmarshalOScheduleInput2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "sunday":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sunday"))
+			it.Sunday, err = ec.unmarshalOScheduleInput2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewCCCommand(ctx context.Context, obj interface{}) (model.NewCCCommand, error) {
 	var it model.NewCCCommand
 	asMap := map[string]interface{}{}
@@ -8705,6 +9238,14 @@ func (ec *executionContext) unmarshalInputNewCommerce(ctx context.Context, obj i
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("instagram"))
 			it.Instagram, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "businessHours":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("businessHours"))
+			it.BusinessHours, err = ec.unmarshalONewBusinessHours2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewBusinessHours(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9090,6 +9631,37 @@ func (ec *executionContext) unmarshalInputProductFilter(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputScheduleInput(ctx context.Context, obj interface{}) (model.ScheduleInput, error) {
+	var it model.ScheduleInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "opening":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opening"))
+			it.Opening, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "closing":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("closing"))
+			it.Closing, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -9210,6 +9782,76 @@ func (ec *executionContext) _BasketProduct(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var businessHoursImplementors = []string{"BusinessHours"}
+
+func (ec *executionContext) _BusinessHours(ctx context.Context, sel ast.SelectionSet, obj *model.BusinessHours) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, businessHoursImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BusinessHours")
+		case "monday":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._BusinessHours_monday(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "tuesday":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._BusinessHours_tuesday(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "wednesday":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._BusinessHours_wednesday(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "thursday":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._BusinessHours_thursday(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "friday":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._BusinessHours_friday(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "saturday":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._BusinessHours_saturday(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "sunday":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._BusinessHours_sunday(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9624,6 +10266,16 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 
 			out.Values[i] = innerFunc(ctx)
 
+		case "businessHours":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_businessHours(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "categories":
 			field := field
 
@@ -11028,6 +11680,47 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
+var scheduleImplementors = []string{"Schedule"}
+
+func (ec *executionContext) _Schedule(ctx context.Context, sel ast.SelectionSet, obj *model.Schedule) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, scheduleImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Schedule")
+		case "opening":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Schedule_opening(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "closing":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Schedule_closing(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var userImplementors = []string{"User"}
 
 func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *model.User) graphql.Marshaler {
@@ -11686,6 +12379,10 @@ func (ec *executionContext) unmarshalNBulkChangesProduct2ᚕᚖcheminᚑduᚑloc
 func (ec *executionContext) unmarshalNBulkChangesProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐBulkChangesProduct(ctx context.Context, v interface{}) (*model.BulkChangesProduct, error) {
 	res, err := ec.unmarshalInputBulkChangesProduct(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBusinessHours2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐBusinessHours(ctx context.Context, sel ast.SelectionSet, v model.BusinessHours) graphql.Marshaler {
+	return ec._BusinessHours(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNCCCommand2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx context.Context, sel ast.SelectionSet, v model.CCCommand) graphql.Marshaler {
@@ -12538,6 +13235,21 @@ func (ec *executionContext) marshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋg
 	return v
 }
 
+func (ec *executionContext) marshalNSchedule2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐSchedule(ctx context.Context, sel ast.SelectionSet, v *model.Schedule) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Schedule(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNScheduleInput2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleInput(ctx context.Context, v interface{}) (*model.ScheduleInput, error) {
+	res, err := ec.unmarshalInputScheduleInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -12959,6 +13671,13 @@ func (ec *executionContext) unmarshalOCCCommandFilter2ᚖcheminᚑduᚑlocalᚗb
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOChangesBusinessHours2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+	if v == nil {
+		return nil, nil
+	}
+	return v.(map[string]interface{}), nil
+}
+
 func (ec *executionContext) unmarshalOChangesCCCommand2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
 	if v == nil {
 		return nil, nil
@@ -13074,6 +13793,14 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
+func (ec *executionContext) unmarshalONewBusinessHours2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewBusinessHours(ctx context.Context, v interface{}) (*model.NewBusinessHours, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputNewBusinessHours(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalONewCCProcuct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCCProcuctᚄ(ctx context.Context, v interface{}) ([]*model.NewCCProcuct, error) {
 	if v == nil {
 		return nil, nil
@@ -13157,6 +13884,73 @@ func (ec *executionContext) unmarshalOProductFilter2ᚖcheminᚑduᚑlocalᚗbzh
 	}
 	res, err := ec.unmarshalInputProductFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOSchedule2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Schedule) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSchedule2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐSchedule(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOScheduleInput2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleInputᚄ(ctx context.Context, v interface{}) ([]*model.ScheduleInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.ScheduleInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNScheduleInput2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

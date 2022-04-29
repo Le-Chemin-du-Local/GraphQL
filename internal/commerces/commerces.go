@@ -89,6 +89,12 @@ func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) (*Commerc
 		storekeeperWord = *input.StorekeeperWord
 	}
 
+	var businessHours model.BusinessHours
+
+	if input.BusinessHours != nil {
+		businessHours = *input.BusinessHours.ToModel()
+	}
+
 	databaseCommerce := Commerce{
 		ID:              commerceObjectID,
 		StorekeeperID:   storekeeperID,
@@ -105,7 +111,7 @@ func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) (*Commerc
 		Facebook:      input.Facebook,
 		Twitter:       input.Twitter,
 		Instagram:     input.Instagram,
-		BusinessHours: *input.BusinessHours.ToModel(),
+		BusinessHours: businessHours,
 	}
 
 	_, err := database.CollectionCommerces.InsertOne(database.MongoContext, databaseCommerce)

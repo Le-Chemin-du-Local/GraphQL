@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/auth"
@@ -13,6 +14,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/products"
 	"chemin-du-local.bzh/graphql/internal/services/clickandcollect"
+	"chemin-du-local.bzh/graphql/internal/services/commands"
 	"chemin-du-local.bzh/graphql/internal/services/paniers"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"github.com/stripe/stripe-go/v72"
@@ -67,6 +69,15 @@ func calculateOrderAmount(basket model.NewBasket) (int64, error) {
 }
 
 func order(user users.User, basket model.NewBasket) error {
+	databaseCommand, err := commands.Create(model.NewCommand{
+		CreationDate: time.Now(),
+		User:         user.ID.Hex(),
+	})
+
+	if err != nil {
+		return err
+	}
+
 	for _, commerce := range basket.Commerces {
 		databaseCommerce, err := commerces.GetById(commerce.CommerceID)
 
@@ -76,6 +87,16 @@ func order(user users.User, basket model.NewBasket) error {
 
 		if databaseCommerce == nil {
 			return &commerces.CommerceErrorNotFound{}
+		}
+
+		// La command
+		databaseCommerceCommand, err := commands.CommerceCreate(model.NewCommerceCommand{
+			CommerceID: databaseCommerce.ID.Hex(),
+			PickupDate: *commerce.PickupDate,
+		}, databaseCommand.ID)
+
+		if err != nil {
+			return err
 		}
 
 		// Click & collect
@@ -93,7 +114,7 @@ func order(user users.User, basket model.NewBasket) error {
 			ProductsID: commandProducts,
 		}
 
-		_, err = clickandcollect.Create(user.ID, commerce.CommerceID, command)
+		_, err = clickandcollect.Create(databaseCommerceCommand.ID, command)
 
 		if err != nil {
 			return err
@@ -106,7 +127,7 @@ func order(user users.User, basket model.NewBasket) error {
 				PickupDate: command.PickupDate,
 			}
 
-			_, err = paniers.CreateCommand(user.ID, commerce.CommerceID, panierCommand)
+			_, err = paniers.CreateCommand(databaseCommerceCommand.ID, panierCommand)
 
 			if err != nil {
 				return err

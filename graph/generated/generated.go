@@ -37,8 +37,9 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	CCCommand() CCCommandResolver
+	Command() CommandResolver
 	Commerce() CommerceResolver
+	CommerceCommand() CommerceCommandResolver
 	Mutation() MutationResolver
 	Panier() PanierResolver
 	PanierCommand() PanierCommandResolver
@@ -78,27 +79,8 @@ type ComplexityRoot struct {
 	}
 
 	CCCommand struct {
-		ID         func(childComplexity int) int
-		PickupDate func(childComplexity int) int
-		Products   func(childComplexity int) int
-		Status     func(childComplexity int) int
-		User       func(childComplexity int) int
-	}
-
-	CCCommandConnection struct {
-		Edges    func(childComplexity int) int
-		PageInfo func(childComplexity int) int
-	}
-
-	CCCommandEdge struct {
-		Cursor func(childComplexity int) int
-		Node   func(childComplexity int) int
-	}
-
-	CCCommandPageInfo struct {
-		EndCursor   func(childComplexity int) int
-		HasNextPage func(childComplexity int) int
-		StartCursor func(childComplexity int) int
+		ID       func(childComplexity int) int
+		Products func(childComplexity int) int
 	}
 
 	CCProduct struct {
@@ -106,11 +88,33 @@ type ComplexityRoot struct {
 		Quantity func(childComplexity int) int
 	}
 
+	Command struct {
+		Commerces    func(childComplexity int) int
+		CreationDate func(childComplexity int) int
+		ID           func(childComplexity int) int
+		User         func(childComplexity int) int
+	}
+
+	CommandConnection struct {
+		Edges    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	CommandEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	CommandPageInfo struct {
+		EndCursor   func(childComplexity int) int
+		HasNextPage func(childComplexity int) int
+		StartCursor func(childComplexity int) int
+	}
+
 	Commerce struct {
 		Address                             func(childComplexity int) int
 		BusinessHours                       func(childComplexity int) int
 		Categories                          func(childComplexity int) int
-		Cccommands                          func(childComplexity int, first *int, after *string, filters *model.CCCommandFilter) int
 		Description                         func(childComplexity int) int
 		Email                               func(childComplexity int) int
 		Facebook                            func(childComplexity int) int
@@ -119,7 +123,6 @@ type ComplexityRoot struct {
 		Latitude                            func(childComplexity int) int
 		Longitude                           func(childComplexity int) int
 		Name                                func(childComplexity int) int
-		PanierCommands                      func(childComplexity int, first *int, after *string, filters *model.PanierCommandFilter) int
 		Paniers                             func(childComplexity int, first *int, after *string, filters *model.PanierFilter) int
 		Phone                               func(childComplexity int) int
 		Products                            func(childComplexity int, first *int, after *string, filters *model.ProductFilter) int
@@ -128,6 +131,32 @@ type ComplexityRoot struct {
 		Storekeeper                         func(childComplexity int) int
 		StorekeeperWord                     func(childComplexity int) int
 		Twitter                             func(childComplexity int) int
+	}
+
+	CommerceCommand struct {
+		Cccommands func(childComplexity int) int
+		Commerce   func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Paniers    func(childComplexity int) int
+		PickupDate func(childComplexity int) int
+		Status     func(childComplexity int) int
+		User       func(childComplexity int) int
+	}
+
+	CommerceCommandConnection struct {
+		Edges    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	CommerceCommandEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	CommerceCommandPageInfo struct {
+		EndCursor   func(childComplexity int) int
+		HasNextPage func(childComplexity int) int
+		StartCursor func(childComplexity int) int
 	}
 
 	CommerceConnection struct {
@@ -147,18 +176,16 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCommerce      func(childComplexity int, userID string, input model.NewCommerce) int
-		CreatePanier        func(childComplexity int, commerceID *string, input model.NewPanier) int
-		CreateProduct       func(childComplexity int, commerceID *string, input model.NewProduct) int
-		CreateProducts      func(childComplexity int, commerceID *string, input []*model.NewProduct) int
-		CreateUser          func(childComplexity int, input model.NewUser) int
-		Login               func(childComplexity int, input model.Login) int
-		UpdateCCCommand     func(childComplexity int, id string, changes map[string]interface{}) int
-		UpdateCommerce      func(childComplexity int, id string, changes map[string]interface{}) int
-		UpdatePanier        func(childComplexity int, id string, changes map[string]interface{}) int
-		UpdatePanierCommand func(childComplexity int, id string, changes map[string]interface{}) int
-		UpdateProduct       func(childComplexity int, id string, changes map[string]interface{}) int
-		UpdateProducts      func(childComplexity int, changes []*model.BulkChangesProduct) int
+		CreateCommerce func(childComplexity int, userID string, input model.NewCommerce) int
+		CreatePanier   func(childComplexity int, commerceID *string, input model.NewPanier) int
+		CreateProduct  func(childComplexity int, commerceID *string, input model.NewProduct) int
+		CreateProducts func(childComplexity int, commerceID *string, input []*model.NewProduct) int
+		CreateUser     func(childComplexity int, input model.NewUser) int
+		Login          func(childComplexity int, input model.Login) int
+		UpdateCommerce func(childComplexity int, id string, changes map[string]interface{}) int
+		UpdatePanier   func(childComplexity int, id string, changes map[string]interface{}) int
+		UpdateProduct  func(childComplexity int, id string, changes map[string]interface{}) int
+		UpdateProducts func(childComplexity int, changes []*model.BulkChangesProduct) int
 	}
 
 	Panier struct {
@@ -175,27 +202,8 @@ type ComplexityRoot struct {
 	}
 
 	PanierCommand struct {
-		ID         func(childComplexity int) int
-		Panier     func(childComplexity int) int
-		PickupDate func(childComplexity int) int
-		Status     func(childComplexity int) int
-		User       func(childComplexity int) int
-	}
-
-	PanierCommandConnection struct {
-		Edges    func(childComplexity int) int
-		PageInfo func(childComplexity int) int
-	}
-
-	PanierCommandEdge struct {
-		Cursor func(childComplexity int) int
-		Node   func(childComplexity int) int
-	}
-
-	PanierCommandPageInfo struct {
-		EndCursor   func(childComplexity int) int
-		HasNextPage func(childComplexity int) int
-		StartCursor func(childComplexity int) int
+		ID     func(childComplexity int) int
+		Panier func(childComplexity int) int
 	}
 
 	PanierConnection struct {
@@ -248,14 +256,14 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Cccommand     func(childComplexity int, id string) int
-		Commerce      func(childComplexity int, id *string) int
-		Commerces     func(childComplexity int, first *int, after *string, filter *model.CommerceFilter) int
-		Panier        func(childComplexity int, id string) int
-		Paniercommand func(childComplexity int, id string) int
-		Product       func(childComplexity int, id string) int
-		User          func(childComplexity int, id *string) int
-		Users         func(childComplexity int) int
+		Commands         func(childComplexity int, userID string) int
+		Commerce         func(childComplexity int, id *string) int
+		CommerceCommands func(childComplexity int, commerceID string) int
+		Commerces        func(childComplexity int, first *int, after *string, filter *model.CommerceFilter) int
+		Panier           func(childComplexity int, id string) int
+		Product          func(childComplexity int, id string) int
+		User             func(childComplexity int, id *string) int
+		Users            func(childComplexity int) int
 	}
 
 	Schedule struct {
@@ -275,10 +283,9 @@ type ComplexityRoot struct {
 	}
 }
 
-type CCCommandResolver interface {
-	Products(ctx context.Context, obj *model.CCCommand) ([]*model.CCProduct, error)
-
-	User(ctx context.Context, obj *model.CCCommand) (*model.User, error)
+type CommandResolver interface {
+	User(ctx context.Context, obj *model.Command) (*model.User, error)
+	Commerces(ctx context.Context, obj *model.Command) ([]*model.CommerceCommand, error)
 }
 type CommerceResolver interface {
 	Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error)
@@ -287,9 +294,14 @@ type CommerceResolver interface {
 	Products(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.ProductFilter) (*model.ProductConnection, error)
 
 	ProductsAvailableForClickAndCollect(ctx context.Context, obj *model.Commerce) ([]*model.Product, error)
-	Cccommands(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.CCCommandFilter) (*model.CCCommandConnection, error)
 	Paniers(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.PanierFilter) (*model.PanierConnection, error)
-	PanierCommands(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.PanierCommandFilter) (*model.PanierCommandConnection, error)
+}
+type CommerceCommandResolver interface {
+	Commerce(ctx context.Context, obj *model.CommerceCommand) (*model.Commerce, error)
+	Cccommands(ctx context.Context, obj *model.CommerceCommand) ([]*model.CCCommand, error)
+	Paniers(ctx context.Context, obj *model.CommerceCommand) ([]*model.PanierCommand, error)
+
+	User(ctx context.Context, obj *model.CommerceCommand) (*model.User, error)
 }
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
@@ -300,18 +312,14 @@ type MutationResolver interface {
 	CreateProducts(ctx context.Context, commerceID *string, input []*model.NewProduct) ([]*model.Product, error)
 	UpdateProduct(ctx context.Context, id string, changes map[string]interface{}) (*model.Product, error)
 	UpdateProducts(ctx context.Context, changes []*model.BulkChangesProduct) ([]*model.Product, error)
-	UpdateCCCommand(ctx context.Context, id string, changes map[string]interface{}) (*model.CCCommand, error)
 	CreatePanier(ctx context.Context, commerceID *string, input model.NewPanier) (*model.Panier, error)
 	UpdatePanier(ctx context.Context, id string, changes map[string]interface{}) (*model.Panier, error)
-	UpdatePanierCommand(ctx context.Context, id string, changes map[string]interface{}) (*model.PanierCommand, error)
 }
 type PanierResolver interface {
 	Products(ctx context.Context, obj *model.Panier) ([]*model.PanierProduct, error)
 }
 type PanierCommandResolver interface {
 	Panier(ctx context.Context, obj *model.PanierCommand) (*model.Panier, error)
-
-	User(ctx context.Context, obj *model.PanierCommand) (*model.User, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
@@ -319,9 +327,9 @@ type QueryResolver interface {
 	Commerces(ctx context.Context, first *int, after *string, filter *model.CommerceFilter) (*model.CommerceConnection, error)
 	Commerce(ctx context.Context, id *string) (*model.Commerce, error)
 	Product(ctx context.Context, id string) (*model.Product, error)
-	Cccommand(ctx context.Context, id string) (*model.CCCommand, error)
+	Commands(ctx context.Context, userID string) (*model.CommandConnection, error)
+	CommerceCommands(ctx context.Context, commerceID string) (*model.CommerceCommandConnection, error)
 	Panier(ctx context.Context, id string) (*model.Panier, error)
-	Paniercommand(ctx context.Context, id string) (*model.PanierCommand, error)
 }
 type UserResolver interface {
 	Commerce(ctx context.Context, obj *model.User) (*model.Commerce, error)
@@ -441,82 +449,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CCCommand.ID(childComplexity), true
 
-	case "CCCommand.pickupDate":
-		if e.complexity.CCCommand.PickupDate == nil {
-			break
-		}
-
-		return e.complexity.CCCommand.PickupDate(childComplexity), true
-
 	case "CCCommand.products":
 		if e.complexity.CCCommand.Products == nil {
 			break
 		}
 
 		return e.complexity.CCCommand.Products(childComplexity), true
-
-	case "CCCommand.status":
-		if e.complexity.CCCommand.Status == nil {
-			break
-		}
-
-		return e.complexity.CCCommand.Status(childComplexity), true
-
-	case "CCCommand.user":
-		if e.complexity.CCCommand.User == nil {
-			break
-		}
-
-		return e.complexity.CCCommand.User(childComplexity), true
-
-	case "CCCommandConnection.edges":
-		if e.complexity.CCCommandConnection.Edges == nil {
-			break
-		}
-
-		return e.complexity.CCCommandConnection.Edges(childComplexity), true
-
-	case "CCCommandConnection.pageInfo":
-		if e.complexity.CCCommandConnection.PageInfo == nil {
-			break
-		}
-
-		return e.complexity.CCCommandConnection.PageInfo(childComplexity), true
-
-	case "CCCommandEdge.cursor":
-		if e.complexity.CCCommandEdge.Cursor == nil {
-			break
-		}
-
-		return e.complexity.CCCommandEdge.Cursor(childComplexity), true
-
-	case "CCCommandEdge.node":
-		if e.complexity.CCCommandEdge.Node == nil {
-			break
-		}
-
-		return e.complexity.CCCommandEdge.Node(childComplexity), true
-
-	case "CCCommandPageInfo.endCursor":
-		if e.complexity.CCCommandPageInfo.EndCursor == nil {
-			break
-		}
-
-		return e.complexity.CCCommandPageInfo.EndCursor(childComplexity), true
-
-	case "CCCommandPageInfo.hasNextPage":
-		if e.complexity.CCCommandPageInfo.HasNextPage == nil {
-			break
-		}
-
-		return e.complexity.CCCommandPageInfo.HasNextPage(childComplexity), true
-
-	case "CCCommandPageInfo.startCursor":
-		if e.complexity.CCCommandPageInfo.StartCursor == nil {
-			break
-		}
-
-		return e.complexity.CCCommandPageInfo.StartCursor(childComplexity), true
 
 	case "CCProduct.product":
 		if e.complexity.CCProduct.Product == nil {
@@ -531,6 +469,83 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CCProduct.Quantity(childComplexity), true
+
+	case "Command.commerces":
+		if e.complexity.Command.Commerces == nil {
+			break
+		}
+
+		return e.complexity.Command.Commerces(childComplexity), true
+
+	case "Command.creationDate":
+		if e.complexity.Command.CreationDate == nil {
+			break
+		}
+
+		return e.complexity.Command.CreationDate(childComplexity), true
+
+	case "Command.id":
+		if e.complexity.Command.ID == nil {
+			break
+		}
+
+		return e.complexity.Command.ID(childComplexity), true
+
+	case "Command.user":
+		if e.complexity.Command.User == nil {
+			break
+		}
+
+		return e.complexity.Command.User(childComplexity), true
+
+	case "CommandConnection.edges":
+		if e.complexity.CommandConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.CommandConnection.Edges(childComplexity), true
+
+	case "CommandConnection.pageInfo":
+		if e.complexity.CommandConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.CommandConnection.PageInfo(childComplexity), true
+
+	case "CommandEdge.cursor":
+		if e.complexity.CommandEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.CommandEdge.Cursor(childComplexity), true
+
+	case "CommandEdge.node":
+		if e.complexity.CommandEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.CommandEdge.Node(childComplexity), true
+
+	case "CommandPageInfo.endCursor":
+		if e.complexity.CommandPageInfo.EndCursor == nil {
+			break
+		}
+
+		return e.complexity.CommandPageInfo.EndCursor(childComplexity), true
+
+	case "CommandPageInfo.hasNextPage":
+		if e.complexity.CommandPageInfo.HasNextPage == nil {
+			break
+		}
+
+		return e.complexity.CommandPageInfo.HasNextPage(childComplexity), true
+
+	case "CommandPageInfo.startCursor":
+		if e.complexity.CommandPageInfo.StartCursor == nil {
+			break
+		}
+
+		return e.complexity.CommandPageInfo.StartCursor(childComplexity), true
 
 	case "Commerce.address":
 		if e.complexity.Commerce.Address == nil {
@@ -552,18 +567,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Categories(childComplexity), true
-
-	case "Commerce.cccommands":
-		if e.complexity.Commerce.Cccommands == nil {
-			break
-		}
-
-		args, err := ec.field_Commerce_cccommands_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Commerce.Cccommands(childComplexity, args["first"].(*int), args["after"].(*string), args["filters"].(*model.CCCommandFilter)), true
 
 	case "Commerce.description":
 		if e.complexity.Commerce.Description == nil {
@@ -620,18 +623,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Name(childComplexity), true
-
-	case "Commerce.panierCommands":
-		if e.complexity.Commerce.PanierCommands == nil {
-			break
-		}
-
-		args, err := ec.field_Commerce_panierCommands_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Commerce.PanierCommands(childComplexity, args["first"].(*int), args["after"].(*string), args["filters"].(*model.PanierCommandFilter)), true
 
 	case "Commerce.paniers":
 		if e.complexity.Commerce.Paniers == nil {
@@ -698,6 +689,104 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Twitter(childComplexity), true
+
+	case "CommerceCommand.cccommands":
+		if e.complexity.CommerceCommand.Cccommands == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommand.Cccommands(childComplexity), true
+
+	case "CommerceCommand.commerce":
+		if e.complexity.CommerceCommand.Commerce == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommand.Commerce(childComplexity), true
+
+	case "CommerceCommand.id":
+		if e.complexity.CommerceCommand.ID == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommand.ID(childComplexity), true
+
+	case "CommerceCommand.paniers":
+		if e.complexity.CommerceCommand.Paniers == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommand.Paniers(childComplexity), true
+
+	case "CommerceCommand.pickupDate":
+		if e.complexity.CommerceCommand.PickupDate == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommand.PickupDate(childComplexity), true
+
+	case "CommerceCommand.status":
+		if e.complexity.CommerceCommand.Status == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommand.Status(childComplexity), true
+
+	case "CommerceCommand.user":
+		if e.complexity.CommerceCommand.User == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommand.User(childComplexity), true
+
+	case "CommerceCommandConnection.edges":
+		if e.complexity.CommerceCommandConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommandConnection.Edges(childComplexity), true
+
+	case "CommerceCommandConnection.pageInfo":
+		if e.complexity.CommerceCommandConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommandConnection.PageInfo(childComplexity), true
+
+	case "CommerceCommandEdge.cursor":
+		if e.complexity.CommerceCommandEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommandEdge.Cursor(childComplexity), true
+
+	case "CommerceCommandEdge.node":
+		if e.complexity.CommerceCommandEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommandEdge.Node(childComplexity), true
+
+	case "CommerceCommandPageInfo.endCursor":
+		if e.complexity.CommerceCommandPageInfo.EndCursor == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommandPageInfo.EndCursor(childComplexity), true
+
+	case "CommerceCommandPageInfo.hasNextPage":
+		if e.complexity.CommerceCommandPageInfo.HasNextPage == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommandPageInfo.HasNextPage(childComplexity), true
+
+	case "CommerceCommandPageInfo.startCursor":
+		if e.complexity.CommerceCommandPageInfo.StartCursor == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommandPageInfo.StartCursor(childComplexity), true
 
 	case "CommerceConnection.edges":
 		if e.complexity.CommerceConnection.Edges == nil {
@@ -820,18 +909,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.Login)), true
 
-	case "Mutation.updateCCCommand":
-		if e.complexity.Mutation.UpdateCCCommand == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateCCCommand_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateCCCommand(childComplexity, args["id"].(string), args["changes"].(map[string]interface{})), true
-
 	case "Mutation.updateCommerce":
 		if e.complexity.Mutation.UpdateCommerce == nil {
 			break
@@ -855,18 +932,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdatePanier(childComplexity, args["id"].(string), args["changes"].(map[string]interface{})), true
-
-	case "Mutation.updatePanierCommand":
-		if e.complexity.Mutation.UpdatePanierCommand == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updatePanierCommand_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdatePanierCommand(childComplexity, args["id"].(string), args["changes"].(map[string]interface{})), true
 
 	case "Mutation.updateProduct":
 		if e.complexity.Mutation.UpdateProduct == nil {
@@ -975,76 +1040,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PanierCommand.Panier(childComplexity), true
-
-	case "PanierCommand.pickupDate":
-		if e.complexity.PanierCommand.PickupDate == nil {
-			break
-		}
-
-		return e.complexity.PanierCommand.PickupDate(childComplexity), true
-
-	case "PanierCommand.status":
-		if e.complexity.PanierCommand.Status == nil {
-			break
-		}
-
-		return e.complexity.PanierCommand.Status(childComplexity), true
-
-	case "PanierCommand.user":
-		if e.complexity.PanierCommand.User == nil {
-			break
-		}
-
-		return e.complexity.PanierCommand.User(childComplexity), true
-
-	case "PanierCommandConnection.edges":
-		if e.complexity.PanierCommandConnection.Edges == nil {
-			break
-		}
-
-		return e.complexity.PanierCommandConnection.Edges(childComplexity), true
-
-	case "PanierCommandConnection.pageInfo":
-		if e.complexity.PanierCommandConnection.PageInfo == nil {
-			break
-		}
-
-		return e.complexity.PanierCommandConnection.PageInfo(childComplexity), true
-
-	case "PanierCommandEdge.cursor":
-		if e.complexity.PanierCommandEdge.Cursor == nil {
-			break
-		}
-
-		return e.complexity.PanierCommandEdge.Cursor(childComplexity), true
-
-	case "PanierCommandEdge.node":
-		if e.complexity.PanierCommandEdge.Node == nil {
-			break
-		}
-
-		return e.complexity.PanierCommandEdge.Node(childComplexity), true
-
-	case "PanierCommandPageInfo.endCursor":
-		if e.complexity.PanierCommandPageInfo.EndCursor == nil {
-			break
-		}
-
-		return e.complexity.PanierCommandPageInfo.EndCursor(childComplexity), true
-
-	case "PanierCommandPageInfo.hasNextPage":
-		if e.complexity.PanierCommandPageInfo.HasNextPage == nil {
-			break
-		}
-
-		return e.complexity.PanierCommandPageInfo.HasNextPage(childComplexity), true
-
-	case "PanierCommandPageInfo.startCursor":
-		if e.complexity.PanierCommandPageInfo.StartCursor == nil {
-			break
-		}
-
-		return e.complexity.PanierCommandPageInfo.StartCursor(childComplexity), true
 
 	case "PanierConnection.edges":
 		if e.complexity.PanierConnection.Edges == nil {
@@ -1221,17 +1216,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ProductPageInfo.StartCursor(childComplexity), true
 
-	case "Query.cccommand":
-		if e.complexity.Query.Cccommand == nil {
+	case "Query.commands":
+		if e.complexity.Query.Commands == nil {
 			break
 		}
 
-		args, err := ec.field_Query_cccommand_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_commands_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.Cccommand(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.Commands(childComplexity, args["userID"].(string)), true
 
 	case "Query.commerce":
 		if e.complexity.Query.Commerce == nil {
@@ -1244,6 +1239,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Commerce(childComplexity, args["id"].(*string)), true
+
+	case "Query.commerceCommands":
+		if e.complexity.Query.CommerceCommands == nil {
+			break
+		}
+
+		args, err := ec.field_Query_commerceCommands_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CommerceCommands(childComplexity, args["commerceID"].(string)), true
 
 	case "Query.commerces":
 		if e.complexity.Query.Commerces == nil {
@@ -1268,18 +1275,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Panier(childComplexity, args["id"].(string)), true
-
-	case "Query.paniercommand":
-		if e.complexity.Query.Paniercommand == nil {
-			break
-		}
-
-		args, err := ec.field_Query_paniercommand_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Paniercommand(childComplexity, args["id"].(string)), true
 
 	case "Query.product":
 		if e.complexity.Query.Product == nil {
@@ -1566,12 +1561,8 @@ type Commerce { # Ici on utilise le nom "Commerce"
   services: [String!]!
   productsAvailableForClickAndCollect: [Product!]!
 
-  # Click and collcet
-  cccommands(first: Int = 10, after: ID, filters: CCCommandFilter): CCCommandConnection!
-
   # Panier
   paniers(first: Int = 10, after: ID, filters: PanierFilter): PanierConnection!
-  panierCommands(first: Int = 10, after: ID, filters: PanierCommandFilter): PanierCommandConnection!
 } 
 
 # Pagination 
@@ -1715,29 +1706,7 @@ type CCProduct {
 
 type CCCommand {
   id: ID!
-  status: String!
   products: [CCProduct!]!
-
-  pickupDate: Time!
-
-  user: User!
-}
-
-# Pagination 
-type CCCommandConnection {
-  edges: [CCCommandEdge!]!
-  pageInfo: CCCommandPageInfo!
-}
-
-type CCCommandEdge {
-  cursor: ID!
-  node: CCCommand
-}
-
-type CCCommandPageInfo {
-  startCursor: ID!
-  endCursor: ID!
-  hasNextPage: Boolean!
 }
 
 input NewCCProcuct {
@@ -1748,10 +1717,6 @@ input NewCCProcuct {
 input NewCCCommand {
   productsID: [NewCCProcuct!]
   pickupDate: Time!
-}
-
-input ChangesCCCommand {
-  status: String
 }
 
 #############
@@ -1838,29 +1803,7 @@ input ChangesPanier {
 
 type PanierCommand {
   id: ID!
-  status: String!
   panier: Panier!
-
-  pickupDate: Time!
-
-  user: User!
-}
-
-# Pagination 
-type PanierCommandConnection {
-  edges: [PanierCommandEdge!]!
-  pageInfo: PanierCommandPageInfo!
-}
-
-type PanierCommandEdge {
-  cursor: ID!
-  node: PanierCommand
-}
-
-type PanierCommandPageInfo {
-  startCursor: ID!
-  endCursor: ID!
-  hasNextPage: Boolean!
 }
 
 input NewPanierCommand {
@@ -1868,9 +1811,74 @@ input NewPanierCommand {
   pickupDate: Time!
 }
 
-input ChangesPanierCommand {
-  status: String
+
+#############
+## COMMAND ##
+#############
+
+type CommerceCommand {
+  id: ID!
+  commerce: Commerce! 
+
+  cccommands: [CCCommand!]!
+  paniers: [PanierCommand!]!
+  pickupDate: Time!
+  status: String!
+  user: User!
 }
+
+type Command {
+  id: ID!
+  creationDate: Time!
+
+  user: User!
+  commerces: [CommerceCommand]!
+}
+
+# Pagination 
+type CommandConnection {
+  edges: [CommandEdge!]!
+  pageInfo: CommandPageInfo!
+}
+
+type CommandEdge {
+  cursor: ID!
+  node: Command
+}
+
+type CommandPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+type CommerceCommandConnection {
+  edges: [CommerceCommandEdge!]!
+  pageInfo: CommerceCommandPageInfo!
+}
+
+type CommerceCommandEdge {
+  cursor: ID!
+  node: CommerceCommand
+}
+
+type CommerceCommandPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+
+input NewCommerceCommand {
+  commerceID: ID!
+  pickupDate: Time!
+}
+
+input NewCommand {
+  creationDate: Time!
+  user: ID!
+}
+
 
 ############
 ## BASKET ##
@@ -1950,12 +1958,11 @@ type Query {
   product(id: ID!): Product!
 
   # SERVICES
-  # CLICK AND COLLECT
-  cccommand(id: ID!): CCCommand! @needAuthentication
+  commands(userID: ID!): CommandConnection! @needAuthentication
+  commerceCommands(commerceID: ID!): CommerceCommandConnection! @needAuthentication
 
   # PANIERS
   panier(id: ID!): Panier!
-  paniercommand(id: ID!): PanierCommand! @needAuthentication
 }
 
 type Mutation {
@@ -1972,13 +1979,10 @@ type Mutation {
   updateProducts(changes: [BulkChangesProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
 
   # SERVICES
-  # CLICK AND COLLECT
-  updateCCCommand(id: ID!, changes: ChangesCCCommand): CCCommand! @hasRole(role: STOREKEEPER)
 
   # PANIER
   createPanier(commerceID: ID, input: NewPanier!): Panier! @hasRole(role: STOREKEEPER)
   updatePanier(id: ID! changes: ChangesPanier!): Panier! @hasRole(role: STOREKEEPER)
-  updatePanierCommand(id: ID!, changes: ChangesPanierCommand): PanierCommand! @hasRole(role: STOREKEEPER)
 }
 `, BuiltIn: false},
 }
@@ -2000,72 +2004,6 @@ func (ec *executionContext) dir_hasRole_args(ctx context.Context, rawArgs map[st
 		}
 	}
 	args["role"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Commerce_cccommands_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *int
-	if tmp, ok := rawArgs["first"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
-		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["first"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["after"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
-		arg1, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["after"] = arg1
-	var arg2 *model.CCCommandFilter
-	if tmp, ok := rawArgs["filters"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
-		arg2, err = ec.unmarshalOCCCommandFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandFilter(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["filters"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) field_Commerce_panierCommands_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *int
-	if tmp, ok := rawArgs["first"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
-		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["first"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["after"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
-		arg1, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["after"] = arg1
-	var arg2 *model.PanierCommandFilter
-	if tmp, ok := rawArgs["filters"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
-		arg2, err = ec.unmarshalOPanierCommandFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandFilter(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["filters"] = arg2
 	return args, nil
 }
 
@@ -2261,30 +2199,6 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateCCCommand_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 map[string]interface{}
-	if tmp, ok := rawArgs["changes"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changes"))
-		arg1, err = ec.unmarshalOChangesCCCommand2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["changes"] = arg1
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_updateCommerce_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2301,30 +2215,6 @@ func (ec *executionContext) field_Mutation_updateCommerce_args(ctx context.Conte
 	if tmp, ok := rawArgs["changes"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changes"))
 		arg1, err = ec.unmarshalNChangesCommerce2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["changes"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updatePanierCommand_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 map[string]interface{}
-	if tmp, ok := rawArgs["changes"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changes"))
-		arg1, err = ec.unmarshalOChangesPanierCommand2map(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2411,18 +2301,33 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_cccommand_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_commands_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["userID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg0
+	args["userID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_commerceCommands_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["commerceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commerceID"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["commerceID"] = arg0
 	return args, nil
 }
 
@@ -2475,21 +2380,6 @@ func (ec *executionContext) field_Query_commerces_args(ctx context.Context, rawA
 }
 
 func (ec *executionContext) field_Query_panier_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_paniercommand_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -3056,7 +2946,7 @@ func (ec *executionContext) _CCCommand_id(ctx context.Context, field graphql.Col
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _CCCommand_status(ctx context.Context, field graphql.CollectedField, obj *model.CCCommand) (ret graphql.Marshaler) {
+func (ec *executionContext) _CCCommand_products(ctx context.Context, field graphql.CollectedField, obj *model.CCCommand) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3074,42 +2964,7 @@ func (ec *executionContext) _CCCommand_status(ctx context.Context, field graphql
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CCCommand_products(ctx context.Context, field graphql.CollectedField, obj *model.CCCommand) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "CCCommand",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.CCCommand().Products(rctx, obj)
+		return obj.Products, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3124,318 +2979,6 @@ func (ec *executionContext) _CCCommand_products(ctx context.Context, field graph
 	res := resTmp.([]*model.CCProduct)
 	fc.Result = res
 	return ec.marshalNCCProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCProductᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CCCommand_pickupDate(ctx context.Context, field graphql.CollectedField, obj *model.CCCommand) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "CCCommand",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PickupDate, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CCCommand_user(ctx context.Context, field graphql.CollectedField, obj *model.CCCommand) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "CCCommand",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.CCCommand().User(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CCCommandConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandConnection) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "CCCommandConnection",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Edges, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.CCCommandEdge)
-	fc.Result = res
-	return ec.marshalNCCCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandEdgeᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CCCommandConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandConnection) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "CCCommandConnection",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PageInfo, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.CCCommandPageInfo)
-	fc.Result = res
-	return ec.marshalNCCCommandPageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandPageInfo(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CCCommandEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandEdge) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "CCCommandEdge",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Cursor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CCCommandEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandEdge) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "CCCommandEdge",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Node, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.CCCommand)
-	fc.Result = res
-	return ec.marshalOCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CCCommandPageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandPageInfo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "CCCommandPageInfo",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.StartCursor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CCCommandPageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandPageInfo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "CCCommandPageInfo",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.EndCursor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CCCommandPageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.CCCommandPageInfo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "CCCommandPageInfo",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.HasNextPage, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CCProduct_quantity(ctx context.Context, field graphql.CollectedField, obj *model.CCProduct) (ret graphql.Marshaler) {
@@ -3506,6 +3049,388 @@ func (ec *executionContext) _CCProduct_product(ctx context.Context, field graphq
 	res := resTmp.(*model.Product)
 	fc.Result = res
 	return ec.marshalNProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Command_id(ctx context.Context, field graphql.CollectedField, obj *model.Command) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Command",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Command_creationDate(ctx context.Context, field graphql.CollectedField, obj *model.Command) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Command",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreationDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Command_user(ctx context.Context, field graphql.CollectedField, obj *model.Command) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Command",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Command().User(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Command_commerces(ctx context.Context, field graphql.CollectedField, obj *model.Command) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Command",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Command().Commerces(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CommerceCommand)
+	fc.Result = res
+	return ec.marshalNCommerceCommand2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommand(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommandConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.CommandConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommandConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CommandEdge)
+	fc.Result = res
+	return ec.marshalNCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommandEdgeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommandConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.CommandConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommandConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CommandPageInfo)
+	fc.Result = res
+	return ec.marshalNCommandPageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommandPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommandEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.CommandEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommandEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommandEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.CommandEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommandEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Command)
+	fc.Result = res
+	return ec.marshalOCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommand(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommandPageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.CommandPageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommandPageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommandPageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *model.CommandPageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommandPageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommandPageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.CommandPageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommandPageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasNextPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Commerce_id(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
@@ -4136,48 +4061,6 @@ func (ec *executionContext) _Commerce_productsAvailableForClickAndCollect(ctx co
 	return ec.marshalNProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProductᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Commerce_cccommands(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Commerce",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Commerce_cccommands_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Commerce().Cccommands(rctx, obj, args["first"].(*int), args["after"].(*string), args["filters"].(*model.CCCommandFilter))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.CCCommandConnection)
-	fc.Result = res
-	return ec.marshalNCCCommandConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandConnection(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Commerce_paniers(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4220,7 +4103,7 @@ func (ec *executionContext) _Commerce_paniers(ctx context.Context, field graphql
 	return ec.marshalNPanierConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierConnection(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Commerce_panierCommands(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+func (ec *executionContext) _CommerceCommand_id(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommand) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4228,24 +4111,17 @@ func (ec *executionContext) _Commerce_panierCommands(ctx context.Context, field 
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "Commerce",
+		Object:     "CommerceCommand",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Commerce_panierCommands_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Commerce().PanierCommands(rctx, obj, args["first"].(*int), args["after"].(*string), args["filters"].(*model.PanierCommandFilter))
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4257,9 +4133,461 @@ func (ec *executionContext) _Commerce_panierCommands(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.PanierCommandConnection)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNPanierCommandConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandConnection(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommand_commerce(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CommerceCommand().Commerce(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Commerce)
+	fc.Result = res
+	return ec.marshalNCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommand_cccommands(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CommerceCommand().Cccommands(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CCCommand)
+	fc.Result = res
+	return ec.marshalNCCCommand2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommand_paniers(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CommerceCommand().Paniers(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.PanierCommand)
+	fc.Result = res
+	return ec.marshalNPanierCommand2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommand_pickupDate(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PickupDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommand_status(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommand_user(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CommerceCommand().User(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommandConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommandConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommandConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CommerceCommandEdge)
+	fc.Result = res
+	return ec.marshalNCommerceCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommandEdgeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommandConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommandConnection) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommandConnection",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CommerceCommandPageInfo)
+	fc.Result = res
+	return ec.marshalNCommerceCommandPageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommandPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommandEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommandEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommandEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommandEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommandEdge) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommandEdge",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.CommerceCommand)
+	fc.Result = res
+	return ec.marshalOCommerceCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommand(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommandPageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommandPageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommandPageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommandPageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommandPageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommandPageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommandPageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommandPageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommandPageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasNextPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CommerceConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.CommerceConnection) (ret graphql.Marshaler) {
@@ -4960,72 +5288,6 @@ func (ec *executionContext) _Mutation_updateProducts(ctx context.Context, field 
 	return ec.marshalNProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProductᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_updateCCCommand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_updateCCCommand_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UpdateCCCommand(rctx, args["id"].(string), args["changes"].(map[string]interface{}))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			role, err := ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, "STOREKEEPER")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, role)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.CCCommand); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.CCCommand`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.CCCommand)
-	fc.Result = res
-	return ec.marshalNCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Mutation_createPanier(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5156,72 +5418,6 @@ func (ec *executionContext) _Mutation_updatePanier(ctx context.Context, field gr
 	res := resTmp.(*model.Panier)
 	fc.Result = res
 	return ec.marshalNPanier2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanier(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_updatePanierCommand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_updatePanierCommand_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UpdatePanierCommand(rctx, args["id"].(string), args["changes"].(map[string]interface{}))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			role, err := ec.unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx, "STOREKEEPER")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, role)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.PanierCommand); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.PanierCommand`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.PanierCommand)
-	fc.Result = res
-	return ec.marshalNPanierCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommand(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Panier_id(ctx context.Context, field graphql.CollectedField, obj *model.Panier) (ret graphql.Marshaler) {
@@ -5606,41 +5802,6 @@ func (ec *executionContext) _PanierCommand_id(ctx context.Context, field graphql
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PanierCommand_status(ctx context.Context, field graphql.CollectedField, obj *model.PanierCommand) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PanierCommand",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _PanierCommand_panier(ctx context.Context, field graphql.CollectedField, obj *model.PanierCommand) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5674,318 +5835,6 @@ func (ec *executionContext) _PanierCommand_panier(ctx context.Context, field gra
 	res := resTmp.(*model.Panier)
 	fc.Result = res
 	return ec.marshalNPanier2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanier(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PanierCommand_pickupDate(ctx context.Context, field graphql.CollectedField, obj *model.PanierCommand) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PanierCommand",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PickupDate, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PanierCommand_user(ctx context.Context, field graphql.CollectedField, obj *model.PanierCommand) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PanierCommand",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.PanierCommand().User(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PanierCommandConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.PanierCommandConnection) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PanierCommandConnection",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Edges, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.PanierCommandEdge)
-	fc.Result = res
-	return ec.marshalNPanierCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandEdgeᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PanierCommandConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.PanierCommandConnection) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PanierCommandConnection",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PageInfo, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.PanierCommandPageInfo)
-	fc.Result = res
-	return ec.marshalNPanierCommandPageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandPageInfo(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PanierCommandEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.PanierCommandEdge) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PanierCommandEdge",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Cursor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PanierCommandEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.PanierCommandEdge) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PanierCommandEdge",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Node, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.PanierCommand)
-	fc.Result = res
-	return ec.marshalOPanierCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommand(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PanierCommandPageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.PanierCommandPageInfo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PanierCommandPageInfo",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.StartCursor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PanierCommandPageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *model.PanierCommandPageInfo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PanierCommandPageInfo",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.EndCursor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PanierCommandPageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.PanierCommandPageInfo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PanierCommandPageInfo",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.HasNextPage, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PanierConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.PanierConnection) (ret graphql.Marshaler) {
@@ -7054,7 +6903,7 @@ func (ec *executionContext) _Query_product(ctx context.Context, field graphql.Co
 	return ec.marshalNProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_cccommand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_commands(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -7071,7 +6920,7 @@ func (ec *executionContext) _Query_cccommand(ctx context.Context, field graphql.
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_cccommand_args(ctx, rawArgs)
+	args, err := ec.field_Query_commands_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -7080,7 +6929,7 @@ func (ec *executionContext) _Query_cccommand(ctx context.Context, field graphql.
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Cccommand(rctx, args["id"].(string))
+			return ec.resolvers.Query().Commands(rctx, args["userID"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.NeedAuthentication == nil {
@@ -7096,10 +6945,10 @@ func (ec *executionContext) _Query_cccommand(ctx context.Context, field graphql.
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.CCCommand); ok {
+		if data, ok := tmp.(*model.CommandConnection); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.CCCommand`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.CommandConnection`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7111,9 +6960,71 @@ func (ec *executionContext) _Query_cccommand(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.CCCommand)
+	res := resTmp.(*model.CommandConnection)
 	fc.Result = res
-	return ec.marshalNCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx, field.Selections, res)
+	return ec.marshalNCommandConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommandConnection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_commerceCommands(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_commerceCommands_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().CommerceCommands(rctx, args["commerceID"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.NeedAuthentication == nil {
+				return nil, errors.New("directive needAuthentication is not implemented")
+			}
+			return ec.directives.NeedAuthentication(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.CommerceCommandConnection); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.CommerceCommandConnection`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CommerceCommandConnection)
+	fc.Result = res
+	return ec.marshalNCommerceCommandConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommandConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_panier(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7156,68 +7067,6 @@ func (ec *executionContext) _Query_panier(ctx context.Context, field graphql.Col
 	res := resTmp.(*model.Panier)
 	fc.Result = res
 	return ec.marshalNPanier2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanier(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_paniercommand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_paniercommand_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Paniercommand(rctx, args["id"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.NeedAuthentication == nil {
-				return nil, errors.New("directive needAuthentication is not implemented")
-			}
-			return ec.directives.NeedAuthentication(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.PanierCommand); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.PanierCommand`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.PanierCommand)
-	fc.Result = res
-	return ec.marshalNPanierCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommand(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -9144,6 +8993,37 @@ func (ec *executionContext) unmarshalInputNewCCProcuct(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNewCommand(ctx context.Context, obj interface{}) (model.NewCommand, error) {
+	var it model.NewCommand
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "creationDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("creationDate"))
+			it.CreationDate, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "user":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user"))
+			it.User, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewCommerce(ctx context.Context, obj interface{}) (model.NewCommerce, error) {
 	var it model.NewCommerce
 	asMap := map[string]interface{}{}
@@ -9262,6 +9142,37 @@ func (ec *executionContext) unmarshalInputNewCommerce(ctx context.Context, obj i
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
 			it.Image, err = ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNewCommerceCommand(ctx context.Context, obj interface{}) (model.NewCommerceCommand, error) {
+	var it model.NewCommerceCommand
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "commerceID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commerceID"))
+			it.CommerceID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "pickupDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pickupDate"))
+			it.PickupDate, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9881,191 +9792,11 @@ func (ec *executionContext) _CCCommand(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "status":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._CCCommand_status(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "products":
-			field := field
-
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._CCCommand_products(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
-		case "pickupDate":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._CCCommand_pickupDate(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "user":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._CCCommand_user(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var cCCommandConnectionImplementors = []string{"CCCommandConnection"}
-
-func (ec *executionContext) _CCCommandConnection(ctx context.Context, sel ast.SelectionSet, obj *model.CCCommandConnection) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, cCCommandConnectionImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("CCCommandConnection")
-		case "edges":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._CCCommandConnection_edges(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "pageInfo":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._CCCommandConnection_pageInfo(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var cCCommandEdgeImplementors = []string{"CCCommandEdge"}
-
-func (ec *executionContext) _CCCommandEdge(ctx context.Context, sel ast.SelectionSet, obj *model.CCCommandEdge) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, cCCommandEdgeImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("CCCommandEdge")
-		case "cursor":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._CCCommandEdge_cursor(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "node":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._CCCommandEdge_node(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var cCCommandPageInfoImplementors = []string{"CCCommandPageInfo"}
-
-func (ec *executionContext) _CCCommandPageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.CCCommandPageInfo) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, cCCommandPageInfoImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("CCCommandPageInfo")
-		case "startCursor":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._CCCommandPageInfo_startCursor(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "endCursor":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._CCCommandPageInfo_endCursor(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "hasNextPage":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._CCCommandPageInfo_hasNextPage(ctx, field, obj)
+				return ec._CCCommand_products(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -10107,6 +9838,217 @@ func (ec *executionContext) _CCProduct(ctx context.Context, sel ast.SelectionSet
 		case "product":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._CCProduct_product(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var commandImplementors = []string{"Command"}
+
+func (ec *executionContext) _Command(ctx context.Context, sel ast.SelectionSet, obj *model.Command) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commandImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Command")
+		case "id":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Command_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "creationDate":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Command_creationDate(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Command_user(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "commerces":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Command_commerces(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var commandConnectionImplementors = []string{"CommandConnection"}
+
+func (ec *executionContext) _CommandConnection(ctx context.Context, sel ast.SelectionSet, obj *model.CommandConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commandConnectionImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CommandConnection")
+		case "edges":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommandConnection_edges(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pageInfo":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommandConnection_pageInfo(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var commandEdgeImplementors = []string{"CommandEdge"}
+
+func (ec *executionContext) _CommandEdge(ctx context.Context, sel ast.SelectionSet, obj *model.CommandEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commandEdgeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CommandEdge")
+		case "cursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommandEdge_cursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommandEdge_node(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var commandPageInfoImplementors = []string{"CommandPageInfo"}
+
+func (ec *executionContext) _CommandPageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.CommandPageInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commandPageInfoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CommandPageInfo")
+		case "startCursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommandPageInfo_startCursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "endCursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommandPageInfo_endCursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hasNextPage":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommandPageInfo_hasNextPage(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -10346,26 +10288,6 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
-		case "cccommands":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Commerce_cccommands(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "paniers":
 			field := field
 
@@ -10386,7 +10308,38 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
-		case "panierCommands":
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var commerceCommandImplementors = []string{"CommerceCommand"}
+
+func (ec *executionContext) _CommerceCommand(ctx context.Context, sel ast.SelectionSet, obj *model.CommerceCommand) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commerceCommandImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CommerceCommand")
+		case "id":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceCommand_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "commerce":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -10395,7 +10348,7 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Commerce_panierCommands(ctx, field, obj)
+				res = ec._CommerceCommand_commerce(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -10406,6 +10359,216 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
+		case "cccommands":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CommerceCommand_cccommands(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "paniers":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CommerceCommand_paniers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "pickupDate":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceCommand_pickupDate(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "status":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceCommand_status(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CommerceCommand_user(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var commerceCommandConnectionImplementors = []string{"CommerceCommandConnection"}
+
+func (ec *executionContext) _CommerceCommandConnection(ctx context.Context, sel ast.SelectionSet, obj *model.CommerceCommandConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commerceCommandConnectionImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CommerceCommandConnection")
+		case "edges":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceCommandConnection_edges(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pageInfo":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceCommandConnection_pageInfo(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var commerceCommandEdgeImplementors = []string{"CommerceCommandEdge"}
+
+func (ec *executionContext) _CommerceCommandEdge(ctx context.Context, sel ast.SelectionSet, obj *model.CommerceCommandEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commerceCommandEdgeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CommerceCommandEdge")
+		case "cursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceCommandEdge_cursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceCommandEdge_node(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var commerceCommandPageInfoImplementors = []string{"CommerceCommandPageInfo"}
+
+func (ec *executionContext) _CommerceCommandPageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.CommerceCommandPageInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commerceCommandPageInfoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CommerceCommandPageInfo")
+		case "startCursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceCommandPageInfo_startCursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "endCursor":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceCommandPageInfo_endCursor(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hasNextPage":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceCommandPageInfo_hasNextPage(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10646,16 +10809,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "updateCCCommand":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateCCCommand(ctx, field)
-			}
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "createPanier":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createPanier(ctx, field)
@@ -10669,16 +10822,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updatePanier":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updatePanier(ctx, field)
-			}
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "updatePanierCommand":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updatePanierCommand(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
@@ -10845,16 +10988,6 @@ func (ec *executionContext) _PanierCommand(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "status":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._PanierCommand_status(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "panier":
 			field := field
 
@@ -10875,166 +11008,6 @@ func (ec *executionContext) _PanierCommand(ctx context.Context, sel ast.Selectio
 				return innerFunc(ctx)
 
 			})
-		case "pickupDate":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._PanierCommand_pickupDate(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "user":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._PanierCommand_user(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var panierCommandConnectionImplementors = []string{"PanierCommandConnection"}
-
-func (ec *executionContext) _PanierCommandConnection(ctx context.Context, sel ast.SelectionSet, obj *model.PanierCommandConnection) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, panierCommandConnectionImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("PanierCommandConnection")
-		case "edges":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._PanierCommandConnection_edges(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "pageInfo":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._PanierCommandConnection_pageInfo(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var panierCommandEdgeImplementors = []string{"PanierCommandEdge"}
-
-func (ec *executionContext) _PanierCommandEdge(ctx context.Context, sel ast.SelectionSet, obj *model.PanierCommandEdge) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, panierCommandEdgeImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("PanierCommandEdge")
-		case "cursor":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._PanierCommandEdge_cursor(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "node":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._PanierCommandEdge_node(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var panierCommandPageInfoImplementors = []string{"PanierCommandPageInfo"}
-
-func (ec *executionContext) _PanierCommandPageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.PanierCommandPageInfo) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, panierCommandPageInfoImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("PanierCommandPageInfo")
-		case "startCursor":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._PanierCommandPageInfo_startCursor(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "endCursor":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._PanierCommandPageInfo_endCursor(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "hasNextPage":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._PanierCommandPageInfo_hasNextPage(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11586,7 +11559,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "cccommand":
+		case "commands":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -11595,7 +11568,30 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_cccommand(ctx, field)
+				res = ec._Query_commands(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "commerceCommands":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_commerceCommands(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -11619,29 +11615,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_panier(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "paniercommand":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_paniercommand(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -12385,35 +12358,7 @@ func (ec *executionContext) marshalNBusinessHours2cheminᚑduᚑlocalᚗbzhᚋgr
 	return ec._BusinessHours(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCCCommand2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx context.Context, sel ast.SelectionSet, v model.CCCommand) graphql.Marshaler {
-	return ec._CCCommand(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx context.Context, sel ast.SelectionSet, v *model.CCCommand) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._CCCommand(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNCCCommandConnection2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandConnection(ctx context.Context, sel ast.SelectionSet, v model.CCCommandConnection) graphql.Marshaler {
-	return ec._CCCommandConnection(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNCCCommandConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandConnection(ctx context.Context, sel ast.SelectionSet, v *model.CCCommandConnection) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._CCCommandConnection(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNCCCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CCCommandEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNCCCommand2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CCCommand) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -12437,7 +12382,7 @@ func (ec *executionContext) marshalNCCCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbz
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCCCommandEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -12457,24 +12402,14 @@ func (ec *executionContext) marshalNCCCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbz
 	return ret
 }
 
-func (ec *executionContext) marshalNCCCommandEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandEdge(ctx context.Context, sel ast.SelectionSet, v *model.CCCommandEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx context.Context, sel ast.SelectionSet, v *model.CCCommand) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._CCCommandEdge(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNCCCommandPageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.CCCommandPageInfo) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._CCCommandPageInfo(ctx, sel, v)
+	return ec._CCCommand(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNCCProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCProductᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CCProduct) graphql.Marshaler {
@@ -12543,6 +12478,84 @@ func (ec *executionContext) unmarshalNChangesProduct2map(ctx context.Context, v 
 	return v.(map[string]interface{}), nil
 }
 
+func (ec *executionContext) marshalNCommandConnection2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommandConnection(ctx context.Context, sel ast.SelectionSet, v model.CommandConnection) graphql.Marshaler {
+	return ec._CommandConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCommandConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommandConnection(ctx context.Context, sel ast.SelectionSet, v *model.CommandConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CommandConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommandEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CommandEdge) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCommandEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommandEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCommandEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommandEdge(ctx context.Context, sel ast.SelectionSet, v *model.CommandEdge) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CommandEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCommandPageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommandPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.CommandPageInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CommandPageInfo(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNCommerce2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx context.Context, sel ast.SelectionSet, v model.Commerce) graphql.Marshaler {
 	return ec._Commerce(ctx, sel, &v)
 }
@@ -12555,6 +12568,122 @@ func (ec *executionContext) marshalNCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgrap
 		return graphql.Null
 	}
 	return ec._Commerce(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCommerceCommand2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommand(ctx context.Context, sel ast.SelectionSet, v []*model.CommerceCommand) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOCommerceCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommand(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCommerceCommandConnection2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommandConnection(ctx context.Context, sel ast.SelectionSet, v model.CommerceCommandConnection) graphql.Marshaler {
+	return ec._CommerceCommandConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCommerceCommandConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommandConnection(ctx context.Context, sel ast.SelectionSet, v *model.CommerceCommandConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CommerceCommandConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCommerceCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommandEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CommerceCommandEdge) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCommerceCommandEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommandEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCommerceCommandEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommandEdge(ctx context.Context, sel ast.SelectionSet, v *model.CommerceCommandEdge) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CommerceCommandEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCommerceCommandPageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommandPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.CommerceCommandPageInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CommerceCommandPageInfo(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNCommerceConnection2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceConnection(ctx context.Context, sel ast.SelectionSet, v model.CommerceConnection) graphql.Marshaler {
@@ -12865,35 +12994,7 @@ func (ec *executionContext) marshalNPanier2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphq
 	return ec._Panier(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPanierCommand2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommand(ctx context.Context, sel ast.SelectionSet, v model.PanierCommand) graphql.Marshaler {
-	return ec._PanierCommand(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNPanierCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommand(ctx context.Context, sel ast.SelectionSet, v *model.PanierCommand) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._PanierCommand(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNPanierCommandConnection2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandConnection(ctx context.Context, sel ast.SelectionSet, v model.PanierCommandConnection) graphql.Marshaler {
-	return ec._PanierCommandConnection(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNPanierCommandConnection2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandConnection(ctx context.Context, sel ast.SelectionSet, v *model.PanierCommandConnection) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._PanierCommandConnection(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNPanierCommandEdge2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PanierCommandEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNPanierCommand2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PanierCommand) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -12917,7 +13018,7 @@ func (ec *executionContext) marshalNPanierCommandEdge2ᚕᚖcheminᚑduᚑlocal�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPanierCommandEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNPanierCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommand(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -12937,24 +13038,14 @@ func (ec *executionContext) marshalNPanierCommandEdge2ᚕᚖcheminᚑduᚑlocal�
 	return ret
 }
 
-func (ec *executionContext) marshalNPanierCommandEdge2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandEdge(ctx context.Context, sel ast.SelectionSet, v *model.PanierCommandEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNPanierCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommand(ctx context.Context, sel ast.SelectionSet, v *model.PanierCommand) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._PanierCommandEdge(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNPanierCommandPageInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.PanierCommandPageInfo) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._PanierCommandPageInfo(ctx, sel, v)
+	return ec._PanierCommand(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNPanierConnection2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierConnection(ctx context.Context, sel ast.SelectionSet, v model.PanierConnection) graphql.Marshaler {
@@ -13656,21 +13747,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOCCCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommand(ctx context.Context, sel ast.SelectionSet, v *model.CCCommand) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._CCCommand(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOCCCommandFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCCCommandFilter(ctx context.Context, v interface{}) (*model.CCCommandFilter, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputCCCommandFilter(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalOChangesBusinessHours2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
 	if v == nil {
 		return nil, nil
@@ -13678,18 +13754,11 @@ func (ec *executionContext) unmarshalOChangesBusinessHours2map(ctx context.Conte
 	return v.(map[string]interface{}), nil
 }
 
-func (ec *executionContext) unmarshalOChangesCCCommand2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) marshalOCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommand(ctx context.Context, sel ast.SelectionSet, v *model.Command) graphql.Marshaler {
 	if v == nil {
-		return nil, nil
+		return graphql.Null
 	}
-	return v.(map[string]interface{}), nil
-}
-
-func (ec *executionContext) unmarshalOChangesPanierCommand2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
-	if v == nil {
-		return nil, nil
-	}
-	return v.(map[string]interface{}), nil
+	return ec._Command(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerce(ctx context.Context, sel ast.SelectionSet, v *model.Commerce) graphql.Marshaler {
@@ -13697,6 +13766,13 @@ func (ec *executionContext) marshalOCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgrap
 		return graphql.Null
 	}
 	return ec._Commerce(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOCommerceCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommand(ctx context.Context, sel ast.SelectionSet, v *model.CommerceCommand) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CommerceCommand(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOCommerceFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceFilter(ctx context.Context, v interface{}) (*model.CommerceFilter, error) {
@@ -13846,21 +13922,6 @@ func (ec *executionContext) marshalOPanier2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphq
 		return graphql.Null
 	}
 	return ec._Panier(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOPanierCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommand(ctx context.Context, sel ast.SelectionSet, v *model.PanierCommand) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._PanierCommand(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOPanierCommandFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierCommandFilter(ctx context.Context, v interface{}) (*model.PanierCommandFilter, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputPanierCommandFilter(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOPanierFilter2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐPanierFilter(ctx context.Context, v interface{}) (*model.PanierFilter, error) {

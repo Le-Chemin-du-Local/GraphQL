@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
@@ -17,6 +16,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/helper"
 	"chemin-du-local.bzh/graphql/internal/products"
 	"chemin-du-local.bzh/graphql/internal/services/clickandcollect"
+	"chemin-du-local.bzh/graphql/internal/services/commands"
 	"chemin-du-local.bzh/graphql/internal/services/paniers"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/geojson"
@@ -26,32 +26,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (r *cCCommandResolver) Products(ctx context.Context, obj *model.CCCommand) ([]*model.CCProduct, error) {
-	return clickandcollect.GetProducts(obj.ID)
+func (r *commandResolver) User(ctx context.Context, obj *model.Command) (*model.User, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *cCCommandResolver) User(ctx context.Context, obj *model.CCCommand) (*model.User, error) {
-	databaseCCCommand, err := clickandcollect.GetById(obj.ID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if databaseCCCommand == nil {
-		return nil, &clickandcollect.CCCommandNotFoundError{}
-	}
-
-	databaseUser, err := users.GetUserById(databaseCCCommand.UserID.Hex())
-
-	if err != nil {
-		return nil, err
-	}
-
-	if databaseUser == nil {
-		return nil, &users.UserNotFoundError{}
-	}
-
-	return databaseUser.ToModel(), nil
+func (r *commandResolver) Commerces(ctx context.Context, obj *model.Command) ([]*model.CommerceCommand, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *commerceResolver) Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error) {
@@ -182,65 +162,6 @@ func (r *commerceResolver) ProductsAvailableForClickAndCollect(ctx context.Conte
 	return productsResult, nil
 }
 
-func (r *commerceResolver) Cccommands(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.CCCommandFilter) (*model.CCCommandConnection, error) {
-	var decodedCursor *string
-
-	if after != nil {
-		bytes, err := base64.StdEncoding.DecodeString(*after)
-
-		if err != nil {
-			return nil, err
-		}
-
-		decodedCursorString := string(bytes)
-		decodedCursor = &decodedCursorString
-	}
-
-	databaseCCCommands, err := clickandcollect.GetPaginated(obj.ID, decodedCursor, *first, filters)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// On construit les edges
-	edges := []*model.CCCommandEdge{}
-
-	for _, datadatabaseCCCommand := range databaseCCCommands {
-		cccommandEdge := model.CCCommandEdge{
-			Cursor: base64.StdEncoding.EncodeToString([]byte(datadatabaseCCCommand.ID.Hex())),
-			Node:   datadatabaseCCCommand.ToModel(),
-		}
-
-		edges = append(edges, &cccommandEdge)
-	}
-
-	itemCount := len(edges)
-
-	// Si jamais il n'y a pas de produits, on veut quand même renvoyer un
-	// tableau vide
-	if itemCount == 0 {
-		return &model.CCCommandConnection{
-			Edges:    edges,
-			PageInfo: &model.CCCommandPageInfo{},
-		}, nil
-	}
-
-	hasNextPage := !databaseCCCommands[itemCount-1].IsLast()
-
-	pageInfo := model.CCCommandPageInfo{
-		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
-		EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
-		HasNextPage: hasNextPage,
-	}
-
-	connection := model.CCCommandConnection{
-		Edges:    edges[:itemCount],
-		PageInfo: &pageInfo,
-	}
-
-	return &connection, nil
-}
-
 func (r *commerceResolver) Paniers(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.PanierFilter) (*model.PanierConnection, error) {
 	var decodedCursor *string
 
@@ -300,63 +221,56 @@ func (r *commerceResolver) Paniers(ctx context.Context, obj *model.Commerce, fir
 	return &connection, nil
 }
 
-func (r *commerceResolver) PanierCommands(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.PanierCommandFilter) (*model.PanierCommandConnection, error) {
-	var decodedCursor *string
-
-	if after != nil {
-		bytes, err := base64.StdEncoding.DecodeString(*after)
-
-		if err != nil {
-			return nil, err
-		}
-
-		decodedCursorString := string(bytes)
-		decodedCursor = &decodedCursorString
-	}
-
-	databasePanierCommands, err := paniers.GetCommandsPaginated(obj.ID, decodedCursor, *first, filters)
+func (r *commerceCommandResolver) Commerce(ctx context.Context, obj *model.CommerceCommand) (*model.Commerce, error) {
+	commerce, err := commands.CommerceGetCommerce(obj.ID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// On construit les edges
-	edges := []*model.PanierCommandEdge{}
+	return commerce, nil
+}
+
+func (r *commerceCommandResolver) Cccommands(ctx context.Context, obj *model.CommerceCommand) ([]*model.CCCommand, error) {
+	databaseCCCommands, err := clickandcollect.GetForCommmerceCommand(obj.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	cccommands := []*model.CCCommand{}
+
+	for _, databaseCCCommand := range databaseCCCommands {
+		cccommands = append(cccommands, databaseCCCommand.ToModel())
+	}
+
+	return cccommands, nil
+}
+
+func (r *commerceCommandResolver) Paniers(ctx context.Context, obj *model.CommerceCommand) ([]*model.PanierCommand, error) {
+	databasePanierCommands, err := paniers.GetCommandsForCommerceCommand(obj.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	panierCommands := []*model.PanierCommand{}
 
 	for _, databasePanierCommand := range databasePanierCommands {
-		panierCommandEdge := model.PanierCommandEdge{
-			Cursor: base64.StdEncoding.EncodeToString([]byte(databasePanierCommand.ID.Hex())),
-			Node:   databasePanierCommand.ToModel(),
-		}
-
-		edges = append(edges, &panierCommandEdge)
+		panierCommands = append(panierCommands, databasePanierCommand.ToModel())
 	}
 
-	itemCount := len(edges)
+	return panierCommands, nil
+}
 
-	// Si jamais il n'y a pas de produits, on veut quand même renvoyer un
-	// tableau vide
-	if itemCount == 0 {
-		return &model.PanierCommandConnection{
-			Edges:    edges,
-			PageInfo: &model.PanierCommandPageInfo{},
-		}, nil
+func (r *commerceCommandResolver) User(ctx context.Context, obj *model.CommerceCommand) (*model.User, error) {
+	user, err := commands.CommerceGetUser(obj.ID)
+
+	if err != nil {
+		return nil, err
 	}
 
-	hasNextPage := !databasePanierCommands[itemCount-1].IsLast()
-
-	pageInfo := model.PanierCommandPageInfo{
-		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
-		EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
-		HasNextPage: hasNextPage,
-	}
-
-	connection := model.PanierCommandConnection{
-		Edges:    edges[:itemCount],
-		PageInfo: &pageInfo,
-	}
-
-	return &connection, nil
+	return user, nil
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
@@ -614,28 +528,6 @@ func (r *mutationResolver) UpdateProducts(ctx context.Context, changes []*model.
 	return result, nil
 }
 
-func (r *mutationResolver) UpdateCCCommand(ctx context.Context, id string, changes map[string]interface{}) (*model.CCCommand, error) {
-	databaseCommand, err := clickandcollect.GetById(id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if databaseCommand == nil {
-		return nil, &clickandcollect.CCCommandNotFoundError{}
-	}
-
-	helper.ApplyChanges(changes, databaseCommand)
-
-	err = clickandcollect.Update(databaseCommand)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return databaseCommand.ToModel(), nil
-}
-
 func (r *mutationResolver) CreatePanier(ctx context.Context, commerceID *string, input model.NewPanier) (*model.Panier, error) {
 	user := auth.ForContext(ctx)
 
@@ -734,28 +626,6 @@ func (r *mutationResolver) UpdatePanier(ctx context.Context, id string, changes 
 	return databasePanier.ToModel(), nil
 }
 
-func (r *mutationResolver) UpdatePanierCommand(ctx context.Context, id string, changes map[string]interface{}) (*model.PanierCommand, error) {
-	databaseCommand, err := paniers.GetCommandById(id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if databaseCommand == nil {
-		return nil, &clickandcollect.CCCommandNotFoundError{}
-	}
-
-	helper.ApplyChanges(changes, databaseCommand)
-
-	err = paniers.UpdateCommand(databaseCommand)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return databaseCommand.ToModel(), nil
-}
-
 func (r *panierResolver) Products(ctx context.Context, obj *model.Panier) ([]*model.PanierProduct, error) {
 	return paniers.GetProducts(obj.ID)
 }
@@ -782,30 +652,6 @@ func (r *panierCommandResolver) Panier(ctx context.Context, obj *model.PanierCom
 	}
 
 	return databasePanier.ToModel(), nil
-}
-
-func (r *panierCommandResolver) User(ctx context.Context, obj *model.PanierCommand) (*model.User, error) {
-	databasePanierCommand, err := paniers.GetCommandById(obj.ID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if databasePanierCommand == nil {
-		return nil, &paniers.PanierNotFoundError{}
-	}
-
-	databaseUser, err := users.GetUserById(databasePanierCommand.UserID.Hex())
-
-	if err != nil {
-		return nil, err
-	}
-
-	if databaseUser == nil {
-		return nil, &users.UserNotFoundError{}
-	}
-
-	return databaseUser.ToModel(), nil
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
@@ -947,18 +793,12 @@ func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product,
 	return databaseProduct.ToModel(), nil
 }
 
-func (r *queryResolver) Cccommand(ctx context.Context, id string) (*model.CCCommand, error) {
-	databaseCCCommand, err := clickandcollect.GetById(id)
+func (r *queryResolver) Commands(ctx context.Context, userID string) (*model.CommandConnection, error) {
+	panic(fmt.Errorf("not implemented"))
+}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if databaseCCCommand == nil {
-		return nil, &clickandcollect.CCCommandNotFoundError{}
-	}
-
-	return databaseCCCommand.ToModel(), nil
+func (r *queryResolver) CommerceCommands(ctx context.Context, commerceID string) (*model.CommerceCommandConnection, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) Panier(ctx context.Context, id string) (*model.Panier, error) {
@@ -973,20 +813,6 @@ func (r *queryResolver) Panier(ctx context.Context, id string) (*model.Panier, e
 	}
 
 	return databasePanier.ToModel(), nil
-}
-
-func (r *queryResolver) Paniercommand(ctx context.Context, id string) (*model.PanierCommand, error) {
-	databasePanierCommand, err := paniers.GetCommandById(id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if databasePanierCommand == nil {
-		return nil, &clickandcollect.CCCommandNotFoundError{}
-	}
-
-	return databasePanierCommand.ToModel(), nil
 }
 
 func (r *userResolver) Commerce(ctx context.Context, obj *model.User) (*model.Commerce, error) {
@@ -1007,11 +833,16 @@ func (r *userResolver) Basket(ctx context.Context, obj *model.User) (*model.Bask
 	panic(fmt.Errorf("not implemented"))
 }
 
-// CCCommand returns generated.CCCommandResolver implementation.
-func (r *Resolver) CCCommand() generated.CCCommandResolver { return &cCCommandResolver{r} }
+// Command returns generated.CommandResolver implementation.
+func (r *Resolver) Command() generated.CommandResolver { return &commandResolver{r} }
 
 // Commerce returns generated.CommerceResolver implementation.
 func (r *Resolver) Commerce() generated.CommerceResolver { return &commerceResolver{r} }
+
+// CommerceCommand returns generated.CommerceCommandResolver implementation.
+func (r *Resolver) CommerceCommand() generated.CommerceCommandResolver {
+	return &commerceCommandResolver{r}
+}
 
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
@@ -1028,8 +859,9 @@ func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
-type cCCommandResolver struct{ *Resolver }
+type commandResolver struct{ *Resolver }
 type commerceResolver struct{ *Resolver }
+type commerceCommandResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type panierResolver struct{ *Resolver }
 type panierCommandResolver struct{ *Resolver }
@@ -1042,23 +874,6 @@ type userResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *commerceResolver) BusinessHours(ctx context.Context, obj *model.Commerce) (*model.BusinessHours, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-func (r *mutationResolver) Order(ctx context.Context, commerceID string, command model.NewCCCommand) (*model.CCCommand, error) {
-	user := auth.ForContext(ctx)
-
-	databaseCommand, err := clickandcollect.Create(user.ID, commerceID, command)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return databaseCommand.ToModel(), nil
-}
-func (r *panierResolver) EndingDate(ctx context.Context, obj *model.Panier) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-func (r *panierResolver) Price(ctx context.Context, obj *model.Panier) (float64, error) {
+func (r *commerceCommandResolver) ID(ctx context.Context, obj *model.CommerceCommand) (string, error) {
 	panic(fmt.Errorf("not implemented"))
 }

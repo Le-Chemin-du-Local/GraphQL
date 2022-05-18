@@ -41,29 +41,50 @@ type BusinessHours struct {
 	Sunday    []*Schedule `json:"sunday"`
 }
 
-type CCCommandConnection struct {
-	Edges    []*CCCommandEdge   `json:"edges"`
-	PageInfo *CCCommandPageInfo `json:"pageInfo"`
-}
-
-type CCCommandEdge struct {
-	Cursor string     `json:"cursor"`
-	Node   *CCCommand `json:"node"`
+type CCCommand struct {
+	ID       string       `json:"id"`
+	Products []*CCProduct `json:"products"`
 }
 
 type CCCommandFilter struct {
 	Status *string `json:"status"`
 }
 
-type CCCommandPageInfo struct {
+type CCProduct struct {
+	Quantity int      `json:"quantity"`
+	Product  *Product `json:"product"`
+}
+
+type CommandConnection struct {
+	Edges    []*CommandEdge   `json:"edges"`
+	PageInfo *CommandPageInfo `json:"pageInfo"`
+}
+
+type CommandEdge struct {
+	Cursor string   `json:"cursor"`
+	Node   *Command `json:"node"`
+}
+
+type CommandPageInfo struct {
 	StartCursor string `json:"startCursor"`
 	EndCursor   string `json:"endCursor"`
 	HasNextPage bool   `json:"hasNextPage"`
 }
 
-type CCProduct struct {
-	Quantity int      `json:"quantity"`
-	Product  *Product `json:"product"`
+type CommerceCommandConnection struct {
+	Edges    []*CommerceCommandEdge   `json:"edges"`
+	PageInfo *CommerceCommandPageInfo `json:"pageInfo"`
+}
+
+type CommerceCommandEdge struct {
+	Cursor string           `json:"cursor"`
+	Node   *CommerceCommand `json:"node"`
+}
+
+type CommerceCommandPageInfo struct {
+	StartCursor string `json:"startCursor"`
+	EndCursor   string `json:"endCursor"`
+	HasNextPage bool   `json:"hasNextPage"`
 }
 
 type CommerceConnection struct {
@@ -134,6 +155,11 @@ type NewCCProcuct struct {
 	ProductID string `json:"productID"`
 }
 
+type NewCommand struct {
+	CreationDate time.Time `json:"creationDate"`
+	User         string    `json:"user"`
+}
+
 type NewCommerce struct {
 	Name            string            `json:"name"`
 	Description     *string           `json:"description"`
@@ -149,6 +175,11 @@ type NewCommerce struct {
 	BusinessHours   *NewBusinessHours `json:"businessHours"`
 	ProfilePicture  *graphql.Upload   `json:"profilePicture"`
 	Image           *graphql.Upload   `json:"image"`
+}
+
+type NewCommerceCommand struct {
+	CommerceID string    `json:"commerceID"`
+	PickupDate time.Time `json:"pickupDate"`
 }
 
 type NewPanier struct {
@@ -193,24 +224,8 @@ type NewUser struct {
 	LastName  *string `json:"lastName"`
 }
 
-type PanierCommandConnection struct {
-	Edges    []*PanierCommandEdge   `json:"edges"`
-	PageInfo *PanierCommandPageInfo `json:"pageInfo"`
-}
-
-type PanierCommandEdge struct {
-	Cursor string         `json:"cursor"`
-	Node   *PanierCommand `json:"node"`
-}
-
 type PanierCommandFilter struct {
 	Status *string `json:"status"`
-}
-
-type PanierCommandPageInfo struct {
-	StartCursor string `json:"startCursor"`
-	EndCursor   string `json:"endCursor"`
-	HasNextPage bool   `json:"hasNextPage"`
 }
 
 type PanierConnection struct {

@@ -27,12 +27,14 @@ type Config struct {
 		Name             string `yaml:"name"`
 		ConnectionString string `yaml:"connectionString"`
 		Collections      struct {
-			Users          string `yaml:"users"`
-			Commerces      string `yaml:"commerces"`
-			Products       string `yaml:"products"`
-			CCCommands     string `yaml:"cccommands"`
-			Paniers        string `yaml:"paniers"`
-			PanierCommands string `yaml:"paniercommands"`
+			Users            string `yaml:"users"`
+			Commerces        string `yaml:"commerces"`
+			Products         string `yaml:"products"`
+			Commands         string `yaml:"commands"`
+			CommerceCommands string `yaml:"commercecommands"`
+			CCCommands       string `yaml:"cccommands"`
+			PanierCommands   string `yaml:"paniercommands"`
+			Paniers          string `yaml:"paniers"`
 		} `yaml:"collections"`
 	} `yaml:"database"`
 }
@@ -75,7 +77,9 @@ func InitFromEnv() {
 	Cfg.Database.Collections.Users = os.Getenv("COLLECTION_USERS")
 	Cfg.Database.Collections.Commerces = os.Getenv("COLLECTION_COMMERCES")
 	Cfg.Database.Collections.Products = os.Getenv("COLLECTION_PRODUCTS")
+	Cfg.Database.Collections.Commands = os.Getenv("COLLECTION_COMMANDS")
+	Cfg.Database.Collections.CommerceCommands = os.Getenv("COLLECTION_COMMERCE_COMMANDS")
 	Cfg.Database.Collections.CCCommands = os.Getenv("COLLECTION_CCCOMMANDS")
-	Cfg.Database.Collections.Paniers = os.Getenv("COLLECTION_PANIERS")
 	Cfg.Database.Collections.PanierCommands = os.Getenv("COLLECTION_PANIERCOMMANDS")
+	Cfg.Database.Collections.Paniers = os.Getenv("COLLECTION_PANIERS")
 }

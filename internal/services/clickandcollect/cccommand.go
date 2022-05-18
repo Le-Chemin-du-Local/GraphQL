@@ -1,8 +1,6 @@
 package clickandcollect
 
 import (
-	"time"
-
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/database"
 	"chemin-du-local.bzh/graphql/internal/products"
@@ -11,15 +9,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const CCCOMMAND_STATUS_IN_PRGRESS = "INPROGRESS"
-
 type CCCommand struct {
-	ID         primitive.ObjectID `bson:"_id"`
-	CommerceID primitive.ObjectID `bson:"commerceID"`
-	UserID     primitive.ObjectID `bson:"userID"`
-	Status     string             `bson:"status"`
-	PickupDate time.Time          `bson:"pickupDate"`
-	Products   []CCProduct        `bson:"products"`
+	ID                primitive.ObjectID `bson:"_id"`
+	CommerceCommandID primitive.ObjectID `bson:"commerceCommandID"`
+	Products          []CCProduct        `bson:"products"`
 }
 
 type CCProduct struct {
@@ -30,46 +23,13 @@ type CCProduct struct {
 
 func (cccommand *CCCommand) ToModel() *model.CCCommand {
 	return &model.CCCommand{
-		ID:         cccommand.ID.Hex(),
-		Status:     cccommand.Status,
-		PickupDate: cccommand.PickupDate,
+		ID: cccommand.ID.Hex(),
 	}
-}
-
-func (cccommand CCCommand) IsLast() bool {
-	filter := bson.D{
-		primitive.E{
-			Key:   "commerceID",
-			Value: cccommand.CommerceID,
-		},
-	}
-
-	opts := options.FindOptions{}
-	opts.SetLimit(1)
-	opts.SetSort(bson.D{
-		primitive.E{
-			Key: "_id", Value: -1,
-		},
-	})
-
-	lastCCCommand, err := GetFiltered(filter, &opts)
-
-	if err != nil || len(lastCCCommand) <= 0 {
-		return false
-	}
-
-	return lastCCCommand[0].ID == cccommand.ID
 }
 
 // Créateur de base de données
 
-func Create(userID primitive.ObjectID, commerceID string, input model.NewCCCommand) (*CCCommand, error) {
-	commerceObjectID, err := primitive.ObjectIDFromHex(commerceID)
-
-	if err != nil {
-		return nil, err
-	}
-
+func Create(commerceCommandID primitive.ObjectID, input model.NewCCCommand) (*CCCommand, error) {
 	products := []CCProduct{}
 	for _, product := range input.ProductsID {
 		productObjectID, err := primitive.ObjectIDFromHex(product.ProductID)
@@ -86,36 +46,18 @@ func Create(userID primitive.ObjectID, commerceID string, input model.NewCCComma
 	}
 
 	databaseCCCommand := CCCommand{
-		ID:         primitive.NewObjectID(),
-		CommerceID: commerceObjectID,
-		UserID:     userID,
-		Status:     CCCOMMAND_STATUS_IN_PRGRESS,
-		PickupDate: input.PickupDate,
-		Products:   products,
+		ID:                primitive.NewObjectID(),
+		CommerceCommandID: commerceCommandID,
+		Products:          products,
 	}
 
-	_, err = database.CollectionCCCommand.InsertOne(database.MongoContext, databaseCCCommand)
+	_, err := database.CollectionCCCommand.InsertOne(database.MongoContext, databaseCCCommand)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &databaseCCCommand, nil
-}
-
-// Mise à jour de la base de données
-
-func Update(changes *CCCommand) error {
-	filter := bson.D{
-		primitive.E{
-			Key:   "_id",
-			Value: changes.ID,
-		},
-	}
-
-	_, err := database.CollectionCCCommand.ReplaceOne(database.MongoContext, filter, changes)
-
-	return err
 }
 
 // Getter de base de données
@@ -147,8 +89,8 @@ func GetById(id string) (*CCCommand, error) {
 	return &cccommands[0], nil
 }
 
-func GetForCommerce(commerceID string) ([]CCCommand, error) {
-	commerceObjectId, err := primitive.ObjectIDFromHex(commerceID)
+func GetForCommmerceCommand(commerceCommandID string) ([]CCCommand, error) {
+	commerceCommandObjectId, err := primitive.ObjectIDFromHex(commerceCommandID)
 
 	if err != nil {
 		return nil, err
@@ -156,66 +98,12 @@ func GetForCommerce(commerceID string) ([]CCCommand, error) {
 
 	filter := bson.D{
 		primitive.E{
-			Key:   "commerceID",
-			Value: commerceObjectId,
+			Key:   "commerceCommandID",
+			Value: commerceCommandObjectId,
 		},
 	}
 
 	return GetFiltered(filter, nil)
-}
-
-func GetPaginated(commerceID string, startValue *string, first int, filters *model.CCCommandFilter) ([]CCCommand, error) {
-	commerceObjectID, err := primitive.ObjectIDFromHex(commerceID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// On doit faire un filtre spécifique si on veut commencer
-	// le curseur à l'ID de départ
-	var finalFilter bson.D
-
-	if startValue != nil {
-		objectID, err := primitive.ObjectIDFromHex(*startValue)
-
-		if err != nil {
-			return nil, err
-		}
-
-		finalFilter = bson.D{
-			primitive.E{
-				Key:   "commerceID",
-				Value: commerceObjectID,
-			},
-			primitive.E{
-				Key: "_id",
-				Value: bson.M{
-					"$gt": objectID,
-				},
-			},
-		}
-	} else {
-		finalFilter = bson.D{
-			primitive.E{
-				Key:   "commerceID",
-				Value: commerceObjectID,
-			},
-		}
-	}
-
-	if filters != nil {
-		if filters.Status != nil {
-			finalFilter = append(finalFilter, primitive.E{
-				Key:   "status",
-				Value: filters.Status,
-			})
-		}
-	}
-
-	opts := options.Find()
-	opts.SetLimit(int64(first))
-
-	return GetFiltered(finalFilter, opts)
 }
 
 func GetFiltered(filter interface{}, opts *options.FindOptions) ([]CCCommand, error) {

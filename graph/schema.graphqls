@@ -118,12 +118,8 @@ type Commerce { # Ici on utilise le nom "Commerce"
   services: [String!]!
   productsAvailableForClickAndCollect: [Product!]!
 
-  # Click and collcet
-  cccommands(first: Int = 10, after: ID, filters: CCCommandFilter): CCCommandConnection!
-
   # Panier
   paniers(first: Int = 10, after: ID, filters: PanierFilter): PanierConnection!
-  panierCommands(first: Int = 10, after: ID, filters: PanierCommandFilter): PanierCommandConnection!
 } 
 
 # Pagination 
@@ -267,29 +263,7 @@ type CCProduct {
 
 type CCCommand {
   id: ID!
-  status: String!
   products: [CCProduct!]!
-
-  pickupDate: Time!
-
-  user: User!
-}
-
-# Pagination 
-type CCCommandConnection {
-  edges: [CCCommandEdge!]!
-  pageInfo: CCCommandPageInfo!
-}
-
-type CCCommandEdge {
-  cursor: ID!
-  node: CCCommand
-}
-
-type CCCommandPageInfo {
-  startCursor: ID!
-  endCursor: ID!
-  hasNextPage: Boolean!
 }
 
 input NewCCProcuct {
@@ -300,10 +274,6 @@ input NewCCProcuct {
 input NewCCCommand {
   productsID: [NewCCProcuct!]
   pickupDate: Time!
-}
-
-input ChangesCCCommand {
-  status: String
 }
 
 #############
@@ -390,29 +360,7 @@ input ChangesPanier {
 
 type PanierCommand {
   id: ID!
-  status: String!
   panier: Panier!
-
-  pickupDate: Time!
-
-  user: User!
-}
-
-# Pagination 
-type PanierCommandConnection {
-  edges: [PanierCommandEdge!]!
-  pageInfo: PanierCommandPageInfo!
-}
-
-type PanierCommandEdge {
-  cursor: ID!
-  node: PanierCommand
-}
-
-type PanierCommandPageInfo {
-  startCursor: ID!
-  endCursor: ID!
-  hasNextPage: Boolean!
 }
 
 input NewPanierCommand {
@@ -420,9 +368,74 @@ input NewPanierCommand {
   pickupDate: Time!
 }
 
-input ChangesPanierCommand {
-  status: String
+
+#############
+## COMMAND ##
+#############
+
+type CommerceCommand {
+  id: ID!
+  commerce: Commerce! 
+
+  cccommands: [CCCommand!]!
+  paniers: [PanierCommand!]!
+  pickupDate: Time!
+  status: String!
+  user: User!
 }
+
+type Command {
+  id: ID!
+  creationDate: Time!
+
+  user: User!
+  commerces: [CommerceCommand]!
+}
+
+# Pagination 
+type CommandConnection {
+  edges: [CommandEdge!]!
+  pageInfo: CommandPageInfo!
+}
+
+type CommandEdge {
+  cursor: ID!
+  node: Command
+}
+
+type CommandPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+type CommerceCommandConnection {
+  edges: [CommerceCommandEdge!]!
+  pageInfo: CommerceCommandPageInfo!
+}
+
+type CommerceCommandEdge {
+  cursor: ID!
+  node: CommerceCommand
+}
+
+type CommerceCommandPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+
+input NewCommerceCommand {
+  commerceID: ID!
+  pickupDate: Time!
+}
+
+input NewCommand {
+  creationDate: Time!
+  user: ID!
+}
+
 
 ############
 ## BASKET ##
@@ -502,12 +515,11 @@ type Query {
   product(id: ID!): Product!
 
   # SERVICES
-  # CLICK AND COLLECT
-  cccommand(id: ID!): CCCommand! @needAuthentication
+  commands(userID: ID!): CommandConnection! @needAuthentication
+  commerceCommands(commerceID: ID!): CommerceCommandConnection! @needAuthentication
 
   # PANIERS
   panier(id: ID!): Panier!
-  paniercommand(id: ID!): PanierCommand! @needAuthentication
 }
 
 type Mutation {
@@ -524,11 +536,8 @@ type Mutation {
   updateProducts(changes: [BulkChangesProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
 
   # SERVICES
-  # CLICK AND COLLECT
-  updateCCCommand(id: ID!, changes: ChangesCCCommand): CCCommand! @hasRole(role: STOREKEEPER)
 
   # PANIER
   createPanier(commerceID: ID, input: NewPanier!): Panier! @hasRole(role: STOREKEEPER)
   updatePanier(id: ID! changes: ChangesPanier!): Panier! @hasRole(role: STOREKEEPER)
-  updatePanierCommand(id: ID!, changes: ChangesPanierCommand): PanierCommand! @hasRole(role: STOREKEEPER)
 }

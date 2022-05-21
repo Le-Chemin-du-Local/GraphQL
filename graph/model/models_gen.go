@@ -41,11 +41,6 @@ type BusinessHours struct {
 	Sunday    []*Schedule `json:"sunday"`
 }
 
-type CCCommand struct {
-	ID       string       `json:"id"`
-	Products []*CCProduct `json:"products"`
-}
-
 type CCCommandFilter struct {
 	Status *string `json:"status"`
 }

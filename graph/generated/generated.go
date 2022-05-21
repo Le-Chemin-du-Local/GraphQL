@@ -37,6 +37,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	CCCommand() CCCommandResolver
 	Command() CommandResolver
 	Commerce() CommerceResolver
 	CommerceCommand() CommerceCommandResolver
@@ -256,9 +257,9 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Commands         func(childComplexity int, userID string) int
+		Commands         func(childComplexity int, first *int, after *string, userID *string) int
 		Commerce         func(childComplexity int, id *string) int
-		CommerceCommands func(childComplexity int, commerceID string) int
+		CommerceCommands func(childComplexity int, first *int, after *string, commerceID *string) int
 		Commerces        func(childComplexity int, first *int, after *string, filter *model.CommerceFilter) int
 		Panier           func(childComplexity int, id string) int
 		Product          func(childComplexity int, id string) int
@@ -283,6 +284,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type CCCommandResolver interface {
+	Products(ctx context.Context, obj *model.CCCommand) ([]*model.CCProduct, error)
+}
 type CommandResolver interface {
 	User(ctx context.Context, obj *model.Command) (*model.User, error)
 	Commerces(ctx context.Context, obj *model.Command) ([]*model.CommerceCommand, error)
@@ -327,8 +331,8 @@ type QueryResolver interface {
 	Commerces(ctx context.Context, first *int, after *string, filter *model.CommerceFilter) (*model.CommerceConnection, error)
 	Commerce(ctx context.Context, id *string) (*model.Commerce, error)
 	Product(ctx context.Context, id string) (*model.Product, error)
-	Commands(ctx context.Context, userID string) (*model.CommandConnection, error)
-	CommerceCommands(ctx context.Context, commerceID string) (*model.CommerceCommandConnection, error)
+	Commands(ctx context.Context, first *int, after *string, userID *string) (*model.CommandConnection, error)
+	CommerceCommands(ctx context.Context, first *int, after *string, commerceID *string) (*model.CommerceCommandConnection, error)
 	Panier(ctx context.Context, id string) (*model.Panier, error)
 }
 type UserResolver interface {
@@ -1226,7 +1230,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Commands(childComplexity, args["userID"].(string)), true
+		return e.complexity.Query.Commands(childComplexity, args["first"].(*int), args["after"].(*string), args["userID"].(*string)), true
 
 	case "Query.commerce":
 		if e.complexity.Query.Commerce == nil {
@@ -1250,7 +1254,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.CommerceCommands(childComplexity, args["commerceID"].(string)), true
+		return e.complexity.Query.CommerceCommands(childComplexity, args["first"].(*int), args["after"].(*string), args["commerceID"].(*string)), true
 
 	case "Query.commerces":
 		if e.complexity.Query.Commerces == nil {
@@ -1958,8 +1962,8 @@ type Query {
   product(id: ID!): Product!
 
   # SERVICES
-  commands(userID: ID!): CommandConnection! @needAuthentication
-  commerceCommands(commerceID: ID!): CommerceCommandConnection! @needAuthentication
+  commands(first: Int = 5, after: ID, userID: ID): CommandConnection! @needAuthentication
+  commerceCommands(first: Int = 5, after: ID, commerceID: ID): CommerceCommandConnection! @needAuthentication
 
   # PANIERS
   panier(id: ID!): Panier!
@@ -2304,30 +2308,66 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_commands_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["userID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	var arg0 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["userID"] = arg0
+	args["first"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["after"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+		arg1, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["userID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+		arg2, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userID"] = arg2
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_commerceCommands_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["commerceID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commerceID"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	var arg0 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["commerceID"] = arg0
+	args["first"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["after"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+		arg1, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["commerceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commerceID"))
+		arg2, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["commerceID"] = arg2
 	return args, nil
 }
 
@@ -2957,14 +2997,14 @@ func (ec *executionContext) _CCCommand_products(ctx context.Context, field graph
 		Object:     "CCCommand",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Products, nil
+		return ec.resolvers.CCCommand().Products(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6929,7 +6969,7 @@ func (ec *executionContext) _Query_commands(ctx context.Context, field graphql.C
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Commands(rctx, args["userID"].(string))
+			return ec.resolvers.Query().Commands(rctx, args["first"].(*int), args["after"].(*string), args["userID"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.NeedAuthentication == nil {
@@ -6991,7 +7031,7 @@ func (ec *executionContext) _Query_commerceCommands(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().CommerceCommands(rctx, args["commerceID"].(string))
+			return ec.resolvers.Query().CommerceCommands(rctx, args["first"].(*int), args["after"].(*string), args["commerceID"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.NeedAuthentication == nil {
@@ -9792,18 +9832,28 @@ func (ec *executionContext) _CCCommand(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "products":
+			field := field
+
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._CCCommand_products(ctx, field, obj)
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CCCommand_products(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
 
-			out.Values[i] = innerFunc(ctx)
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

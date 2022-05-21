@@ -5,6 +5,7 @@ import (
 
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/database"
+	"chemin-du-local.bzh/graphql/internal/users"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -22,6 +23,26 @@ func (command *Command) ToModel() *model.Command {
 		CreationDate: command.CreationDate,
 		User:         command.UserID.Hex(),
 	}
+}
+
+func (command Command) IsLast() bool {
+	filter := bson.D{{}}
+
+	opts := options.FindOptions{}
+	opts.SetLimit(1)
+	opts.SetSort(bson.D{
+		primitive.E{
+			Key: "_id", Value: -1,
+		},
+	})
+
+	lastCommand, err := GetFiltered(filter, &opts)
+
+	if err != nil || len(lastCommand) <= 0 {
+		return false
+	}
+
+	return lastCommand[0].ID == command.ID
 }
 
 func Create(input model.NewCommand) (*Command, error) {
@@ -79,6 +100,50 @@ func GetById(id string) (*Command, error) {
 	return &commands[0], nil
 }
 
+func GetPaginated(startValue *string, first int, userID *string) ([]Command, error) {
+	var finalFilter bson.M
+
+	if startValue != nil {
+		objectID, err := primitive.ObjectIDFromHex(*startValue)
+
+		if err != nil {
+			return nil, err
+		}
+
+		finalFilter = bson.M{
+			"_id": bson.M{
+				"$gt": objectID,
+			},
+		}
+	} else {
+		finalFilter = bson.M{}
+	}
+
+	if userID != nil {
+		userObjectID, err := primitive.ObjectIDFromHex(*userID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		finalFilter = bson.M{
+			"$and": []bson.M{
+				finalFilter,
+				{
+					"userID": bson.M{
+						"$eq": userObjectID,
+					},
+				},
+			},
+		}
+	}
+
+	opts := options.Find()
+	opts.SetLimit(int64(first))
+
+	return GetFiltered(finalFilter, opts)
+}
+
 func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Command, error) {
 	commands := []Command{}
 
@@ -105,4 +170,28 @@ func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Command, erro
 	}
 
 	return commands, nil
+}
+
+func GetUser(commandID string) (*model.User, error) {
+	databaseCommand, err := GetById(commandID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseCommand == nil {
+		return nil, &CommandNotFoundError{}
+	}
+
+	databaseUser, err := users.GetUserById(databaseCommand.UserID.Hex())
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseUser == nil {
+		return nil, &users.UserNotFoundError{}
+	}
+
+	return databaseUser.ToModel(), nil
 }

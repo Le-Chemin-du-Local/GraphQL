@@ -515,8 +515,8 @@ type Query {
   product(id: ID!): Product!
 
   # SERVICES
-  commands(userID: ID!): CommandConnection! @needAuthentication
-  commerceCommands(commerceID: ID!): CommerceCommandConnection! @needAuthentication
+  commands(first: Int = 5, after: ID, userID: ID): CommandConnection! @needAuthentication
+  commerceCommands(first: Int = 5, after: ID, commerceID: ID): CommerceCommandConnection! @needAuthentication
 
   # PANIERS
   panier(id: ID!): Panier!

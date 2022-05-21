@@ -26,12 +26,34 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+func (r *cCCommandResolver) Products(ctx context.Context, obj *model.CCCommand) ([]*model.CCProduct, error) {
+	return clickandcollect.GetProducts(obj.ID)
+}
+
 func (r *commandResolver) User(ctx context.Context, obj *model.Command) (*model.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	user, err := commands.GetUser(obj.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (r *commandResolver) Commerces(ctx context.Context, obj *model.Command) ([]*model.CommerceCommand, error) {
-	panic(fmt.Errorf("not implemented"))
+	databaseCommerceCommands, err := commands.CommerceGetForCommand(obj.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	commerceCommands := []*model.CommerceCommand{}
+
+	for _, databaseCommerceCommand := range databaseCommerceCommands {
+		commerceCommands = append(commerceCommands, databaseCommerceCommand.ToModel())
+	}
+
+	return commerceCommands, nil
 }
 
 func (r *commerceResolver) Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error) {
@@ -793,12 +815,153 @@ func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product,
 	return databaseProduct.ToModel(), nil
 }
 
-func (r *queryResolver) Commands(ctx context.Context, userID string) (*model.CommandConnection, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Commands(ctx context.Context, first *int, after *string, userID *string) (*model.CommandConnection, error) {
+	user := auth.ForContext(ctx)
+	if userID == nil {
+		userIDValue := user.ID.Hex()
+		userID = &userIDValue
+	}
+
+	var decodedCursor *string
+
+	if after != nil {
+		bytes, err := base64.StdEncoding.DecodeString(*after)
+
+		if err != nil {
+			return nil, err
+		}
+
+		decodedCursorString := string(bytes)
+		decodedCursor = &decodedCursorString
+	}
+
+	databaseCommands, err := commands.GetPaginated(decodedCursor, *first, userID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// On construit les edges
+	edges := []*model.CommandEdge{}
+
+	for _, datadatabaseCommand := range databaseCommands {
+		commandEdge := model.CommandEdge{
+			Cursor: base64.StdEncoding.EncodeToString([]byte(datadatabaseCommand.ID.Hex())),
+			Node:   datadatabaseCommand.ToModel(),
+		}
+
+		edges = append(edges, &commandEdge)
+	}
+
+	itemCount := len(edges)
+
+	// Si jamais il n'y a pas de command, on veut quand même renvoyer un
+	// tableau vide
+	if itemCount == 0 {
+		return &model.CommandConnection{
+			Edges: edges,
+			PageInfo: &model.CommandPageInfo{
+				HasNextPage: false,
+			},
+		}, nil
+	}
+
+	hasNextPage := !databaseCommands[itemCount-1].IsLast()
+
+	pageInfo := model.CommandPageInfo{
+		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
+		EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
+		HasNextPage: hasNextPage,
+	}
+
+	connection := model.CommandConnection{
+		Edges:    edges[:itemCount],
+		PageInfo: &pageInfo,
+	}
+
+	return &connection, nil
 }
 
-func (r *queryResolver) CommerceCommands(ctx context.Context, commerceID string) (*model.CommerceCommandConnection, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) CommerceCommands(ctx context.Context, first *int, after *string, commerceID *string) (*model.CommerceCommandConnection, error) {
+	user := auth.ForContext(ctx)
+
+	if user.Role != users.USERROLE_STOREKEEPER && commerceID == nil {
+		return nil, &commands.MustSpecifyCommerceIDError{}
+	}
+
+	// Si l'utilisateur est un commerçant, il doit créer des produits
+	// pour son commerce
+	if user.Role == users.USERROLE_STOREKEEPER {
+		databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+
+		// Cela permet aussi d'éviter qu'un commerçant créer un
+		// produit sans commerce
+		if err != nil {
+			return nil, err
+		}
+
+		databaseCommerceID := databaseCommerce.ID.Hex()
+		commerceID = &databaseCommerceID
+	}
+
+	var decodedCursor *string
+
+	if after != nil {
+		bytes, err := base64.StdEncoding.DecodeString(*after)
+
+		if err != nil {
+			return nil, err
+		}
+
+		decodedCursorString := string(bytes)
+		decodedCursor = &decodedCursorString
+	}
+
+	databaseCommerceCommands, err := commands.CommerceGetPaginated(decodedCursor, *first, commerceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// On construit les edges
+	edges := []*model.CommerceCommandEdge{}
+
+	for _, datadatabaseCommerceCommand := range databaseCommerceCommands {
+		commandEdge := model.CommerceCommandEdge{
+			Cursor: base64.StdEncoding.EncodeToString([]byte(datadatabaseCommerceCommand.ID.Hex())),
+			Node:   datadatabaseCommerceCommand.ToModel(),
+		}
+
+		edges = append(edges, &commandEdge)
+	}
+
+	itemCount := len(edges)
+
+	// Si jamais il n'y a pas de command, on veut quand même renvoyer un
+	// tableau vide
+	if itemCount == 0 {
+		return &model.CommerceCommandConnection{
+			Edges: edges,
+			PageInfo: &model.CommerceCommandPageInfo{
+				HasNextPage: false,
+			},
+		}, nil
+	}
+
+	hasNextPage := !databaseCommerceCommands[itemCount-1].IsLast()
+
+	pageInfo := model.CommerceCommandPageInfo{
+		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
+		EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
+		HasNextPage: hasNextPage,
+	}
+
+	connection := model.CommerceCommandConnection{
+		Edges:    edges[:itemCount],
+		PageInfo: &pageInfo,
+	}
+
+	return &connection, nil
 }
 
 func (r *queryResolver) Panier(ctx context.Context, id string) (*model.Panier, error) {
@@ -833,6 +996,9 @@ func (r *userResolver) Basket(ctx context.Context, obj *model.User) (*model.Bask
 	panic(fmt.Errorf("not implemented"))
 }
 
+// CCCommand returns generated.CCCommandResolver implementation.
+func (r *Resolver) CCCommand() generated.CCCommandResolver { return &cCCommandResolver{r} }
+
 // Command returns generated.CommandResolver implementation.
 func (r *Resolver) Command() generated.CommandResolver { return &commandResolver{r} }
 
@@ -859,6 +1025,7 @@ func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
+type cCCommandResolver struct{ *Resolver }
 type commandResolver struct{ *Resolver }
 type commerceResolver struct{ *Resolver }
 type commerceCommandResolver struct{ *Resolver }

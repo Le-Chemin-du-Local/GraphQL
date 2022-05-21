@@ -25,9 +25,30 @@ type CommerceCommand struct {
 
 func (command *CommerceCommand) ToModel() *model.CommerceCommand {
 	return &model.CommerceCommand{
+		ID:         command.ID.Hex(),
 		PickupDate: command.PickupDate,
 		Status:     command.Status,
 	}
+}
+
+func (commerceCommand CommerceCommand) IsLast() bool {
+	filter := bson.D{{}}
+
+	opts := options.FindOptions{}
+	opts.SetLimit(1)
+	opts.SetSort(bson.D{
+		primitive.E{
+			Key: "_id", Value: -1,
+		},
+	})
+
+	lastCommerceCommand, err := GetFiltered(filter, &opts)
+
+	if err != nil || len(lastCommerceCommand) <= 0 {
+		return false
+	}
+
+	return lastCommerceCommand[0].ID == commerceCommand.ID
 }
 
 func CommerceCreate(input model.NewCommerceCommand, commandID primitive.ObjectID) (*CommerceCommand, error) {
@@ -87,6 +108,73 @@ func CommerceGetById(id string) (*CommerceCommand, error) {
 	}
 
 	return &commerceCommands[0], nil
+}
+
+func CommerceGetForCommand(commerceCommandID string) ([]CommerceCommand, error) {
+	commerceCommandObjectId, err := primitive.ObjectIDFromHex(commerceCommandID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.D{
+		primitive.E{
+			Key:   "commandID",
+			Value: commerceCommandObjectId,
+		},
+	}
+
+	commerceCommands, err := CommerceGetFiltered(filter, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return commerceCommands, nil
+}
+
+func CommerceGetPaginated(startValue *string, first int, commerceID *string) ([]CommerceCommand, error) {
+	var finalFilter bson.M
+
+	if startValue != nil {
+		objectID, err := primitive.ObjectIDFromHex(*startValue)
+
+		if err != nil {
+			return nil, err
+		}
+
+		finalFilter = bson.M{
+			"_id": bson.M{
+				"$gt": objectID,
+			},
+		}
+	} else {
+		finalFilter = bson.M{}
+	}
+
+	if commerceID != nil {
+		commerceObjectID, err := primitive.ObjectIDFromHex(*commerceID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		finalFilter = bson.M{
+			"$and": []bson.M{
+				finalFilter,
+				{
+					"commerceID": bson.M{
+						"$eq": commerceObjectID,
+					},
+				},
+			},
+		}
+	}
+
+	opts := options.Find()
+	opts.SetLimit(int64(first))
+
+	return CommerceGetFiltered(finalFilter, opts)
 }
 
 func CommerceGetFiltered(filter interface{}, opts *options.FindOptions) ([]CommerceCommand, error) {
@@ -152,7 +240,7 @@ func CommerceGetUser(commerceCommandID string) (*model.User, error) {
 		return nil, &CommerceCommandNotFoundError{}
 	}
 
-	databaseCommand, err := GetById(databaseCommerceCommand.ID.Hex())
+	databaseCommand, err := GetById(databaseCommerceCommand.CommandID.Hex())
 
 	if err != nil {
 		return nil, err

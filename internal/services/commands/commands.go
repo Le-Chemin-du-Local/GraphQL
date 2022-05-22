@@ -11,10 +11,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const COMMAND_STATUS_IN_PROGRESS = "INPROGRESS"
+const COMMAND_STATUS_READY = "READY"
+const COMMAND_STATUS_DONE = "DONE"
+
 type Command struct {
 	ID           primitive.ObjectID `bson:"_id"`
 	CreationDate time.Time          `bson:"creationDate"`
 	UserID       primitive.ObjectID `bson:"userID"`
+	Status       string             `bson:"status"`
 }
 
 func (command *Command) ToModel() *model.Command {
@@ -56,6 +61,7 @@ func Create(input model.NewCommand) (*Command, error) {
 		ID:           primitive.NewObjectID(),
 		CreationDate: time.Now(),
 		UserID:       userObjectID,
+		Status:       COMMAND_STATUS_IN_PROGRESS,
 	}
 
 	_, err = database.CollectionCommand.InsertOne(database.MongoContext, databaseCommand)
@@ -100,7 +106,7 @@ func GetById(id string) (*Command, error) {
 	return &commands[0], nil
 }
 
-func GetPaginated(startValue *string, first int, userID *string) ([]Command, error) {
+func GetPaginated(startValue *string, first int, filter *model.CommandsFilter) ([]Command, error) {
 	var finalFilter bson.M
 
 	if startValue != nil {
@@ -119,8 +125,8 @@ func GetPaginated(startValue *string, first int, userID *string) ([]Command, err
 		finalFilter = bson.M{}
 	}
 
-	if userID != nil {
-		userObjectID, err := primitive.ObjectIDFromHex(*userID)
+	if filter != nil && filter.UserID != nil {
+		userObjectID, err := primitive.ObjectIDFromHex(*filter.UserID)
 
 		if err != nil {
 			return nil, err
@@ -132,6 +138,19 @@ func GetPaginated(startValue *string, first int, userID *string) ([]Command, err
 				{
 					"userID": bson.M{
 						"$eq": userObjectID,
+					},
+				},
+			},
+		}
+	}
+
+	if filter != nil && filter.Status != nil {
+		finalFilter = bson.M{
+			"$and": []bson.M{
+				finalFilter,
+				{
+					"status": bson.M{
+						"$eq": filter.Status,
 					},
 				},
 			},
@@ -170,6 +189,29 @@ func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Command, erro
 	}
 
 	return commands, nil
+}
+
+func GetStatus(commandID string) (*string, error) {
+	databaseCommerceCommands, err := CommerceGetForCommand(commandID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := COMMAND_STATUS_DONE
+
+	for _, databaseCommerceCommand := range databaseCommerceCommands {
+		if databaseCommerceCommand.Status == COMMERCE_COMMAND_STATUS_IN_PROGRESS {
+			result = COMMAND_STATUS_IN_PROGRESS
+			break
+		}
+
+		if databaseCommerceCommand.Status == COMMAND_STATUS_READY {
+			result = COMMAND_STATUS_READY
+		}
+	}
+
+	return &result, nil
 }
 
 func GetUser(commandID string) (*model.User, error) {

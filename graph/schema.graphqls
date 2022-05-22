@@ -390,6 +390,7 @@ type Command {
 
   user: User!
   commerces: [CommerceCommand]!
+  status: String!
 }
 
 # Pagination 
@@ -492,11 +493,13 @@ input ProductFilter {
   category: String
 }
 
-input CCCommandFilter {
+input CommandsFilter {
+  userID: ID
   status: String
 }
 
-input PanierCommandFilter {
+input CommerceCommandsFilter {
+  commerceID: ID
   status: String
 }
 
@@ -515,8 +518,10 @@ type Query {
   product(id: ID!): Product!
 
   # SERVICES
-  commands(first: Int = 5, after: ID, userID: ID): CommandConnection! @needAuthentication
-  commerceCommands(first: Int = 5, after: ID, commerceID: ID): CommerceCommandConnection! @needAuthentication
+  commands(first: Int = 5, after: ID, filter: CommandsFilter): CommandConnection! @needAuthentication
+  commerceCommands(first: Int = 5, after: ID, filter: CommerceCommandsFilter): CommerceCommandConnection! @needAuthentication
+
+  command(id: ID!): Command! @needAuthentication
 
   # PANIERS
   panier(id: ID!): Panier!

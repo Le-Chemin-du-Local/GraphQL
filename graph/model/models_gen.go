@@ -41,10 +41,6 @@ type BusinessHours struct {
 	Sunday    []*Schedule `json:"sunday"`
 }
 
-type CCCommandFilter struct {
-	Status *string `json:"status"`
-}
-
 type CCProduct struct {
 	Quantity int      `json:"quantity"`
 	Product  *Product `json:"product"`
@@ -66,6 +62,11 @@ type CommandPageInfo struct {
 	HasNextPage bool   `json:"hasNextPage"`
 }
 
+type CommandsFilter struct {
+	UserID *string `json:"userID"`
+	Status *string `json:"status"`
+}
+
 type CommerceCommandConnection struct {
 	Edges    []*CommerceCommandEdge   `json:"edges"`
 	PageInfo *CommerceCommandPageInfo `json:"pageInfo"`
@@ -80,6 +81,11 @@ type CommerceCommandPageInfo struct {
 	StartCursor string `json:"startCursor"`
 	EndCursor   string `json:"endCursor"`
 	HasNextPage bool   `json:"hasNextPage"`
+}
+
+type CommerceCommandsFilter struct {
+	CommerceID *string `json:"commerceID"`
+	Status     *string `json:"status"`
 }
 
 type CommerceConnection struct {
@@ -217,10 +223,6 @@ type NewUser struct {
 	Password  string  `json:"password"`
 	FirstName *string `json:"firstName"`
 	LastName  *string `json:"lastName"`
-}
-
-type PanierCommandFilter struct {
-	Status *string `json:"status"`
 }
 
 type PanierConnection struct {

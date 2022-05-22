@@ -13,6 +13,7 @@ import (
 )
 
 const COMMERCE_COMMAND_STATUS_IN_PROGRESS = "INPROGRESS"
+const COMMERCE_COMMAND_STATUS_READY = "READY"
 const COMMERCE_COMMAND_STATUS_DONE = "DONE"
 
 type CommerceCommand struct {
@@ -110,8 +111,8 @@ func CommerceGetById(id string) (*CommerceCommand, error) {
 	return &commerceCommands[0], nil
 }
 
-func CommerceGetForCommand(commerceCommandID string) ([]CommerceCommand, error) {
-	commerceCommandObjectId, err := primitive.ObjectIDFromHex(commerceCommandID)
+func CommerceGetForCommand(commandID string) ([]CommerceCommand, error) {
+	commandObjectId, err := primitive.ObjectIDFromHex(commandID)
 
 	if err != nil {
 		return nil, err
@@ -120,7 +121,7 @@ func CommerceGetForCommand(commerceCommandID string) ([]CommerceCommand, error) 
 	filter := bson.D{
 		primitive.E{
 			Key:   "commandID",
-			Value: commerceCommandObjectId,
+			Value: commandObjectId,
 		},
 	}
 

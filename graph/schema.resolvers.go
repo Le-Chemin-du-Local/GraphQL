@@ -56,6 +56,16 @@ func (r *commandResolver) Commerces(ctx context.Context, obj *model.Command) ([]
 	return commerceCommands, nil
 }
 
+func (r *commandResolver) Status(ctx context.Context, obj *model.Command) (string, error) {
+	status, err := commands.GetStatus(obj.ID)
+
+	if err != nil {
+		return "", err
+	}
+
+	return *status, nil
+}
+
 func (r *commerceResolver) Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error) {
 	storekeeper, err := users.GetUserById(obj.StorekeeperID)
 
@@ -815,11 +825,15 @@ func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product,
 	return databaseProduct.ToModel(), nil
 }
 
-func (r *queryResolver) Commands(ctx context.Context, first *int, after *string, userID *string) (*model.CommandConnection, error) {
+func (r *queryResolver) Commands(ctx context.Context, first *int, after *string, filter *model.CommandsFilter) (*model.CommandConnection, error) {
+	if filter == nil {
+		filter = &model.CommandsFilter{}
+	}
+
 	user := auth.ForContext(ctx)
-	if userID == nil {
+	if filter.UserID == nil {
 		userIDValue := user.ID.Hex()
-		userID = &userIDValue
+		filter.UserID = &userIDValue
 	}
 
 	var decodedCursor *string
@@ -835,7 +849,7 @@ func (r *queryResolver) Commands(ctx context.Context, first *int, after *string,
 		decodedCursor = &decodedCursorString
 	}
 
-	databaseCommands, err := commands.GetPaginated(decodedCursor, *first, userID)
+	databaseCommands, err := commands.GetPaginated(decodedCursor, *first, filter)
 
 	if err != nil {
 		return nil, err
@@ -882,86 +896,101 @@ func (r *queryResolver) Commands(ctx context.Context, first *int, after *string,
 	return &connection, nil
 }
 
-func (r *queryResolver) CommerceCommands(ctx context.Context, first *int, after *string, commerceID *string) (*model.CommerceCommandConnection, error) {
-	user := auth.ForContext(ctx)
+func (r *queryResolver) CommerceCommands(ctx context.Context, first *int, after *string, filter *model.CommerceCommandsFilter) (*model.CommerceCommandConnection, error) {
+	// user := auth.ForContext(ctx)
 
-	if user.Role != users.USERROLE_STOREKEEPER && commerceID == nil {
-		return nil, &commands.MustSpecifyCommerceIDError{}
-	}
+	// if user.Role != users.USERROLE_STOREKEEPER && commerceID == nil {
+	// 	return nil, &commands.MustSpecifyCommerceIDError{}
+	// }
 
-	// Si l'utilisateur est un commerçant, il doit créer des produits
-	// pour son commerce
-	if user.Role == users.USERROLE_STOREKEEPER {
-		databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+	// // Si l'utilisateur est un commerçant, il doit créer des produits
+	// // pour son commerce
+	// if user.Role == users.USERROLE_STOREKEEPER {
+	// 	databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
 
-		// Cela permet aussi d'éviter qu'un commerçant créer un
-		// produit sans commerce
-		if err != nil {
-			return nil, err
-		}
+	// 	// Cela permet aussi d'éviter qu'un commerçant créer un
+	// 	// produit sans commerce
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
 
-		databaseCommerceID := databaseCommerce.ID.Hex()
-		commerceID = &databaseCommerceID
-	}
+	// 	databaseCommerceID := databaseCommerce.ID.Hex()
+	// 	commerceID = &databaseCommerceID
+	// }
 
-	var decodedCursor *string
+	// var decodedCursor *string
 
-	if after != nil {
-		bytes, err := base64.StdEncoding.DecodeString(*after)
+	// if after != nil {
+	// 	bytes, err := base64.StdEncoding.DecodeString(*after)
 
-		if err != nil {
-			return nil, err
-		}
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
 
-		decodedCursorString := string(bytes)
-		decodedCursor = &decodedCursorString
-	}
+	// 	decodedCursorString := string(bytes)
+	// 	decodedCursor = &decodedCursorString
+	// }
 
-	databaseCommerceCommands, err := commands.CommerceGetPaginated(decodedCursor, *first, commerceID)
+	// databaseCommerceCommands, err := commands.CommerceGetPaginated(decodedCursor, *first, commerceID)
+
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// // On construit les edges
+	// edges := []*model.CommerceCommandEdge{}
+
+	// for _, datadatabaseCommerceCommand := range databaseCommerceCommands {
+	// 	commandEdge := model.CommerceCommandEdge{
+	// 		Cursor: base64.StdEncoding.EncodeToString([]byte(datadatabaseCommerceCommand.ID.Hex())),
+	// 		Node:   datadatabaseCommerceCommand.ToModel(),
+	// 	}
+
+	// 	edges = append(edges, &commandEdge)
+	// }
+
+	// itemCount := len(edges)
+
+	// // Si jamais il n'y a pas de command, on veut quand même renvoyer un
+	// // tableau vide
+	// if itemCount == 0 {
+	// 	return &model.CommerceCommandConnection{
+	// 		Edges: edges,
+	// 		PageInfo: &model.CommerceCommandPageInfo{
+	// 			HasNextPage: false,
+	// 		},
+	// 	}, nil
+	// }
+
+	// hasNextPage := !databaseCommerceCommands[itemCount-1].IsLast()
+
+	// pageInfo := model.CommerceCommandPageInfo{
+	// 	StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
+	// 	EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
+	// 	HasNextPage: hasNextPage,
+	// }
+
+	// connection := model.CommerceCommandConnection{
+	// 	Edges:    edges[:itemCount],
+	// 	PageInfo: &pageInfo,
+	// }
+
+	// return &connection, nil
+	return nil, nil
+}
+
+func (r *queryResolver) Command(ctx context.Context, id string) (*model.Command, error) {
+	databaseCommand, err := commands.GetById(id)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// On construit les edges
-	edges := []*model.CommerceCommandEdge{}
-
-	for _, datadatabaseCommerceCommand := range databaseCommerceCommands {
-		commandEdge := model.CommerceCommandEdge{
-			Cursor: base64.StdEncoding.EncodeToString([]byte(datadatabaseCommerceCommand.ID.Hex())),
-			Node:   datadatabaseCommerceCommand.ToModel(),
-		}
-
-		edges = append(edges, &commandEdge)
+	if databaseCommand == nil {
+		return nil, &commands.CommandNotFoundError{}
 	}
 
-	itemCount := len(edges)
-
-	// Si jamais il n'y a pas de command, on veut quand même renvoyer un
-	// tableau vide
-	if itemCount == 0 {
-		return &model.CommerceCommandConnection{
-			Edges: edges,
-			PageInfo: &model.CommerceCommandPageInfo{
-				HasNextPage: false,
-			},
-		}, nil
-	}
-
-	hasNextPage := !databaseCommerceCommands[itemCount-1].IsLast()
-
-	pageInfo := model.CommerceCommandPageInfo{
-		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
-		EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
-		HasNextPage: hasNextPage,
-	}
-
-	connection := model.CommerceCommandConnection{
-		Edges:    edges[:itemCount],
-		PageInfo: &pageInfo,
-	}
-
-	return &connection, nil
+	return databaseCommand.ToModel(), nil
 }
 
 func (r *queryResolver) Panier(ctx context.Context, id string) (*model.Panier, error) {
@@ -1034,13 +1063,3 @@ type panierResolver struct{ *Resolver }
 type panierCommandResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *commerceCommandResolver) ID(ctx context.Context, obj *model.CommerceCommand) (string, error) {
-	panic(fmt.Errorf("not implemented"))
-}

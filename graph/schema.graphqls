@@ -432,6 +432,10 @@ input NewCommerceCommand {
   pickupDate: Time!
 }
 
+input ChangesCommerceCommand {
+  status: String
+}
+
 input NewCommand {
   creationDate: Time!
   user: ID!
@@ -495,12 +499,12 @@ input ProductFilter {
 
 input CommandsFilter {
   userID: ID
-  status: String
+  status: [String!]
 }
 
 input CommerceCommandsFilter {
   commerceID: ID
-  status: String
+  status: [String!]
 }
 
 input PanierFilter {
@@ -541,6 +545,7 @@ type Mutation {
   updateProducts(changes: [BulkChangesProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
 
   # SERVICES
+  updateCommerceCommand(id: ID!, changes: ChangesCommerceCommand!): CommerceCommand! @needAuthentication
 
   # PANIER
   createPanier(commerceID: ID, input: NewPanier!): Panier! @hasRole(role: STOREKEEPER)

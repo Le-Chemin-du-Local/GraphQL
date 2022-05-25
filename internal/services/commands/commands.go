@@ -73,6 +73,23 @@ func Create(input model.NewCommand) (*Command, error) {
 	return &databaseCommand, nil
 }
 
+// Mise à jour de base de données
+
+func Update(changes *Command) error {
+	filter := bson.D{
+		primitive.E{
+			Key:   "_id",
+			Value: changes.ID,
+		},
+	}
+
+	_, err := database.CollectionCommand.ReplaceOne(database.MongoContext, filter, changes)
+
+	return err
+}
+
+// Getters
+
 func GetAll() ([]Command, error) {
 	filter := bson.D{{}}
 
@@ -150,7 +167,7 @@ func GetPaginated(startValue *string, first int, filter *model.CommandsFilter) (
 				finalFilter,
 				{
 					"status": bson.M{
-						"$eq": filter.Status,
+						"$in": filter.Status,
 					},
 				},
 			},

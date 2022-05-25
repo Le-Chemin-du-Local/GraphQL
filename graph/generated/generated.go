@@ -178,16 +178,17 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCommerce func(childComplexity int, userID string, input model.NewCommerce) int
-		CreatePanier   func(childComplexity int, commerceID *string, input model.NewPanier) int
-		CreateProduct  func(childComplexity int, commerceID *string, input model.NewProduct) int
-		CreateProducts func(childComplexity int, commerceID *string, input []*model.NewProduct) int
-		CreateUser     func(childComplexity int, input model.NewUser) int
-		Login          func(childComplexity int, input model.Login) int
-		UpdateCommerce func(childComplexity int, id string, changes map[string]interface{}) int
-		UpdatePanier   func(childComplexity int, id string, changes map[string]interface{}) int
-		UpdateProduct  func(childComplexity int, id string, changes map[string]interface{}) int
-		UpdateProducts func(childComplexity int, changes []*model.BulkChangesProduct) int
+		CreateCommerce        func(childComplexity int, userID string, input model.NewCommerce) int
+		CreatePanier          func(childComplexity int, commerceID *string, input model.NewPanier) int
+		CreateProduct         func(childComplexity int, commerceID *string, input model.NewProduct) int
+		CreateProducts        func(childComplexity int, commerceID *string, input []*model.NewProduct) int
+		CreateUser            func(childComplexity int, input model.NewUser) int
+		Login                 func(childComplexity int, input model.Login) int
+		UpdateCommerce        func(childComplexity int, id string, changes map[string]interface{}) int
+		UpdateCommerceCommand func(childComplexity int, id string, changes map[string]interface{}) int
+		UpdatePanier          func(childComplexity int, id string, changes map[string]interface{}) int
+		UpdateProduct         func(childComplexity int, id string, changes map[string]interface{}) int
+		UpdateProducts        func(childComplexity int, changes []*model.BulkChangesProduct) int
 	}
 
 	Panier struct {
@@ -319,6 +320,7 @@ type MutationResolver interface {
 	CreateProducts(ctx context.Context, commerceID *string, input []*model.NewProduct) ([]*model.Product, error)
 	UpdateProduct(ctx context.Context, id string, changes map[string]interface{}) (*model.Product, error)
 	UpdateProducts(ctx context.Context, changes []*model.BulkChangesProduct) ([]*model.Product, error)
+	UpdateCommerceCommand(ctx context.Context, id string, changes map[string]interface{}) (*model.CommerceCommand, error)
 	CreatePanier(ctx context.Context, commerceID *string, input model.NewPanier) (*model.Panier, error)
 	UpdatePanier(ctx context.Context, id string, changes map[string]interface{}) (*model.Panier, error)
 }
@@ -935,6 +937,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateCommerce(childComplexity, args["id"].(string), args["changes"].(map[string]interface{})), true
+
+	case "Mutation.updateCommerceCommand":
+		if e.complexity.Mutation.UpdateCommerceCommand == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateCommerceCommand_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateCommerceCommand(childComplexity, args["id"].(string), args["changes"].(map[string]interface{})), true
 
 	case "Mutation.updatePanier":
 		if e.complexity.Mutation.UpdatePanier == nil {
@@ -1902,6 +1916,10 @@ input NewCommerceCommand {
   pickupDate: Time!
 }
 
+input ChangesCommerceCommand {
+  status: String
+}
+
 input NewCommand {
   creationDate: Time!
   user: ID!
@@ -1965,12 +1983,12 @@ input ProductFilter {
 
 input CommandsFilter {
   userID: ID
-  status: String
+  status: [String!]
 }
 
 input CommerceCommandsFilter {
   commerceID: ID
-  status: String
+  status: [String!]
 }
 
 input PanierFilter {
@@ -2011,6 +2029,7 @@ type Mutation {
   updateProducts(changes: [BulkChangesProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
 
   # SERVICES
+  updateCommerceCommand(id: ID!, changes: ChangesCommerceCommand!): CommerceCommand! @needAuthentication
 
   # PANIER
   createPanier(commerceID: ID, input: NewPanier!): Panier! @hasRole(role: STOREKEEPER)
@@ -2228,6 +2247,30 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateCommerceCommand_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 map[string]interface{}
+	if tmp, ok := rawArgs["changes"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changes"))
+		arg1, err = ec.unmarshalNChangesCommerceCommand2map(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["changes"] = arg1
 	return args, nil
 }
 
@@ -5404,6 +5447,68 @@ func (ec *executionContext) _Mutation_updateProducts(ctx context.Context, field 
 	res := resTmp.([]*model.Product)
 	fc.Result = res
 	return ec.marshalNProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProductᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateCommerceCommand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateCommerceCommand_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateCommerceCommand(rctx, args["id"].(string), args["changes"].(map[string]interface{}))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.NeedAuthentication == nil {
+				return nil, errors.New("directive needAuthentication is not implemented")
+			}
+			return ec.directives.NeedAuthentication(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.CommerceCommand); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.CommerceCommand`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CommerceCommand)
+	fc.Result = res
+	return ec.marshalNCommerceCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommand(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createPanier(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -8836,7 +8941,7 @@ func (ec *executionContext) unmarshalInputCommandsFilter(ctx context.Context, ob
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			it.Status, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Status, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8867,7 +8972,7 @@ func (ec *executionContext) unmarshalInputCommerceCommandsFilter(ctx context.Con
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			it.Status, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Status, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -11035,6 +11140,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "updateCommerceCommand":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateCommerceCommand(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createPanier":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createPanier(ctx, field)
@@ -12719,6 +12834,10 @@ func (ec *executionContext) unmarshalNChangesCommerce2map(ctx context.Context, v
 	return v.(map[string]interface{}), nil
 }
 
+func (ec *executionContext) unmarshalNChangesCommerceCommand2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+	return v.(map[string]interface{}), nil
+}
+
 func (ec *executionContext) unmarshalNChangesPanier2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
 	return v.(map[string]interface{}), nil
 }
@@ -12833,6 +12952,10 @@ func (ec *executionContext) marshalNCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgrap
 	return ec._Commerce(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNCommerceCommand2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommand(ctx context.Context, sel ast.SelectionSet, v model.CommerceCommand) graphql.Marshaler {
+	return ec._CommerceCommand(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNCommerceCommand2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommand(ctx context.Context, sel ast.SelectionSet, v []*model.CommerceCommand) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -12869,6 +12992,16 @@ func (ec *executionContext) marshalNCommerceCommand2ᚕᚖcheminᚑduᚑlocalᚗ
 	wg.Wait()
 
 	return ret
+}
+
+func (ec *executionContext) marshalNCommerceCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommand(ctx context.Context, sel ast.SelectionSet, v *model.CommerceCommand) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CommerceCommand(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNCommerceCommandConnection2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommerceCommandConnection(ctx context.Context, sel ast.SelectionSet, v model.CommerceCommandConnection) graphql.Marshaler {

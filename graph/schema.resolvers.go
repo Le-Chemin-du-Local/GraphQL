@@ -560,6 +560,28 @@ func (r *mutationResolver) UpdateProducts(ctx context.Context, changes []*model.
 	return result, nil
 }
 
+func (r *mutationResolver) UpdateCommerceCommand(ctx context.Context, id string, changes map[string]interface{}) (*model.CommerceCommand, error) {
+	databaseCommerceCommand, err := commands.CommerceGetById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseCommerceCommand == nil {
+		return nil, &commands.CommerceCommandNotFoundError{}
+	}
+
+	helper.ApplyChanges(changes, databaseCommerceCommand)
+
+	err = commands.CommerceUpdate(databaseCommerceCommand)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return databaseCommerceCommand.ToModel(), nil
+}
+
 func (r *mutationResolver) CreatePanier(ctx context.Context, commerceID *string, input model.NewPanier) (*model.Panier, error) {
 	user := auth.ForContext(ctx)
 

@@ -63,8 +63,8 @@ type CommandPageInfo struct {
 }
 
 type CommandsFilter struct {
-	UserID *string `json:"userID"`
-	Status *string `json:"status"`
+	UserID *string  `json:"userID"`
+	Status []string `json:"status"`
 }
 
 type CommerceCommandConnection struct {
@@ -84,8 +84,8 @@ type CommerceCommandPageInfo struct {
 }
 
 type CommerceCommandsFilter struct {
-	CommerceID *string `json:"commerceID"`
-	Status     *string `json:"status"`
+	CommerceID *string  `json:"commerceID"`
+	Status     []string `json:"status"`
 }
 
 type CommerceConnection struct {

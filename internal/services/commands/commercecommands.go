@@ -76,6 +76,45 @@ func CommerceCreate(input model.NewCommerceCommand, commandID primitive.ObjectID
 	return &databaseCommerceCommand, nil
 }
 
+// Mise à jour de la base de données
+
+func CommerceUpdate(changes *CommerceCommand) error {
+	databaseCommand, err := GetById(changes.CommandID.Hex())
+
+	if err != nil {
+		return err
+	}
+
+	if databaseCommand == nil {
+		return &CommandNotFoundError{}
+	}
+
+	filter := bson.D{
+		primitive.E{
+			Key:   "_id",
+			Value: changes.ID,
+		},
+	}
+
+	_, err = database.CollectionCommerceCommand.ReplaceOne(database.MongoContext, filter, changes)
+
+	if err != nil {
+		return err
+	}
+
+	commandStatus, err := GetStatus(databaseCommand.ID.Hex())
+
+	if err != nil {
+		return err
+	}
+
+	databaseCommand.Status = *commandStatus
+
+	err = Update(databaseCommand)
+
+	return err
+}
+
 // Getters
 
 func CommerceGetAll() ([]CommerceCommand, error) {

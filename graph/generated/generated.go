@@ -117,6 +117,7 @@ type ComplexityRoot struct {
 		Address                             func(childComplexity int) int
 		BusinessHours                       func(childComplexity int) int
 		Categories                          func(childComplexity int) int
+		ClickAndCollectHours                func(childComplexity int) int
 		Description                         func(childComplexity int) int
 		Email                               func(childComplexity int) int
 		Facebook                            func(childComplexity int) int
@@ -584,6 +585,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Categories(childComplexity), true
+
+	case "Commerce.clickAndCollectHours":
+		if e.complexity.Commerce.ClickAndCollectHours == nil {
+			break
+		}
+
+		return e.complexity.Commerce.ClickAndCollectHours(childComplexity), true
 
 	case "Commerce.description":
 		if e.complexity.Commerce.Description == nil {
@@ -1593,6 +1601,7 @@ type Commerce { # Ici on utilise le nom "Commerce"
   instagram: String
 
   businessHours: BusinessHours!
+  clickAndCollectHours: BusinessHours!
 
   # Produits
   categories: [String!]!
@@ -1641,6 +1650,7 @@ input NewCommerce {
   instagram: String
 
   businessHours: NewBusinessHours
+  clickAndCollectHours: NewBusinessHours
 
   profilePicture: Upload
   image: Upload
@@ -1664,6 +1674,7 @@ input ChangesCommerce {
   instagram: String
 
   businessHours: ChangesBusinessHours
+  clickAndCollectHours: ChangesBusinessHours
 
   profilePicture: Upload
   image: Upload
@@ -4059,6 +4070,41 @@ func (ec *executionContext) _Commerce_businessHours(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.BusinessHours, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.BusinessHours)
+	fc.Result = res
+	return ec.marshalNBusinessHours2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐBusinessHours(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_clickAndCollectHours(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClickAndCollectHours, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9453,6 +9499,14 @@ func (ec *executionContext) unmarshalInputNewCommerce(ctx context.Context, obj i
 			if err != nil {
 				return it, err
 			}
+		case "clickAndCollectHours":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clickAndCollectHours"))
+			it.ClickAndCollectHours, err = ec.unmarshalONewBusinessHours2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewBusinessHours(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "profilePicture":
 			var err error
 
@@ -10542,6 +10596,16 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 		case "businessHours":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Commerce_businessHours(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "clickAndCollectHours":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_clickAndCollectHours(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

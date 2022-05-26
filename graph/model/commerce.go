@@ -68,19 +68,20 @@ func (input *NewBusinessHours) ToModel() *BusinessHours {
 }
 
 type Commerce struct {
-	ID              string        `json:"id"`
-	StorekeeperID   string        `json:"storekeeper"`
-	Name            string        `json:"name"`
-	Description     string        `json:"description"`
-	StorekeeperWord string        `json:"storekeeperWord"`
-	Address         string        `json:"address"`
-	Latitude        float64       `json:"latitude"`
-	Longitude       float64       `json:"longitude"`
-	Phone           string        `json:"phone"`
-	Email           string        `json:"email"`
-	Facebook        *string       `json:"facebook"`
-	Twitter         *string       `json:"twitter"`
-	Instagram       *string       `json:"instagram"`
-	BusinessHours   BusinessHours `json:"businessHours"`
-	Services        []string      `json:"services"`
+	ID                   string        `json:"id"`
+	StorekeeperID        string        `json:"storekeeper"`
+	Name                 string        `json:"name"`
+	Description          string        `json:"description"`
+	StorekeeperWord      string        `json:"storekeeperWord"`
+	Address              string        `json:"address"`
+	Latitude             float64       `json:"latitude"`
+	Longitude            float64       `json:"longitude"`
+	Phone                string        `json:"phone"`
+	Email                string        `json:"email"`
+	Facebook             *string       `json:"facebook"`
+	Twitter              *string       `json:"twitter"`
+	Instagram            *string       `json:"instagram"`
+	BusinessHours        BusinessHours `json:"businessHours"`
+	ClickAndCollectHours BusinessHours `json:"clickAndCollectHours"`
+	Services             []string      `json:"services"`
 }

@@ -162,20 +162,21 @@ type NewCommand struct {
 }
 
 type NewCommerce struct {
-	Name            string            `json:"name"`
-	Description     *string           `json:"description"`
-	StorekeeperWord *string           `json:"storekeeperWord"`
-	Address         string            `json:"address"`
-	Latitude        float64           `json:"latitude"`
-	Longitude       float64           `json:"longitude"`
-	Phone           string            `json:"phone"`
-	Email           string            `json:"email"`
-	Facebook        *string           `json:"facebook"`
-	Twitter         *string           `json:"twitter"`
-	Instagram       *string           `json:"instagram"`
-	BusinessHours   *NewBusinessHours `json:"businessHours"`
-	ProfilePicture  *graphql.Upload   `json:"profilePicture"`
-	Image           *graphql.Upload   `json:"image"`
+	Name                 string            `json:"name"`
+	Description          *string           `json:"description"`
+	StorekeeperWord      *string           `json:"storekeeperWord"`
+	Address              string            `json:"address"`
+	Latitude             float64           `json:"latitude"`
+	Longitude            float64           `json:"longitude"`
+	Phone                string            `json:"phone"`
+	Email                string            `json:"email"`
+	Facebook             *string           `json:"facebook"`
+	Twitter              *string           `json:"twitter"`
+	Instagram            *string           `json:"instagram"`
+	BusinessHours        *NewBusinessHours `json:"businessHours"`
+	ClickAndCollectHours *NewBusinessHours `json:"clickAndCollectHours"`
+	ProfilePicture       *graphql.Upload   `json:"profilePicture"`
+	Image                *graphql.Upload   `json:"image"`
 }
 
 type NewCommerceCommand struct {

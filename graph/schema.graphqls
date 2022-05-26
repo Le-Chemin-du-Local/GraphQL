@@ -109,6 +109,7 @@ type Commerce { # Ici on utilise le nom "Commerce"
   instagram: String
 
   businessHours: BusinessHours!
+  clickAndCollectHours: BusinessHours!
 
   # Produits
   categories: [String!]!
@@ -157,6 +158,7 @@ input NewCommerce {
   instagram: String
 
   businessHours: NewBusinessHours
+  clickAndCollectHours: NewBusinessHours
 
   profilePicture: Upload
   image: Upload
@@ -180,6 +182,7 @@ input ChangesCommerce {
   instagram: String
 
   businessHours: ChangesBusinessHours
+  clickAndCollectHours: ChangesBusinessHours
 
   profilePicture: Upload
   image: Upload

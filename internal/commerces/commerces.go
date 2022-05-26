@@ -29,6 +29,7 @@ type Commerce struct {
 	Twitter                             *string             `bson:"twitter"`
 	Instagram                           *string             `bson:"instagram"`
 	BusinessHours                       model.BusinessHours `bson:"businesHours"`
+	ClickAndCollectHours                model.BusinessHours `bson:"clickAndCollectHours"`
 	Services                            []string            `bson:"services"`
 	ProductsAvailableForClickAndCollect []string            `bson:"productsAvailableForClickAndCollect"`
 }
@@ -90,9 +91,14 @@ func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) (*Commerc
 	}
 
 	var businessHours model.BusinessHours
+	var clickAndCollectHours model.BusinessHours
 
 	if input.BusinessHours != nil {
 		businessHours = *input.BusinessHours.ToModel()
+	}
+
+	if input.ClickAndCollectHours != nil {
+		clickAndCollectHours = *input.ClickAndCollectHours.ToModel()
 	}
 
 	databaseCommerce := Commerce{
@@ -106,12 +112,13 @@ func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) (*Commerc
 			Type:        "Point",
 			Coordinates: []float64{input.Latitude, input.Longitude},
 		},
-		Phone:         input.Phone,
-		Email:         input.Email,
-		Facebook:      input.Facebook,
-		Twitter:       input.Twitter,
-		Instagram:     input.Instagram,
-		BusinessHours: businessHours,
+		Phone:                input.Phone,
+		Email:                input.Email,
+		Facebook:             input.Facebook,
+		Twitter:              input.Twitter,
+		Instagram:            input.Instagram,
+		BusinessHours:        businessHours,
+		ClickAndCollectHours: clickAndCollectHours,
 	}
 
 	_, err := database.CollectionCommerces.InsertOne(database.MongoContext, databaseCommerce)

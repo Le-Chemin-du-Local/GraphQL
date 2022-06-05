@@ -60,7 +60,7 @@ func HandlePlaceDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := http.Get("https://maps.googleapis.com/maps/api/place/details/json?place_id=" + req.PlaceID + "&fields=geometry&key=" + mapApiKey + "&sessiontoken=" + req.SessionTokenString)
+	resp, err := http.Get("https://maps.googleapis.com/maps/api/place/details/json?place_id=" + req.PlaceID + "&fields=geometry,address_components&key=" + mapApiKey + "&sessiontoken=" + req.SessionTokenString)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -10,6 +10,34 @@ enum Role {
 scalar Time
 scalar Upload
 
+###########
+## UTILS ##
+###########
+
+type Address {
+  number: String
+  route: String
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
+input NewAddress {
+  number: String
+  route: String
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
+input ChangesAddress {
+  number: String 
+  route: String 
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
 ##################
 ## UTILISATEURS ##
 ##################
@@ -98,7 +126,8 @@ type Commerce { # Ici on utilise le nom "Commerce"
   storekeeperWord: String!
 
   # Coordonnées
-  address: String!
+  address: String! @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
+  addressDetailed: Address!
   latitude: Float!
   longitude: Float!
   phone: String!
@@ -147,7 +176,8 @@ input NewCommerce {
   storekeeperWord: String
 
   # Coordonnées
-  address: String!
+  address: String! @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
+  addressDetailed: NewAddress!
   latitude: Float!
   longitude: Float!
   phone: String!
@@ -171,7 +201,8 @@ input ChangesCommerce {
   storekeeperWord: String
 
   # Coordonnées
-  address: String
+  address: String @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
+  addressDetailed: ChangesAddress
   latitude: Float
   longitude: Float
   phone: String

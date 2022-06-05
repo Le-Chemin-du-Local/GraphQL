@@ -74,6 +74,7 @@ type Commerce struct {
 	Description          string        `json:"description"`
 	StorekeeperWord      string        `json:"storekeeperWord"`
 	Address              string        `json:"address"`
+	AddressDetailed      Address       `json:"addressDetailled"`
 	Latitude             float64       `json:"latitude"`
 	Longitude            float64       `json:"longitude"`
 	Phone                string        `json:"phone"`

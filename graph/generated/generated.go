@@ -54,6 +54,14 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Address struct {
+		City          func(childComplexity int) int
+		Number        func(childComplexity int) int
+		OptionalRoute func(childComplexity int) int
+		PostalCode    func(childComplexity int) int
+		Route         func(childComplexity int) int
+	}
+
 	Basket struct {
 		Commerces func(childComplexity int) int
 	}
@@ -115,6 +123,7 @@ type ComplexityRoot struct {
 
 	Commerce struct {
 		Address                             func(childComplexity int) int
+		AddressDetailed                     func(childComplexity int) int
 		BusinessHours                       func(childComplexity int) int
 		Categories                          func(childComplexity int) int
 		ClickAndCollectHours                func(childComplexity int) int
@@ -362,6 +371,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Address.city":
+		if e.complexity.Address.City == nil {
+			break
+		}
+
+		return e.complexity.Address.City(childComplexity), true
+
+	case "Address.number":
+		if e.complexity.Address.Number == nil {
+			break
+		}
+
+		return e.complexity.Address.Number(childComplexity), true
+
+	case "Address.optionalRoute":
+		if e.complexity.Address.OptionalRoute == nil {
+			break
+		}
+
+		return e.complexity.Address.OptionalRoute(childComplexity), true
+
+	case "Address.postalCode":
+		if e.complexity.Address.PostalCode == nil {
+			break
+		}
+
+		return e.complexity.Address.PostalCode(childComplexity), true
+
+	case "Address.route":
+		if e.complexity.Address.Route == nil {
+			break
+		}
+
+		return e.complexity.Address.Route(childComplexity), true
+
 	case "Basket.commerces":
 		if e.complexity.Basket.Commerces == nil {
 			break
@@ -571,6 +615,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Address(childComplexity), true
+
+	case "Commerce.addressDetailed":
+		if e.complexity.Commerce.AddressDetailed == nil {
+			break
+		}
+
+		return e.complexity.Commerce.AddressDetailed(childComplexity), true
 
 	case "Commerce.businessHours":
 		if e.complexity.Commerce.BusinessHours == nil {
@@ -1502,6 +1553,34 @@ enum Role {
 scalar Time
 scalar Upload
 
+###########
+## UTILS ##
+###########
+
+type Address {
+  number: String
+  route: String
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
+input NewAddress {
+  number: String
+  route: String
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
+input ChangesAddress {
+  number: String 
+  route: String 
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
 ##################
 ## UTILISATEURS ##
 ##################
@@ -1590,7 +1669,8 @@ type Commerce { # Ici on utilise le nom "Commerce"
   storekeeperWord: String!
 
   # Coordonnées
-  address: String!
+  address: String! @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
+  addressDetailed: Address!
   latitude: Float!
   longitude: Float!
   phone: String!
@@ -1639,7 +1719,8 @@ input NewCommerce {
   storekeeperWord: String
 
   # Coordonnées
-  address: String!
+  address: String! @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
+  addressDetailed: NewAddress!
   latitude: Float!
   longitude: Float!
   phone: String!
@@ -1663,7 +1744,8 @@ input ChangesCommerce {
   storekeeperWord: String
 
   # Coordonnées
-  address: String
+  address: String @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
+  addressDetailed: ChangesAddress
   latitude: Float
   longitude: Float
   phone: String
@@ -2613,6 +2695,166 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Address_number(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Address",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Number, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Address_route(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Address",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Route, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Address_optionalRoute(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Address",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OptionalRoute, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Address_postalCode(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Address",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PostalCode, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Address_city(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Address",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.City, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _Basket_commerces(ctx context.Context, field graphql.CollectedField, obj *model.Basket) (ret graphql.Marshaler) {
 	defer func() {
@@ -3813,6 +4055,41 @@ func (ec *executionContext) _Commerce_address(ctx context.Context, field graphql
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_addressDetailed(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AddressDetailed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Address)
+	fc.Result = res
+	return ec.marshalNAddress2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐAddress(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Commerce_latitude(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
@@ -8966,6 +9243,61 @@ func (ec *executionContext) unmarshalInputBulkChangesProduct(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputChangesAddress(ctx context.Context, obj interface{}) (model.ChangesAddress, error) {
+	var it model.ChangesAddress
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "number":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("number"))
+			it.Number, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "route":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("route"))
+			it.Route, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "optionalRoute":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("optionalRoute"))
+			it.OptionalRoute, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "postalCode":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postalCode"))
+			it.PostalCode, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "city":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("city"))
+			it.City, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCommandsFilter(ctx context.Context, obj interface{}) (model.CommandsFilter, error) {
 	var it model.CommandsFilter
 	asMap := map[string]interface{}{}
@@ -9120,6 +9452,61 @@ func (ec *executionContext) unmarshalInputLogin(ctx context.Context, obj interfa
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 			it.Password, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNewAddress(ctx context.Context, obj interface{}) (model.NewAddress, error) {
+	var it model.NewAddress
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "number":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("number"))
+			it.Number, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "route":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("route"))
+			it.Route, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "optionalRoute":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("optionalRoute"))
+			it.OptionalRoute, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "postalCode":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postalCode"))
+			it.PostalCode, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "city":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("city"))
+			it.City, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9432,6 +9819,14 @@ func (ec *executionContext) unmarshalInputNewCommerce(ctx context.Context, obj i
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
 			it.Address, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "addressDetailed":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressDetailed"))
+			it.AddressDetailed, err = ec.unmarshalNNewAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewAddress(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9935,6 +10330,62 @@ func (ec *executionContext) unmarshalInputScheduleInput(ctx context.Context, obj
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var addressImplementors = []string{"Address"}
+
+func (ec *executionContext) _Address(ctx context.Context, sel ast.SelectionSet, obj *model.Address) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Address")
+		case "number":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Address_number(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "route":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Address_route(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "optionalRoute":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Address_optionalRoute(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "postalCode":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Address_postalCode(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "city":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Address_city(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
 
 var basketImplementors = []string{"Basket"}
 
@@ -10525,6 +10976,16 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 		case "address":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Commerce_address(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "addressDetailed":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_addressDetailed(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -12637,6 +13098,10 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAddress2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐAddress(ctx context.Context, sel ast.SelectionSet, v model.Address) graphql.Marshaler {
+	return ec._Address(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNBasketCommerce2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐBasketCommerceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.BasketCommerce) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -13304,6 +13769,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 func (ec *executionContext) unmarshalNLogin2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐLogin(ctx context.Context, v interface{}) (model.Login, error) {
 	res, err := ec.unmarshalInputLogin(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNewAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewAddress(ctx context.Context, v interface{}) (*model.NewAddress, error) {
+	res, err := ec.unmarshalInputNewAddress(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNNewBasketCommerce2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewBasketCommerceᚄ(ctx context.Context, v interface{}) ([]*model.NewBasketCommerce, error) {
@@ -14205,6 +14675,14 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOChangesAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesAddress(ctx context.Context, v interface{}) (*model.ChangesAddress, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputChangesAddress(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOChangesBusinessHours2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {

@@ -11,6 +11,14 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+type Address struct {
+	Number        *string `json:"number"`
+	Route         *string `json:"route"`
+	OptionalRoute *string `json:"optionalRoute"`
+	PostalCode    *string `json:"postalCode"`
+	City          *string `json:"city"`
+}
+
 type Basket struct {
 	Commerces []*BasketCommerce `json:"commerces"`
 }
@@ -44,6 +52,14 @@ type BusinessHours struct {
 type CCProduct struct {
 	Quantity int      `json:"quantity"`
 	Product  *Product `json:"product"`
+}
+
+type ChangesAddress struct {
+	Number        *string `json:"number"`
+	Route         *string `json:"route"`
+	OptionalRoute *string `json:"optionalRoute"`
+	PostalCode    *string `json:"postalCode"`
+	City          *string `json:"city"`
 }
 
 type CommandConnection struct {
@@ -120,6 +136,14 @@ type Login struct {
 	Password string `json:"password"`
 }
 
+type NewAddress struct {
+	Number        *string `json:"number"`
+	Route         *string `json:"route"`
+	OptionalRoute *string `json:"optionalRoute"`
+	PostalCode    *string `json:"postalCode"`
+	City          *string `json:"city"`
+}
+
 type NewBasket struct {
 	Commerces []*NewBasketCommerce `json:"commerces"`
 }
@@ -166,6 +190,7 @@ type NewCommerce struct {
 	Description          *string           `json:"description"`
 	StorekeeperWord      *string           `json:"storekeeperWord"`
 	Address              string            `json:"address"`
+	AddressDetailed      *NewAddress       `json:"addressDetailed"`
 	Latitude             float64           `json:"latitude"`
 	Longitude            float64           `json:"longitude"`
 	Phone                string            `json:"phone"`

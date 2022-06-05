@@ -22,6 +22,7 @@ type Commerce struct {
 	Description                         string              `bson:"description"`
 	StorekeeperWord                     string              `bson:"storekeeperWord"`
 	Address                             string              `bson:"address"`
+	AddressDetailed                     model.Address       `bson:"addressDetailed"`
 	AddressGeo                          geojson.GeoJSON     `bson:"addressGeo"`
 	Phone                               string              `bson:"phone"`
 	Email                               string              `bson:"email"`
@@ -42,6 +43,7 @@ func (commerce *Commerce) ToModel() *model.Commerce {
 		Description:     commerce.Description,
 		StorekeeperWord: commerce.StorekeeperWord,
 		Address:         commerce.Address,
+		AddressDetailed: commerce.AddressDetailed,
 		Latitude:        commerce.AddressGeo.Coordinates[1],
 		Longitude:       commerce.AddressGeo.Coordinates[0],
 		Phone:           commerce.Phone,
@@ -108,6 +110,13 @@ func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) (*Commerc
 		Description:     description,
 		StorekeeperWord: storekeeperWord,
 		Address:         input.Address,
+		AddressDetailed: model.Address{
+			Number:        input.AddressDetailed.Number,
+			Route:         input.AddressDetailed.Route,
+			OptionalRoute: input.AddressDetailed.OptionalRoute,
+			PostalCode:    input.AddressDetailed.PostalCode,
+			City:          input.AddressDetailed.City,
+		},
 		AddressGeo: geojson.GeoJSON{
 			Type:        "Point",
 			Coordinates: []float64{input.Latitude, input.Longitude},

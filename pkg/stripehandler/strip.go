@@ -295,7 +295,7 @@ func HandleCreatePaymentIntentWeb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var stripeCustomer, _ = authentification(w, r)
+	var stripeCustomer, user = authentification(w, r)
 
 	price, err := calculateOrderAmount(req.Basket)
 
@@ -321,6 +321,13 @@ func HandleCreatePaymentIntentWeb(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("pi.New: %v", pi.ClientSecret)
+
+	err = order(*user, req.Basket)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	writeJSON(w, struct {
 		ClientSecret string `json:"clientSecret"`

@@ -138,34 +138,13 @@ func order(user users.User, basket model.NewBasket) error {
 	return nil
 }
 
-func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
-	// Set Stripe API key
-	apiKey := config.Cfg.Stripe.Key
-	stripe.Key = apiKey
-
-	if r.Method != "POST" {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-		return
-	}
-
-	var req struct {
-		UseStripeSDK    *bool           `json:"useStripeSKD"`
-		PaymentMethodID *string         `json:"paymentMethodId"`
-		PaymentIntentID *string         `json:"paymentIntentId"`
-		Basket          model.NewBasket `json:"basket"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
+func authentification(w http.ResponseWriter, r *http.Request) (*string, *users.User) {
 	// On doit créer le consumer Stripe si nécesaire
 	user := auth.ForContext(r.Context())
 
 	if user == nil {
 		http.Error(w, "access denied", http.StatusForbidden)
-		return
+		return nil, nil
 	}
 
 	var stripeCustomer *string
@@ -193,6 +172,33 @@ func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 	} else {
 		stripeCustomer = user.StripID
 	}
+
+	return stripeCustomer, user
+}
+
+func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
+	// Set Stripe API key
+	apiKey := config.Cfg.Stripe.Key
+	stripe.Key = apiKey
+
+	if r.Method != "POST" {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		UseStripeSDK    *bool           `json:"useStripeSKD"`
+		PaymentMethodID *string         `json:"paymentMethodId"`
+		PaymentIntentID *string         `json:"paymentIntentId"`
+		Basket          model.NewBasket `json:"basket"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var stripeCustomer, user = authentification(w, r)
 
 	if req.PaymentIntentID != nil {
 		err := order(*user, req.Basket)
@@ -268,6 +274,59 @@ func HandleCreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 			RequiresAction: pi.Status == stripe.PaymentIntentStatusRequiresAction,
 		})
 	}
+}
+
+func HandleCreatePaymentIntentWeb(w http.ResponseWriter, r *http.Request) {
+	// Set Stripe API key
+	apiKey := config.Cfg.Stripe.Key
+	stripe.Key = apiKey
+
+	if r.Method != "POST" {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Basket model.NewBasket `json:"basket"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var stripeCustomer, _ = authentification(w, r)
+
+	price, err := calculateOrderAmount(req.Basket)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// Create a PaymentIntent with amount and currency
+	params := &stripe.PaymentIntentParams{
+		Amount:   stripe.Int64(price),
+		Currency: stripe.String(string(stripe.CurrencyEUR)),
+		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
+			Enabled: stripe.Bool(true),
+		},
+		Customer: stripeCustomer,
+	}
+
+	pi, err := paymentintent.New(params)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("pi.New: %v", pi.ClientSecret)
+
+	writeJSON(w, struct {
+		ClientSecret string `json:"clientSecret"`
+	}{
+		ClientSecret: pi.ClientSecret,
+	})
 }
 
 func writeJSON(w http.ResponseWriter, v interface{}) {

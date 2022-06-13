@@ -77,8 +77,7 @@ func main() {
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 	router.Handle("/playground", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
-	router.HandleFunc("/create-payment-intent", stripehandler.HandleCreatePaymentIntent)
-	router.HandleFunc("/create-payment-intent-web", stripehandler.HandleCreatePaymentIntentWeb)
+	router.HandleFunc("/create-setup-intent", stripehandler.HanldeCreateSetupIntent)
 	router.HandleFunc("/maps/autocomplete", mapshandler.HandleAutocomplete)
 	router.HandleFunc("/maps/details", mapshandler.HandlePlaceDetails)
 

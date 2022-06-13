@@ -7,6 +7,7 @@ import (
 
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/database"
+	"chemin-du-local.bzh/graphql/internal/registeredpaymentmethod"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
@@ -19,14 +20,16 @@ const USERROLE_USER = "USER"
 // Type
 
 type User struct {
-	ID           primitive.ObjectID `bson:"_id"`
-	CreatedAt    time.Time          `bson:"createAt"`
-	Email        string             `bson:"email"`
-	Role         string             `bson:"role"`
-	FirstName    *string            `bson:"firstName"`
-	LastName     *string            `bson:"lastName"`
-	StripID      *string            `bson:"stripeID"`
-	PasswordHash string             `bson:"password_hash"`
+	ID                       primitive.ObjectID                                `bson:"_id"`
+	CreatedAt                time.Time                                         `bson:"createAt"`
+	Email                    string                                            `bson:"email"`
+	Role                     string                                            `bson:"role"`
+	FirstName                *string                                           `bson:"firstName"`
+	LastName                 *string                                           `bson:"lastName"`
+	StripID                  *string                                           `bson:"stripeID"`
+	RegisteredPaymentMethods []registeredpaymentmethod.RegisteredPaymentMethod `bson:"registeredPaymentMethods"`
+	DefaultPaymentMethod     *string                                           `bson:"defaultPaymentMethod"`
+	PasswordHash             string                                            `bson:"password_hash"`
 }
 
 func (user *User) ToModel() *model.User {

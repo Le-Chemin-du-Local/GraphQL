@@ -38,6 +38,22 @@ input ChangesAddress {
   city: String
 }
 
+##############
+## PAYEMENT ##
+##############
+
+type RegisteredPaymentMethod {
+  name: String!
+  stripeID: String!
+  cardBrand: String 
+  cardLast4Digits: String
+}
+
+input ChangesRegistedPaymentMethod {
+  name: String 
+  stripeID: String
+}
+
 ##################
 ## UTILISATEURS ##
 ##################
@@ -52,6 +68,9 @@ type User {
 
   commerce: Commerce
   basket: Basket
+
+  registeredPaymentMethods: [RegisteredPaymentMethod!]!
+  defaultPaymentMethod: RegisteredPaymentMethod
 }
 
 input NewUser {
@@ -64,6 +83,14 @@ input NewUser {
 input Login {
   email: String!
   password: String!
+}
+
+input ChangesUser {
+  firstName: String 
+  lastName: String
+
+  registedPaymentMethods: [ChangesRegistedPaymentMethod!]
+  defaultPaymentMethod: String
 }
 
 ###############
@@ -569,6 +596,7 @@ type Mutation {
   # UTILISATEURS
   createUser(input: NewUser!): User!
   login(input: Login!): String!
+  updateUser(id: ID, input: ChangesUser): User! @needAuthentication
 
   # COMMERCES
   createCommerce(userID: ID!, input: NewCommerce!): Commerce! 

@@ -62,6 +62,11 @@ type ChangesAddress struct {
 	City          *string `json:"city"`
 }
 
+type ChangesRegistedPaymentMethod struct {
+	Name     *string `json:"name"`
+	StripeID *string `json:"stripeID"`
+}
+
 type CommandConnection struct {
 	Edges    []*CommandEdge   `json:"edges"`
 	PageInfo *CommandPageInfo `json:"pageInfo"`
@@ -306,6 +311,13 @@ type ProductPageInfo struct {
 	StartCursor string `json:"startCursor"`
 	EndCursor   string `json:"endCursor"`
 	HasNextPage bool   `json:"hasNextPage"`
+}
+
+type RegisteredPaymentMethod struct {
+	Name            string  `json:"name"`
+	StripeID        string  `json:"stripeID"`
+	CardBrand       *string `json:"cardBrand"`
+	CardLast4Digits *string `json:"cardLast4Digits"`
 }
 
 type Schedule struct {

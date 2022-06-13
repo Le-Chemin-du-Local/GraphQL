@@ -199,6 +199,7 @@ type ComplexityRoot struct {
 		UpdatePanier          func(childComplexity int, id string, changes map[string]interface{}) int
 		UpdateProduct         func(childComplexity int, id string, changes map[string]interface{}) int
 		UpdateProducts        func(childComplexity int, changes []*model.BulkChangesProduct) int
+		UpdateUser            func(childComplexity int, id *string, input map[string]interface{}) int
 	}
 
 	Panier struct {
@@ -280,20 +281,29 @@ type ComplexityRoot struct {
 		Users            func(childComplexity int) int
 	}
 
+	RegisteredPaymentMethod struct {
+		CardBrand       func(childComplexity int) int
+		CardLast4Digits func(childComplexity int) int
+		Name            func(childComplexity int) int
+		StripeID        func(childComplexity int) int
+	}
+
 	Schedule struct {
 		Closing func(childComplexity int) int
 		Opening func(childComplexity int) int
 	}
 
 	User struct {
-		Basket    func(childComplexity int) int
-		Commerce  func(childComplexity int) int
-		CreatedAt func(childComplexity int) int
-		Email     func(childComplexity int) int
-		FirstName func(childComplexity int) int
-		ID        func(childComplexity int) int
-		LastName  func(childComplexity int) int
-		Role      func(childComplexity int) int
+		Basket                   func(childComplexity int) int
+		Commerce                 func(childComplexity int) int
+		CreatedAt                func(childComplexity int) int
+		DefaultPaymentMethod     func(childComplexity int) int
+		Email                    func(childComplexity int) int
+		FirstName                func(childComplexity int) int
+		ID                       func(childComplexity int) int
+		LastName                 func(childComplexity int) int
+		RegisteredPaymentMethods func(childComplexity int) int
+		Role                     func(childComplexity int) int
 	}
 }
 
@@ -324,6 +334,7 @@ type CommerceCommandResolver interface {
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
 	Login(ctx context.Context, input model.Login) (string, error)
+	UpdateUser(ctx context.Context, id *string, input map[string]interface{}) (*model.User, error)
 	CreateCommerce(ctx context.Context, userID string, input model.NewCommerce) (*model.Commerce, error)
 	UpdateCommerce(ctx context.Context, id string, changes map[string]interface{}) (*model.Commerce, error)
 	CreateProduct(ctx context.Context, commerceID *string, input model.NewProduct) (*model.Product, error)
@@ -354,6 +365,8 @@ type QueryResolver interface {
 type UserResolver interface {
 	Commerce(ctx context.Context, obj *model.User) (*model.Commerce, error)
 	Basket(ctx context.Context, obj *model.User) (*model.Basket, error)
+	RegisteredPaymentMethods(ctx context.Context, obj *model.User) ([]*model.RegisteredPaymentMethod, error)
+	DefaultPaymentMethod(ctx context.Context, obj *model.User) (*model.RegisteredPaymentMethod, error)
 }
 
 type executableSchema struct {
@@ -1045,6 +1058,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateProducts(childComplexity, args["changes"].([]*model.BulkChangesProduct)), true
 
+	case "Mutation.updateUser":
+		if e.complexity.Mutation.UpdateUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(*string), args["input"].(map[string]interface{})), true
+
 	case "Panier.category":
 		if e.complexity.Panier.Category == nil {
 			break
@@ -1407,6 +1432,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Users(childComplexity), true
 
+	case "RegisteredPaymentMethod.cardBrand":
+		if e.complexity.RegisteredPaymentMethod.CardBrand == nil {
+			break
+		}
+
+		return e.complexity.RegisteredPaymentMethod.CardBrand(childComplexity), true
+
+	case "RegisteredPaymentMethod.cardLast4Digits":
+		if e.complexity.RegisteredPaymentMethod.CardLast4Digits == nil {
+			break
+		}
+
+		return e.complexity.RegisteredPaymentMethod.CardLast4Digits(childComplexity), true
+
+	case "RegisteredPaymentMethod.name":
+		if e.complexity.RegisteredPaymentMethod.Name == nil {
+			break
+		}
+
+		return e.complexity.RegisteredPaymentMethod.Name(childComplexity), true
+
+	case "RegisteredPaymentMethod.stripeID":
+		if e.complexity.RegisteredPaymentMethod.StripeID == nil {
+			break
+		}
+
+		return e.complexity.RegisteredPaymentMethod.StripeID(childComplexity), true
+
 	case "Schedule.closing":
 		if e.complexity.Schedule.Closing == nil {
 			break
@@ -1442,6 +1495,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.CreatedAt(childComplexity), true
 
+	case "User.defaultPaymentMethod":
+		if e.complexity.User.DefaultPaymentMethod == nil {
+			break
+		}
+
+		return e.complexity.User.DefaultPaymentMethod(childComplexity), true
+
 	case "User.email":
 		if e.complexity.User.Email == nil {
 			break
@@ -1469,6 +1529,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.LastName(childComplexity), true
+
+	case "User.registeredPaymentMethods":
+		if e.complexity.User.RegisteredPaymentMethods == nil {
+			break
+		}
+
+		return e.complexity.User.RegisteredPaymentMethods(childComplexity), true
 
 	case "User.role":
 		if e.complexity.User.Role == nil {
@@ -1581,6 +1648,22 @@ input ChangesAddress {
   city: String
 }
 
+##############
+## PAYEMENT ##
+##############
+
+type RegisteredPaymentMethod {
+  name: String!
+  stripeID: String!
+  cardBrand: String 
+  cardLast4Digits: String
+}
+
+input ChangesRegistedPaymentMethod {
+  name: String 
+  stripeID: String
+}
+
 ##################
 ## UTILISATEURS ##
 ##################
@@ -1595,6 +1678,9 @@ type User {
 
   commerce: Commerce
   basket: Basket
+
+  registeredPaymentMethods: [RegisteredPaymentMethod!]!
+  defaultPaymentMethod: RegisteredPaymentMethod
 }
 
 input NewUser {
@@ -1607,6 +1693,14 @@ input NewUser {
 input Login {
   email: String!
   password: String!
+}
+
+input ChangesUser {
+  firstName: String 
+  lastName: String
+
+  registedPaymentMethods: [ChangesRegistedPaymentMethod!]
+  defaultPaymentMethod: String
 }
 
 ###############
@@ -2112,6 +2206,7 @@ type Mutation {
   # UTILISATEURS
   createUser(input: NewUser!): User!
   login(input: Login!): String!
+  updateUser(id: ID, input: ChangesUser): User! @needAuthentication
 
   # COMMERCES
   createCommerce(userID: ID!, input: NewCommerce!): Commerce! 
@@ -2451,6 +2546,30 @@ func (ec *executionContext) field_Mutation_updateProducts_args(ctx context.Conte
 		}
 	}
 	args["changes"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 map[string]interface{}
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalOChangesUser2map(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -5400,6 +5519,68 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateUser(rctx, args["id"].(*string), args["input"].(map[string]interface{}))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.NeedAuthentication == nil {
+				return nil, errors.New("directive needAuthentication is not implemented")
+			}
+			return ec.directives.NeedAuthentication(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *chemin-du-local.bzh/graphql/graph/model.User`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createCommerce(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7748,6 +7929,140 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _RegisteredPaymentMethod_name(ctx context.Context, field graphql.CollectedField, obj *model.RegisteredPaymentMethod) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RegisteredPaymentMethod",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RegisteredPaymentMethod_stripeID(ctx context.Context, field graphql.CollectedField, obj *model.RegisteredPaymentMethod) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RegisteredPaymentMethod",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StripeID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RegisteredPaymentMethod_cardBrand(ctx context.Context, field graphql.CollectedField, obj *model.RegisteredPaymentMethod) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RegisteredPaymentMethod",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CardBrand, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RegisteredPaymentMethod_cardLast4Digits(ctx context.Context, field graphql.CollectedField, obj *model.RegisteredPaymentMethod) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RegisteredPaymentMethod",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CardLast4Digits, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Schedule_opening(ctx context.Context, field graphql.CollectedField, obj *model.Schedule) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -8081,6 +8396,73 @@ func (ec *executionContext) _User_basket(ctx context.Context, field graphql.Coll
 	res := resTmp.(*model.Basket)
 	fc.Result = res
 	return ec.marshalOBasket2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐBasket(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_registeredPaymentMethods(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().RegisteredPaymentMethods(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.RegisteredPaymentMethod)
+	fc.Result = res
+	return ec.marshalNRegisteredPaymentMethod2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRegisteredPaymentMethodᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_defaultPaymentMethod(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().DefaultPaymentMethod(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.RegisteredPaymentMethod)
+	fc.Result = res
+	return ec.marshalORegisteredPaymentMethod2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRegisteredPaymentMethod(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -9289,6 +9671,37 @@ func (ec *executionContext) unmarshalInputChangesAddress(ctx context.Context, ob
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("city"))
 			it.City, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputChangesRegistedPaymentMethod(ctx context.Context, obj interface{}) (model.ChangesRegistedPaymentMethod, error) {
+	var it model.ChangesRegistedPaymentMethod
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "stripeID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stripeID"))
+			it.StripeID, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -11605,6 +12018,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "updateUser":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUser(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createCommerce":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createCommerce(ctx, field)
@@ -12542,6 +12965,61 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
+var registeredPaymentMethodImplementors = []string{"RegisteredPaymentMethod"}
+
+func (ec *executionContext) _RegisteredPaymentMethod(ctx context.Context, sel ast.SelectionSet, obj *model.RegisteredPaymentMethod) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, registeredPaymentMethodImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RegisteredPaymentMethod")
+		case "name":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._RegisteredPaymentMethod_name(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "stripeID":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._RegisteredPaymentMethod_stripeID(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "cardBrand":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._RegisteredPaymentMethod_cardBrand(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "cardLast4Digits":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._RegisteredPaymentMethod_cardLast4Digits(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var scheduleImplementors = []string{"Schedule"}
 
 func (ec *executionContext) _Schedule(ctx context.Context, sel ast.SelectionSet, obj *model.Schedule) graphql.Marshaler {
@@ -12671,6 +13149,43 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_basket(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "registeredPaymentMethods":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_registeredPaymentMethods(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "defaultPaymentMethod":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_defaultPaymentMethod(ctx, field, obj)
 				return res
 			}
 
@@ -13373,6 +13888,11 @@ func (ec *executionContext) unmarshalNChangesPanier2map(ctx context.Context, v i
 
 func (ec *executionContext) unmarshalNChangesProduct2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
 	return v.(map[string]interface{}), nil
+}
+
+func (ec *executionContext) unmarshalNChangesRegistedPaymentMethod2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesRegistedPaymentMethod(ctx context.Context, v interface{}) (*model.ChangesRegistedPaymentMethod, error) {
+	res, err := ec.unmarshalInputChangesRegistedPaymentMethod(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNCommand2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommand(ctx context.Context, sel ast.SelectionSet, v model.Command) graphql.Marshaler {
@@ -14246,6 +14766,60 @@ func (ec *executionContext) marshalNProductPageInfo2ᚖcheminᚑduᚑlocalᚗbzh
 	return ec._ProductPageInfo(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNRegisteredPaymentMethod2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRegisteredPaymentMethodᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RegisteredPaymentMethod) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRegisteredPaymentMethod2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRegisteredPaymentMethod(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNRegisteredPaymentMethod2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRegisteredPaymentMethod(ctx context.Context, sel ast.SelectionSet, v *model.RegisteredPaymentMethod) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._RegisteredPaymentMethod(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNRole2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRole(ctx context.Context, v interface{}) (model.Role, error) {
 	var res model.Role
 	err := res.UnmarshalGQL(v)
@@ -14692,6 +15266,33 @@ func (ec *executionContext) unmarshalOChangesBusinessHours2map(ctx context.Conte
 	return v.(map[string]interface{}), nil
 }
 
+func (ec *executionContext) unmarshalOChangesRegistedPaymentMethod2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesRegistedPaymentMethodᚄ(ctx context.Context, v interface{}) ([]*model.ChangesRegistedPaymentMethod, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.ChangesRegistedPaymentMethod, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNChangesRegistedPaymentMethod2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesRegistedPaymentMethod(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOChangesUser2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+	if v == nil {
+		return nil, nil
+	}
+	return v.(map[string]interface{}), nil
+}
+
 func (ec *executionContext) marshalOCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommand(ctx context.Context, sel ast.SelectionSet, v *model.Command) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -14899,6 +15500,13 @@ func (ec *executionContext) unmarshalOProductFilter2ᚖcheminᚑduᚑlocalᚗbzh
 	}
 	res, err := ec.unmarshalInputProductFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalORegisteredPaymentMethod2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRegisteredPaymentMethod(ctx context.Context, sel ast.SelectionSet, v *model.RegisteredPaymentMethod) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._RegisteredPaymentMethod(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOSchedule2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Schedule) graphql.Marshaler {

@@ -15,12 +15,14 @@ import (
 	"chemin-du-local.bzh/graphql/internal/commerces"
 	"chemin-du-local.bzh/graphql/internal/helper"
 	"chemin-du-local.bzh/graphql/internal/products"
+	"chemin-du-local.bzh/graphql/internal/registeredpaymentmethod"
 	"chemin-du-local.bzh/graphql/internal/services/clickandcollect"
 	"chemin-du-local.bzh/graphql/internal/services/commands"
 	"chemin-du-local.bzh/graphql/internal/services/paniers"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/geojson"
 	"chemin-du-local.bzh/graphql/pkg/jwt"
+	"chemin-du-local.bzh/graphql/pkg/stripehandler"
 	"github.com/99designs/gqlgen/graphql"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -344,6 +346,10 @@ func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string
 	}
 
 	return token, nil
+}
+
+func (r *mutationResolver) UpdateUser(ctx context.Context, id *string, input map[string]interface{}) (*model.User, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *mutationResolver) CreateCommerce(ctx context.Context, userID string, input model.NewCommerce) (*model.Commerce, error) {
@@ -728,6 +734,10 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 
 func (r *queryResolver) User(ctx context.Context, id *string) (*model.User, error) {
 	if id == nil {
+		if auth.ForContext(ctx) == nil {
+			return nil, &users.UserNotFoundError{}
+		}
+
 		return auth.ForContext(ctx).ToModel(), nil
 	}
 
@@ -1045,6 +1055,65 @@ func (r *userResolver) Commerce(ctx context.Context, obj *model.User) (*model.Co
 
 func (r *userResolver) Basket(ctx context.Context, obj *model.User) (*model.Basket, error) {
 	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *userResolver) RegisteredPaymentMethods(ctx context.Context, obj *model.User) ([]*model.RegisteredPaymentMethod, error) {
+	if obj == nil {
+		return nil, &users.UserAccessDenied{}
+	}
+
+	databaseUser, err := users.GetUserById(obj.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseUser == nil {
+		return nil, &users.UserNotFoundError{}
+	}
+
+	if databaseUser.StripID == nil {
+		return nil, nil
+	}
+
+	return stripehandler.GetPaymentMethods(*databaseUser.StripID), nil
+}
+
+func (r *userResolver) DefaultPaymentMethod(ctx context.Context, obj *model.User) (*model.RegisteredPaymentMethod, error) {
+	databaseUser, err := users.GetUserById(obj.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseUser == nil {
+		return nil, &users.UserNotFoundError{}
+	}
+
+	if databaseUser.DefaultPaymentMethod == nil {
+		return nil, nil
+	}
+
+	for _, paymentMethod := range databaseUser.RegisteredPaymentMethods {
+		if paymentMethod.StripeID != *databaseUser.DefaultPaymentMethod {
+			continue
+		}
+
+		details, err := registeredpaymentmethod.GetPaymentMethodDetails(paymentMethod.StripeID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &model.RegisteredPaymentMethod{
+			Name:            paymentMethod.Name,
+			StripeID:        paymentMethod.StripeID,
+			CardBrand:       details.CardBrand,
+			CardLast4Digits: details.CardLast4Digits,
+		}, nil
+	}
+
+	return nil, nil
 }
 
 // CCCommand returns generated.CCCommandResolver implementation.

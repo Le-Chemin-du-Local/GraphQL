@@ -17,11 +17,13 @@ const COMMERCE_COMMAND_STATUS_READY = "READY"
 const COMMERCE_COMMAND_STATUS_DONE = "DONE"
 
 type CommerceCommand struct {
-	ID         primitive.ObjectID `bson:"_id"`
-	CommandID  primitive.ObjectID `bson:"commandID"`
-	CommerceID primitive.ObjectID `bson:"commerceID"`
-	PickupDate time.Time          `bson:"pickupDate"`
-	Status     string             `bson:"status"`
+	ID            primitive.ObjectID `bson:"_id"`
+	CommandID     primitive.ObjectID `bson:"commandID"`
+	CommerceID    primitive.ObjectID `bson:"commerceID"`
+	PickupDate    time.Time          `bson:"pickupDate"`
+	Price         int                `bson:"price"`
+	PaymentMethod string             `bson:"paymentMethod"`
+	Status        string             `bson:"status"`
 }
 
 func (command *CommerceCommand) ToModel() *model.CommerceCommand {
@@ -29,6 +31,7 @@ func (command *CommerceCommand) ToModel() *model.CommerceCommand {
 		ID:         command.ID.Hex(),
 		PickupDate: command.PickupDate,
 		Status:     command.Status,
+		Price:      float64(command.Price) / 100,
 	}
 }
 
@@ -60,11 +63,13 @@ func CommerceCreate(input model.NewCommerceCommand, commandID primitive.ObjectID
 	}
 
 	databaseCommerceCommand := CommerceCommand{
-		ID:         primitive.NewObjectID(),
-		CommandID:  commandID,
-		CommerceID: commerceObjectID,
-		PickupDate: input.PickupDate,
-		Status:     COMMERCE_COMMAND_STATUS_IN_PROGRESS,
+		ID:            primitive.NewObjectID(),
+		CommandID:     commandID,
+		CommerceID:    commerceObjectID,
+		PickupDate:    input.PickupDate,
+		Price:         input.Price,
+		PaymentMethod: input.PaymentMethod,
+		Status:        COMMERCE_COMMAND_STATUS_IN_PROGRESS,
 	}
 
 	_, err = database.CollectionCommerceCommand.InsertOne(database.MongoContext, databaseCommerceCommand)

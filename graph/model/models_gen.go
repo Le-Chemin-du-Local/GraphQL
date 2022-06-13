@@ -210,8 +210,10 @@ type NewCommerce struct {
 }
 
 type NewCommerceCommand struct {
-	CommerceID string    `json:"commerceID"`
-	PickupDate time.Time `json:"pickupDate"`
+	CommerceID    string    `json:"commerceID"`
+	PickupDate    time.Time `json:"pickupDate"`
+	PaymentMethod string    `json:"paymentMethod"`
+	Price         int       `json:"price"`
 }
 
 type NewPanier struct {

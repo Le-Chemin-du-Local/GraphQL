@@ -22,53 +22,51 @@ import (
 	"github.com/stripe/stripe-go/v72/setupintent"
 )
 
-func calculateOrderAmount(basket model.NewBasket) (int64, error) {
+func calculateOrderAmountForCommerce(commerce model.NewBasketCommerce) (int64, error) {
 	result := 0
 
-	for _, commerce := range basket.Commerces {
-		databaseCommerce, err := commerces.GetById(commerce.CommerceID)
+	databaseCommerce, err := commerces.GetById(commerce.CommerceID)
+
+	if err != nil {
+		return 0, err
+	}
+
+	if databaseCommerce == nil {
+		return 0, &commerces.CommerceErrorNotFound{}
+	}
+
+	for _, product := range commerce.Products {
+		databaseProduct, err := products.GetById(product.ProductID)
 
 		if err != nil {
 			return 0, err
 		}
 
-		if databaseCommerce == nil {
-			return 0, &commerces.CommerceErrorNotFound{}
+		if databaseProduct == nil {
+			return 0, &products.ProductNotFoundError{}
 		}
 
-		for _, product := range commerce.Products {
-			databaseProduct, err := products.GetById(product.ProductID)
+		result = result + int(databaseProduct.Price*product.Quantity*100)
+	}
 
-			if err != nil {
-				return 0, err
-			}
+	for _, panier := range commerce.Paniers {
+		databasePanier, err := paniers.GetById(panier)
 
-			if databaseProduct == nil {
-				return 0, &products.ProductNotFoundError{}
-			}
-
-			result = result + int(databaseProduct.Price*product.Quantity*100)
+		if err != nil {
+			return 0, err
 		}
 
-		for _, panier := range commerce.Paniers {
-			databasePanier, err := paniers.GetById(panier)
-
-			if err != nil {
-				return 0, err
-			}
-
-			if databasePanier == nil {
-				return 0, &paniers.PanierNotFoundError{}
-			}
-
-			result = result + int(databasePanier.Price*100)
+		if databasePanier == nil {
+			return 0, &paniers.PanierNotFoundError{}
 		}
+
+		result = result + int(databasePanier.Price*100)
 	}
 
 	return int64(result), nil
 }
 
-func order(user users.User, basket model.NewBasket) error {
+func order(user users.User, paymentMethod string, basket model.NewBasket) error {
 	databaseCommand, err := commands.Create(model.NewCommand{
 		CreationDate: time.Now(),
 		User:         user.ID.Hex(),
@@ -79,6 +77,12 @@ func order(user users.User, basket model.NewBasket) error {
 	}
 
 	for _, commerce := range basket.Commerces {
+		price, err := calculateOrderAmountForCommerce(*commerce)
+
+		if err != nil {
+			return err
+		}
+
 		databaseCommerce, err := commerces.GetById(commerce.CommerceID)
 
 		if err != nil {
@@ -91,8 +95,10 @@ func order(user users.User, basket model.NewBasket) error {
 
 		// La command
 		databaseCommerceCommand, err := commands.CommerceCreate(model.NewCommerceCommand{
-			CommerceID: databaseCommerce.ID.Hex(),
-			PickupDate: *commerce.PickupDate,
+			CommerceID:    databaseCommerce.ID.Hex(),
+			PickupDate:    *commerce.PickupDate,
+			PaymentMethod: paymentMethod,
+			Price:         int(price),
 		}, databaseCommand.ID)
 
 		if err != nil {
@@ -241,6 +247,40 @@ func HanldeCreateSetupIntent(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+}
+
+func HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		PaymentMethodID *string         `json:"paymentMethodId"`
+		Basket          model.NewBasket `json:"basket"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var _, user = authentification(w, r)
+
+	err := order(*user, *req.PaymentMethodID, req.Basket)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, struct {
+		PaymentMethod string `json:"paymentMethod"`
+		Success       bool   `json:"success"`
+	}{
+		PaymentMethod: *req.PaymentMethodID,
+		Success:       true,
+	})
 }
 
 func writeJSON(w http.ResponseWriter, v interface{}) {

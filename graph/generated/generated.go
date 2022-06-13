@@ -151,6 +151,7 @@ type ComplexityRoot struct {
 		ID         func(childComplexity int) int
 		Paniers    func(childComplexity int) int
 		PickupDate func(childComplexity int) int
+		Price      func(childComplexity int) int
 		Status     func(childComplexity int) int
 		User       func(childComplexity int) int
 	}
@@ -813,6 +814,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CommerceCommand.PickupDate(childComplexity), true
+
+	case "CommerceCommand.price":
+		if e.complexity.CommerceCommand.Price == nil {
+			break
+		}
+
+		return e.complexity.CommerceCommand.Price(childComplexity), true
 
 	case "CommerceCommand.status":
 		if e.complexity.CommerceCommand.Status == nil {
@@ -2053,6 +2061,7 @@ type CommerceCommand {
   pickupDate: Time!
   status: String!
   user: User!
+  price: Float!
 }
 
 type Command {
@@ -2101,6 +2110,8 @@ type CommerceCommandPageInfo {
 input NewCommerceCommand {
   commerceID: ID!
   pickupDate: Time!
+  paymentMethod: String!
+  price: Int!
 }
 
 input ChangesCommerceCommand {
@@ -4949,6 +4960,41 @@ func (ec *executionContext) _CommerceCommand_user(ctx context.Context, field gra
 	res := resTmp.(*model.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CommerceCommand_price(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommand) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CommerceCommand",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Price, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CommerceCommandConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.CommerceCommandConnection) (ret graphql.Marshaler) {
@@ -10362,6 +10408,22 @@ func (ec *executionContext) unmarshalInputNewCommerceCommand(ctx context.Context
 			if err != nil {
 				return it, err
 			}
+		case "paymentMethod":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paymentMethod"))
+			it.PaymentMethod, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "price":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
+			it.Price, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -11708,6 +11770,16 @@ func (ec *executionContext) _CommerceCommand(ctx context.Context, sel ast.Select
 				return innerFunc(ctx)
 
 			})
+		case "price":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._CommerceCommand_price(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

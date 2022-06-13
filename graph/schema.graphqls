@@ -443,6 +443,7 @@ type CommerceCommand {
   pickupDate: Time!
   status: String!
   user: User!
+  price: Float!
 }
 
 type Command {
@@ -491,6 +492,8 @@ type CommerceCommandPageInfo {
 input NewCommerceCommand {
   commerceID: ID!
   pickupDate: Time!
+  paymentMethod: String!
+  price: Int!
 }
 
 input ChangesCommerceCommand {

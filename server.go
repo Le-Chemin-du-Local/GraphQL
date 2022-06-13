@@ -78,6 +78,7 @@ func main() {
 	router.Handle("/playground", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 	router.HandleFunc("/create-setup-intent", stripehandler.HanldeCreateSetupIntent)
+	router.HandleFunc("/create-order", stripehandler.HandleCreateOrder)
 	router.HandleFunc("/maps/autocomplete", mapshandler.HandleAutocomplete)
 	router.HandleFunc("/maps/details", mapshandler.HandlePlaceDetails)
 

@@ -79,6 +79,7 @@ func main() {
 	router.Handle("/query", srv)
 	router.HandleFunc("/create-setup-intent", stripehandler.HanldeCreateSetupIntent)
 	router.HandleFunc("/create-order", stripehandler.HandleCreateOrder)
+	router.HandleFunc("/complete-order", stripehandler.HandleCompleteOrder)
 	router.HandleFunc("/maps/autocomplete", mapshandler.HandleAutocomplete)
 	router.HandleFunc("/maps/details", mapshandler.HandlePlaceDetails)
 

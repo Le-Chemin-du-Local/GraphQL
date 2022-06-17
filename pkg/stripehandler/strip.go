@@ -19,6 +19,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/users"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/customer"
+	"github.com/stripe/stripe-go/v72/paymentintent"
 	"github.com/stripe/stripe-go/v72/setupintent"
 )
 
@@ -281,6 +282,113 @@ func HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 		PaymentMethod: *req.PaymentMethodID,
 		Success:       true,
 	})
+}
+
+func HandleCompleteOrder(w http.ResponseWriter, r *http.Request) {
+	// Set Stripe API key
+	apiKey := config.Cfg.Stripe.Key
+	stripe.Key = apiKey
+
+	if r.Method != "POST" {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		CommerceCommandID *string `json:"commerceCommandId"`
+		PaymentIntentID   *string `json:"paymentIntentId"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var stripeCustomer, _ = authentification(w, r)
+	databaseCommerceCommand, err := commands.CommerceGetById(*req.CommerceCommandID)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if databaseCommerceCommand == nil {
+		http.Error(w, "la commande n'a pas été trouvée", http.StatusNotFound)
+		return
+	}
+
+	databaseCommerceCommand.Status = commands.COMMERCE_COMMAND_STATUS_DONE
+
+	if req.PaymentIntentID != nil {
+		err := commands.CommerceUpdate(databaseCommerceCommand)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		params := &stripe.PaymentIntentConfirmParams{
+			PaymentMethod: &databaseCommerceCommand.PaymentMethod,
+		}
+
+		pi, err := paymentintent.Confirm(*req.PaymentIntentID, params)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, struct {
+			ClientSecret string `json:"clientSecret"`
+		}{
+			ClientSecret: pi.ClientSecret,
+		})
+	} else {
+		// Create a PaymentIntent with amount and currency
+		confirm := true
+		confirmationMethode := "manual"
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		params := &stripe.PaymentIntentParams{
+			Amount:             stripe.Int64(int64(databaseCommerceCommand.Price)),
+			Currency:           stripe.String(string(stripe.CurrencyEUR)),
+			PaymentMethod:      &databaseCommerceCommand.PaymentMethod,
+			Confirm:            &confirm,
+			ConfirmationMethod: &confirmationMethode,
+			Customer:           stripeCustomer,
+		}
+
+		pi, err := paymentintent.New(params)
+		log.Printf("pi.New: %v", pi.ClientSecret)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Printf("pi.New: %v", err)
+			return
+		}
+
+		if pi.Status == stripe.PaymentIntentStatusSucceeded {
+			err := commands.CommerceUpdate(databaseCommerceCommand)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		writeJSON(w, struct {
+			ClientSecret   string `json:"clientSecret"`
+			RequiresAction bool   `json:"requiresAction"`
+		}{
+			ClientSecret:   pi.ClientSecret,
+			RequiresAction: pi.Status == stripe.PaymentIntentStatusRequiresAction,
+		})
+	}
+
 }
 
 func writeJSON(w http.ResponseWriter, v interface{}) {

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"chemin-du-local.bzh/graphql/graph/model"
+	"chemin-du-local.bzh/graphql/internal/address"
+	"chemin-du-local.bzh/graphql/internal/commerces"
 	"chemin-du-local.bzh/graphql/internal/database"
 	"chemin-du-local.bzh/graphql/internal/registeredpaymentmethod"
 	"go.mongodb.org/mongo-driver/bson"
@@ -23,9 +25,14 @@ type User struct {
 	ID                       primitive.ObjectID                                `bson:"_id"`
 	CreatedAt                time.Time                                         `bson:"createAt"`
 	Email                    string                                            `bson:"email"`
+	Phone                    string                                            `bson:"phone"`
 	Role                     string                                            `bson:"role"`
+	Gender                   *string                                           `bson:"gender"`
 	FirstName                *string                                           `bson:"firstName"`
 	LastName                 *string                                           `bson:"lastName"`
+	Birthdate                *time.Time                                        `bson:"birthdate"`
+	Addresses                []*address.Address                                `bson:"addresses"`
+	DefaultAddressID         *primitive.ObjectID                               `bson:"defaultAddressID"`
 	StripID                  *string                                           `bson:"stripeID"`
 	RegisteredPaymentMethods []registeredpaymentmethod.RegisteredPaymentMethod `bson:"registeredPaymentMethods"`
 	DefaultPaymentMethod     *string                                           `bson:"defaultPaymentMethod"`
@@ -37,9 +44,12 @@ func (user *User) ToModel() *model.User {
 		ID:        user.ID.Hex(),
 		CreatedAt: &user.CreatedAt,
 		Email:     user.Email,
+		Phone:     user.Phone,
 		Role:      user.Role,
+		Gender:    user.Gender,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
+		Birthdate: user.Birthdate,
 	}
 }
 
@@ -62,31 +72,61 @@ func (user *User) HasRole(role model.Role) bool {
 
 // Createur de base de données
 
-func Create(input model.NewUser) *User {
+func Create(input model.NewUser) (*User, error) {
 	hashedPassword, err := HashPassword(input.Password)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// On doit créer la première address
+	addressID := primitive.NewObjectID()
+	addresses := []*address.Address{}
+
+	if input.Address != nil {
+		addresses = append(addresses, &address.Address{
+			ID:            addressID,
+			Number:        input.Address.Number,
+			Route:         input.Address.Route,
+			OptionalRoute: input.Address.OptionalRoute,
+			PostalCode:    input.Address.PostalCode,
+			City:          input.Address.City,
+		})
+	}
+
 	// On a besoin de faire la conversion
+	userID := primitive.NewObjectID()
 	databaseUser := User{
-		ID:           primitive.NewObjectID(),
-		CreatedAt:    time.Now(),
-		Email:        strings.ToLower(input.Email),
-		Role:         USERROLE_USER,
-		FirstName:    input.FirstName,
-		LastName:     input.LastName,
-		PasswordHash: hashedPassword,
+		ID:               userID,
+		CreatedAt:        time.Now(),
+		Email:            strings.ToLower(input.Email),
+		Phone:            input.Phone,
+		Role:             USERROLE_USER,
+		Gender:           input.Gender,
+		FirstName:        input.FirstName,
+		LastName:         input.LastName,
+		Birthdate:        input.Birthdate,
+		Addresses:        addresses,
+		DefaultAddressID: &addressID,
+		PasswordHash:     hashedPassword,
 	}
 
 	_, err = database.CollectionUsers.InsertOne(database.MongoContext, databaseUser)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return &databaseUser
+	// Si le commerce n'est pas nul, il faut le créer
+	if input.Commerce != nil {
+		_, err = commerces.Create(*input.Commerce, userID)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &databaseUser, nil
 }
 
 // Mise à jour de la base de données

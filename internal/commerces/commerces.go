@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"chemin-du-local.bzh/graphql/graph/model"
+	"chemin-du-local.bzh/graphql/internal/address"
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
 	"chemin-du-local.bzh/graphql/pkg/geojson"
@@ -18,11 +19,11 @@ import (
 type Commerce struct {
 	ID                                  primitive.ObjectID  `bson:"_id"`
 	StorekeeperID                       primitive.ObjectID  `bson:"storekeeperID"`
+	Siret                               string              `bson:"siret"`
 	Name                                string              `bson:"name"`
 	Description                         string              `bson:"description"`
 	StorekeeperWord                     string              `bson:"storekeeperWord"`
-	Address                             string              `bson:"address"`
-	AddressDetailed                     model.Address       `bson:"addressDetailed"`
+	Address                             address.Address     `bson:"address"`
 	AddressGeo                          geojson.GeoJSON     `bson:"addressGeo"`
 	Phone                               string              `bson:"phone"`
 	Email                               string              `bson:"email"`
@@ -39,11 +40,11 @@ func (commerce *Commerce) ToModel() *model.Commerce {
 	return &model.Commerce{
 		ID:                   commerce.ID.Hex(),
 		StorekeeperID:        commerce.StorekeeperID.Hex(),
+		Siret:                commerce.Siret,
 		Name:                 commerce.Name,
 		Description:          commerce.Description,
 		StorekeeperWord:      commerce.StorekeeperWord,
-		Address:              commerce.Address,
-		AddressDetailed:      commerce.AddressDetailed,
+		Address:              *commerce.Address.ToModel(),
 		Latitude:             commerce.AddressGeo.Coordinates[1],
 		Longitude:            commerce.AddressGeo.Coordinates[0],
 		Phone:                commerce.Phone,
@@ -108,15 +109,16 @@ func Create(input model.NewCommerce, storekeeperID primitive.ObjectID) (*Commerc
 		ID:              commerceObjectID,
 		StorekeeperID:   storekeeperID,
 		Name:            input.Name,
+		Siret:           input.Siret,
 		Description:     description,
 		StorekeeperWord: storekeeperWord,
-		Address:         input.Address,
-		AddressDetailed: model.Address{
-			Number:        input.AddressDetailed.Number,
-			Route:         input.AddressDetailed.Route,
-			OptionalRoute: input.AddressDetailed.OptionalRoute,
-			PostalCode:    input.AddressDetailed.PostalCode,
-			City:          input.AddressDetailed.City,
+		Address: address.Address{
+			ID:            primitive.NewObjectID(),
+			Number:        input.Address.Number,
+			Route:         input.Address.Route,
+			OptionalRoute: input.Address.OptionalRoute,
+			PostalCode:    input.Address.PostalCode,
+			City:          input.Address.City,
 		},
 		AddressGeo: geojson.GeoJSON{
 			Type:        "Point",

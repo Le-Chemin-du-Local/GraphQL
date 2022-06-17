@@ -15,6 +15,7 @@ scalar Upload
 ###########
 
 type Address {
+  id: ID!
   number: String
   route: String
   optionalRoute: String
@@ -62,9 +63,15 @@ type User {
   id: ID!
   createdAt: Time
   email: String!
+  phone: String!
   role: String!
+  gender: String
   firstName: String
   lastName: String
+  birthdate: Time
+
+  addresses: [Address!]!
+  defaultAddress: Address
 
   commerce: Commerce
   basket: Basket
@@ -75,9 +82,16 @@ type User {
 
 input NewUser {
   email: String!
+  phone: String!
   password: String!
+  gender: String
   firstName: String
   lastName: String
+  birthdate: Time
+  address: NewAddress
+
+  # Si on doit créer un commerçant
+  commerce: NewCommerce
 }
 
 input Login {
@@ -86,8 +100,12 @@ input Login {
 }
 
 input ChangesUser {
+  gender: String
   firstName: String 
   lastName: String
+  birthdate: Time
+
+  addresses: [ChangesAddress!]
 
   registedPaymentMethods: [ChangesRegistedPaymentMethod!]
   defaultPaymentMethod: String
@@ -147,14 +165,15 @@ type Commerce { # Ici on utilise le nom "Commerce"
   id: ID!
   storekeeper: User!
   
+  siret: String!
+  
   # Descriptif
   name: String!
   description: String!
   storekeeperWord: String!
 
   # Coordonnées
-  address: String! @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
-  addressDetailed: Address!
+  address: Address!
   latitude: Float!
   longitude: Float!
   phone: String!
@@ -197,14 +216,14 @@ type CommercePageInfo {
 }
 
 input NewCommerce {
+  siret: String!
   # Descriptif
   name: String!
   description: String
   storekeeperWord: String
 
   # Coordonnées
-  address: String! @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
-  addressDetailed: NewAddress!
+  address: NewAddress!
   latitude: Float!
   longitude: Float!
   phone: String!
@@ -222,14 +241,15 @@ input NewCommerce {
 }
 
 input ChangesCommerce {
+  siret: String
+
   # Descriptif
   name: String
   description: String
   storekeeperWord: String
 
   # Coordonnées
-  address: String @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
-  addressDetailed: ChangesAddress
+  address: ChangesAddress
   latitude: Float
   longitude: Float
   phone: String

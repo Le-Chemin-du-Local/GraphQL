@@ -12,6 +12,7 @@ import (
 )
 
 type Address struct {
+	ID            string  `json:"id"`
 	Number        *string `json:"number"`
 	Route         *string `json:"route"`
 	OptionalRoute *string `json:"optionalRoute"`
@@ -191,11 +192,11 @@ type NewCommand struct {
 }
 
 type NewCommerce struct {
+	Siret                string            `json:"siret"`
 	Name                 string            `json:"name"`
 	Description          *string           `json:"description"`
 	StorekeeperWord      *string           `json:"storekeeperWord"`
-	Address              string            `json:"address"`
-	AddressDetailed      *NewAddress       `json:"addressDetailed"`
+	Address              *NewAddress       `json:"address"`
 	Latitude             float64           `json:"latitude"`
 	Longitude            float64           `json:"longitude"`
 	Phone                string            `json:"phone"`
@@ -252,10 +253,15 @@ type NewProduct struct {
 }
 
 type NewUser struct {
-	Email     string  `json:"email"`
-	Password  string  `json:"password"`
-	FirstName *string `json:"firstName"`
-	LastName  *string `json:"lastName"`
+	Email     string       `json:"email"`
+	Phone     string       `json:"phone"`
+	Password  string       `json:"password"`
+	Gender    *string      `json:"gender"`
+	FirstName *string      `json:"firstName"`
+	LastName  *string      `json:"lastName"`
+	Birthdate *time.Time   `json:"birthdate"`
+	Address   *NewAddress  `json:"address"`
+	Commerce  *NewCommerce `json:"commerce"`
 }
 
 type PanierConnection struct {

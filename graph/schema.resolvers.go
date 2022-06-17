@@ -319,7 +319,11 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		return nil, err
 	}
 
-	databaseUser := users.Create(input)
+	databaseUser, err := users.Create(input)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return databaseUser.ToModel(), nil
 }

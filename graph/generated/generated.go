@@ -56,6 +56,7 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Address struct {
 		City          func(childComplexity int) int
+		ID            func(childComplexity int) int
 		Number        func(childComplexity int) int
 		OptionalRoute func(childComplexity int) int
 		PostalCode    func(childComplexity int) int
@@ -123,7 +124,6 @@ type ComplexityRoot struct {
 
 	Commerce struct {
 		Address                             func(childComplexity int) int
-		AddressDetailed                     func(childComplexity int) int
 		BusinessHours                       func(childComplexity int) int
 		Categories                          func(childComplexity int) int
 		ClickAndCollectHours                func(childComplexity int) int
@@ -140,6 +140,7 @@ type ComplexityRoot struct {
 		Products                            func(childComplexity int, first *int, after *string, filters *model.ProductFilter) int
 		ProductsAvailableForClickAndCollect func(childComplexity int) int
 		Services                            func(childComplexity int) int
+		Siret                               func(childComplexity int) int
 		Storekeeper                         func(childComplexity int) int
 		StorekeeperWord                     func(childComplexity int) int
 		Twitter                             func(childComplexity int) int
@@ -295,14 +296,19 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
+		Addresses                func(childComplexity int) int
 		Basket                   func(childComplexity int) int
+		Birthdate                func(childComplexity int) int
 		Commerce                 func(childComplexity int) int
 		CreatedAt                func(childComplexity int) int
+		DefaultAddress           func(childComplexity int) int
 		DefaultPaymentMethod     func(childComplexity int) int
 		Email                    func(childComplexity int) int
 		FirstName                func(childComplexity int) int
+		Gender                   func(childComplexity int) int
 		ID                       func(childComplexity int) int
 		LastName                 func(childComplexity int) int
+		Phone                    func(childComplexity int) int
 		RegisteredPaymentMethods func(childComplexity int) int
 		Role                     func(childComplexity int) int
 	}
@@ -391,6 +397,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Address.City(childComplexity), true
+
+	case "Address.id":
+		if e.complexity.Address.ID == nil {
+			break
+		}
+
+		return e.complexity.Address.ID(childComplexity), true
 
 	case "Address.number":
 		if e.complexity.Address.Number == nil {
@@ -630,13 +643,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Commerce.Address(childComplexity), true
 
-	case "Commerce.addressDetailed":
-		if e.complexity.Commerce.AddressDetailed == nil {
-			break
-		}
-
-		return e.complexity.Commerce.AddressDetailed(childComplexity), true
-
 	case "Commerce.businessHours":
 		if e.complexity.Commerce.BusinessHours == nil {
 			break
@@ -758,6 +764,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Services(childComplexity), true
+
+	case "Commerce.siret":
+		if e.complexity.Commerce.Siret == nil {
+			break
+		}
+
+		return e.complexity.Commerce.Siret(childComplexity), true
 
 	case "Commerce.storekeeper":
 		if e.complexity.Commerce.Storekeeper == nil {
@@ -1482,12 +1495,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Schedule.Opening(childComplexity), true
 
+	case "User.addresses":
+		if e.complexity.User.Addresses == nil {
+			break
+		}
+
+		return e.complexity.User.Addresses(childComplexity), true
+
 	case "User.basket":
 		if e.complexity.User.Basket == nil {
 			break
 		}
 
 		return e.complexity.User.Basket(childComplexity), true
+
+	case "User.birthdate":
+		if e.complexity.User.Birthdate == nil {
+			break
+		}
+
+		return e.complexity.User.Birthdate(childComplexity), true
 
 	case "User.commerce":
 		if e.complexity.User.Commerce == nil {
@@ -1502,6 +1529,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.CreatedAt(childComplexity), true
+
+	case "User.defaultAddress":
+		if e.complexity.User.DefaultAddress == nil {
+			break
+		}
+
+		return e.complexity.User.DefaultAddress(childComplexity), true
 
 	case "User.defaultPaymentMethod":
 		if e.complexity.User.DefaultPaymentMethod == nil {
@@ -1524,6 +1558,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.FirstName(childComplexity), true
 
+	case "User.gender":
+		if e.complexity.User.Gender == nil {
+			break
+		}
+
+		return e.complexity.User.Gender(childComplexity), true
+
 	case "User.id":
 		if e.complexity.User.ID == nil {
 			break
@@ -1537,6 +1578,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.LastName(childComplexity), true
+
+	case "User.phone":
+		if e.complexity.User.Phone == nil {
+			break
+		}
+
+		return e.complexity.User.Phone(childComplexity), true
 
 	case "User.registeredPaymentMethods":
 		if e.complexity.User.RegisteredPaymentMethods == nil {
@@ -1633,6 +1681,7 @@ scalar Upload
 ###########
 
 type Address {
+  id: ID!
   number: String
   route: String
   optionalRoute: String
@@ -1680,9 +1729,15 @@ type User {
   id: ID!
   createdAt: Time
   email: String!
+  phone: String!
   role: String!
+  gender: String
   firstName: String
   lastName: String
+  birthdate: Time
+
+  addresses: [Address!]!
+  defaultAddress: Address
 
   commerce: Commerce
   basket: Basket
@@ -1693,9 +1748,16 @@ type User {
 
 input NewUser {
   email: String!
+  phone: String!
   password: String!
+  gender: String
   firstName: String
   lastName: String
+  birthdate: Time
+  address: NewAddress
+
+  # Si on doit créer un commerçant
+  commerce: NewCommerce
 }
 
 input Login {
@@ -1704,8 +1766,12 @@ input Login {
 }
 
 input ChangesUser {
+  gender: String
   firstName: String 
   lastName: String
+  birthdate: Time
+
+  addresses: [ChangesAddress!]
 
   registedPaymentMethods: [ChangesRegistedPaymentMethod!]
   defaultPaymentMethod: String
@@ -1765,14 +1831,15 @@ type Commerce { # Ici on utilise le nom "Commerce"
   id: ID!
   storekeeper: User!
   
+  siret: String!
+  
   # Descriptif
   name: String!
   description: String!
   storekeeperWord: String!
 
   # Coordonnées
-  address: String! @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
-  addressDetailed: Address!
+  address: Address!
   latitude: Float!
   longitude: Float!
   phone: String!
@@ -1815,14 +1882,14 @@ type CommercePageInfo {
 }
 
 input NewCommerce {
+  siret: String!
   # Descriptif
   name: String!
   description: String
   storekeeperWord: String
 
   # Coordonnées
-  address: String! @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
-  addressDetailed: NewAddress!
+  address: NewAddress!
   latitude: Float!
   longitude: Float!
   phone: String!
@@ -1840,14 +1907,15 @@ input NewCommerce {
 }
 
 input ChangesCommerce {
+  siret: String
+
   # Descriptif
   name: String
   description: String
   storekeeperWord: String
 
   # Coordonnées
-  address: String @deprecated(reason: "address is not enough detailled. Use addressDetailed instead.")
-  addressDetailed: ChangesAddress
+  address: ChangesAddress
   latitude: Float
   longitude: Float
   phone: String
@@ -2825,6 +2893,41 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Address_id(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Address",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _Address_number(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
 	defer func() {
@@ -4047,6 +4150,41 @@ func (ec *executionContext) _Commerce_storekeeper(ctx context.Context, field gra
 	return ec.marshalNUser2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Commerce_siret(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Siret, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Commerce_name(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4171,41 +4309,6 @@ func (ec *executionContext) _Commerce_address(ctx context.Context, field graphql
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Address, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Commerce_addressDetailed(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Commerce",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AddressDetailed, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8281,6 +8384,41 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _User_phone(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Phone, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _User_role(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -8314,6 +8452,38 @@ func (ec *executionContext) _User_role(ctx context.Context, field graphql.Collec
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_gender(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Gender, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_firstName(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -8378,6 +8548,105 @@ func (ec *executionContext) _User_lastName(ctx context.Context, field graphql.Co
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_birthdate(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Birthdate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_addresses(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Addresses, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Address)
+	fc.Result = res
+	return ec.marshalNAddress2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐAddressᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_defaultAddress(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DefaultAddress, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Address)
+	fc.Result = res
+	return ec.marshalOAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐAddress(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_commerce(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -10249,6 +10518,14 @@ func (ec *executionContext) unmarshalInputNewCommerce(ctx context.Context, obj i
 
 	for k, v := range asMap {
 		switch k {
+		case "siret":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("siret"))
+			it.Siret, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "name":
 			var err error
 
@@ -10277,15 +10554,7 @@ func (ec *executionContext) unmarshalInputNewCommerce(ctx context.Context, obj i
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
-			it.Address, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "addressDetailed":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressDetailed"))
-			it.AddressDetailed, err = ec.unmarshalNNewAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewAddress(ctx, v)
+			it.Address, err = ec.unmarshalNNewAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewAddress(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10691,11 +10960,27 @@ func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj inter
 			if err != nil {
 				return it, err
 			}
+		case "phone":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phone"))
+			it.Phone, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "password":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 			it.Password, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "gender":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gender"))
+			it.Gender, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10712,6 +10997,30 @@ func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
 			it.LastName, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "birthdate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("birthdate"))
+			it.Birthdate, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "address":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
+			it.Address, err = ec.unmarshalONewAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewAddress(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "commerce":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commerce"))
+			it.Commerce, err = ec.unmarshalONewCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCommerce(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10816,6 +11125,16 @@ func (ec *executionContext) _Address(ctx context.Context, sel ast.SelectionSet, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Address")
+		case "id":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Address_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "number":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Address_number(ctx, field, obj)
@@ -11418,6 +11737,16 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
+		case "siret":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_siret(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Commerce_name(ctx, field, obj)
@@ -11451,16 +11780,6 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 		case "address":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Commerce_address(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "addressDetailed":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Commerce_addressDetailed(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -13170,6 +13489,16 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "phone":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._User_phone(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "role":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._User_role(ctx, field, obj)
@@ -13180,6 +13509,13 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "gender":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._User_gender(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
 		case "firstName":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._User_firstName(ctx, field, obj)
@@ -13190,6 +13526,30 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "lastName":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._User_lastName(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "birthdate":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._User_birthdate(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "addresses":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._User_addresses(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "defaultAddress":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._User_defaultAddress(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -13689,6 +14049,60 @@ func (ec *executionContext) marshalNAddress2cheminᚑduᚑlocalᚗbzhᚋgraphql�
 	return ec._Address(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNAddress2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐAddressᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Address) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐAddress(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐAddress(ctx context.Context, sel ast.SelectionSet, v *model.Address) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Address(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNBasketCommerce2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐBasketCommerceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.BasketCommerce) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -13944,6 +14358,11 @@ func (ec *executionContext) marshalNCCProduct2ᚖcheminᚑduᚑlocalᚗbzhᚋgra
 		return graphql.Null
 	}
 	return ec._CCProduct(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNChangesAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesAddress(ctx context.Context, v interface{}) (*model.ChangesAddress, error) {
+	res, err := ec.unmarshalInputChangesAddress(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNChangesCommerce2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
@@ -15290,6 +15709,13 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) marshalOAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐAddress(ctx context.Context, sel ast.SelectionSet, v *model.Address) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Address(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOBasket2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐBasket(ctx context.Context, sel ast.SelectionSet, v *model.Basket) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -15321,6 +15747,26 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOChangesAddress2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesAddressᚄ(ctx context.Context, v interface{}) ([]*model.ChangesAddress, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.ChangesAddress, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNChangesAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesAddress(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOChangesAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesAddress(ctx context.Context, v interface{}) (*model.ChangesAddress, error) {
@@ -15496,6 +15942,14 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
+func (ec *executionContext) unmarshalONewAddress2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewAddress(ctx context.Context, v interface{}) (*model.NewAddress, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputNewAddress(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalONewBusinessHours2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewBusinessHours(ctx context.Context, v interface{}) (*model.NewBusinessHours, error) {
 	if v == nil {
 		return nil, nil
@@ -15522,6 +15976,14 @@ func (ec *executionContext) unmarshalONewCCProcuct2ᚕᚖcheminᚑduᚑlocalᚗb
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalONewCommerce2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewCommerce(ctx context.Context, v interface{}) (*model.NewCommerce, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputNewCommerce(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalONewPanierProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐNewPanierProductᚄ(ctx context.Context, v interface{}) ([]*model.NewPanierProduct, error) {

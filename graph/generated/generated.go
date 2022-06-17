@@ -1772,6 +1772,7 @@ input ChangesUser {
   birthdate: Time
 
   addresses: [ChangesAddress!]
+  defaultAddressID: String
 
   registedPaymentMethods: [ChangesRegistedPaymentMethod!]
   defaultPaymentMethod: String

@@ -24,6 +24,7 @@ type Product struct {
 	Tva         float64            `bson:"tva"`
 	IsBreton    bool               `bson:"isBreton"`
 	Tags        []string           `bson:"tags"`
+	Allergens   []string           `bson:"allergens"`
 	Categories  []string           `bson:"categories"`
 }
 
@@ -37,6 +38,7 @@ func (product *Product) ToModel() *model.Product {
 		Tva:         product.Tva,
 		IsBreton:    product.IsBreton,
 		Tags:        product.Tags,
+		Allergens:   product.Allergens,
 		Categories:  product.Categories,
 	}
 }
@@ -86,6 +88,7 @@ func Create(commerceID string, input model.NewProduct) (*Product, error) {
 		Tva:         input.Tva,
 		IsBreton:    input.IsBreton,
 		Tags:        input.Tags,
+		Allergens:   input.Allergens,
 		Categories:  input.Categories,
 	}
 

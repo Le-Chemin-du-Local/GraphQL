@@ -248,6 +248,7 @@ type NewProduct struct {
 	Tva         float64         `json:"tva"`
 	IsBreton    bool            `json:"isBreton"`
 	Tags        []string        `json:"tags"`
+	Allergens   []string        `json:"allergens"`
 	Categories  []string        `json:"categories"`
 	Image       *graphql.Upload `json:"image"`
 }
@@ -298,6 +299,7 @@ type Product struct {
 	Tva         float64  `json:"tva"`
 	IsBreton    bool     `json:"isBreton"`
 	Tags        []string `json:"tags"`
+	Allergens   []string `json:"allergens"`
 	Categories  []string `json:"categories"`
 }
 

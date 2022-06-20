@@ -244,6 +244,7 @@ type ComplexityRoot struct {
 	}
 
 	Product struct {
+		Allergens   func(childComplexity int) int
 		Categories  func(childComplexity int) int
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -1238,6 +1239,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PanierProduct.Quantity(childComplexity), true
 
+	case "Product.allergens":
+		if e.complexity.Product.Allergens == nil {
+			break
+		}
+
+		return e.complexity.Product.Allergens(childComplexity), true
+
 	case "Product.categories":
 		if e.complexity.Product.Categories == nil {
 			break
@@ -1947,6 +1955,7 @@ type Product {
   isBreton: Boolean!
 
   tags: [String!]
+  allergens: [String!]
   categories: [String!]!
 }
 
@@ -1976,6 +1985,7 @@ input NewProduct {
   isBreton: Boolean!
 
   tags: [String!]
+  allergens: [String!]
   categories: [String!]!
 
   image: Upload
@@ -1990,6 +2000,7 @@ input ChangesProduct {
   isBreton: Boolean
 
   tags: [String!]
+  allergens: [String!]
   categories: [String!]
 
   image: Upload
@@ -7303,6 +7314,38 @@ func (ec *executionContext) _Product_tags(ctx context.Context, field graphql.Col
 	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Product_allergens(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Allergens, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Product_categories(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -10922,6 +10965,14 @@ func (ec *executionContext) unmarshalInputNewProduct(ctx context.Context, obj in
 			if err != nil {
 				return it, err
 			}
+		case "allergens":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("allergens"))
+			it.Allergens, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "categories":
 			var err error
 
@@ -12954,6 +13005,13 @@ func (ec *executionContext) _Product(ctx context.Context, sel ast.SelectionSet, 
 		case "tags":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Product_tags(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "allergens":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Product_allergens(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

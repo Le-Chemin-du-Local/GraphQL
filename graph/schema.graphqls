@@ -281,6 +281,7 @@ type Product {
   isBreton: Boolean!
 
   tags: [String!]
+  allergens: [String!]
   categories: [String!]!
 }
 
@@ -310,6 +311,7 @@ input NewProduct {
   isBreton: Boolean!
 
   tags: [String!]
+  allergens: [String!]
   categories: [String!]!
 
   image: Upload
@@ -324,6 +326,7 @@ input ChangesProduct {
   isBreton: Boolean
 
   tags: [String!]
+  allergens: [String!]
   categories: [String!]
 
   image: Upload

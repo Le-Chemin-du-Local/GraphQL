@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
@@ -337,7 +338,7 @@ func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string
 	}
 
 	// Puis on génère le token
-	user, err := users.GetUserByEmail(input.Email)
+	user, err := users.GetUserByEmail(strings.ToLower(input.Email))
 
 	if user == nil || err != nil {
 		return "", err

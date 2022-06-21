@@ -178,7 +178,7 @@ func CommerceGetForCommand(commandID string) ([]CommerceCommand, error) {
 	return commerceCommands, nil
 }
 
-func CommerceGetPaginated(startValue *string, first int, commerceID *string) ([]CommerceCommand, error) {
+func CommerceGetPaginated(startValue *string, first int, filter *model.CommerceCommandsFilter) ([]CommerceCommand, error) {
 	var finalFilter bson.M
 
 	if startValue != nil {
@@ -197,8 +197,8 @@ func CommerceGetPaginated(startValue *string, first int, commerceID *string) ([]
 		finalFilter = bson.M{}
 	}
 
-	if commerceID != nil {
-		commerceObjectID, err := primitive.ObjectIDFromHex(*commerceID)
+	if filter != nil && filter.CommerceID != nil {
+		commerceObjectID, err := primitive.ObjectIDFromHex(*filter.CommerceID)
 
 		if err != nil {
 			return nil, err
@@ -210,6 +210,19 @@ func CommerceGetPaginated(startValue *string, first int, commerceID *string) ([]
 				{
 					"commerceID": bson.M{
 						"$eq": commerceObjectID,
+					},
+				},
+			},
+		}
+	}
+
+	if filter != nil && filter.Status != nil {
+		finalFilter = bson.M{
+			"$and": []bson.M{
+				finalFilter,
+				{
+					"status": bson.M{
+						"$in": filter.Status,
 					},
 				},
 			},

@@ -934,86 +934,90 @@ func (r *queryResolver) Commands(ctx context.Context, first *int, after *string,
 }
 
 func (r *queryResolver) CommerceCommands(ctx context.Context, first *int, after *string, filter *model.CommerceCommandsFilter) (*model.CommerceCommandConnection, error) {
-	// user := auth.ForContext(ctx)
+	if filter == nil {
+		filter = &model.CommerceCommandsFilter{}
+	}
 
-	// if user.Role != users.USERROLE_STOREKEEPER && commerceID == nil {
-	// 	return nil, &commands.MustSpecifyCommerceIDError{}
-	// }
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return nil, &users.UserAccessDenied{}
+	}
 
-	// // Si l'utilisateur est un commerçant, il doit créer des produits
-	// // pour son commerce
-	// if user.Role == users.USERROLE_STOREKEEPER {
-	// 	databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+	if filter.CommerceID == nil {
+		userIDValue := user.ID.Hex()
 
-	// 	// Cela permet aussi d'éviter qu'un commerçant créer un
-	// 	// produit sans commerce
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
+		databaseCommerce, err := commerces.GetForUser(userIDValue)
 
-	// 	databaseCommerceID := databaseCommerce.ID.Hex()
-	// 	commerceID = &databaseCommerceID
-	// }
+		if err != nil {
+			return nil, err
+		}
 
-	// var decodedCursor *string
+		if databaseCommerce == nil {
+			return nil, &commerces.CommerceErrorNotFound{}
+		}
 
-	// if after != nil {
-	// 	bytes, err := base64.StdEncoding.DecodeString(*after)
+		commerceID := databaseCommerce.ID.Hex()
+		filter.CommerceID = &commerceID
+	}
 
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
+	var decodedCursor *string
 
-	// 	decodedCursorString := string(bytes)
-	// 	decodedCursor = &decodedCursorString
-	// }
+	if after != nil {
+		bytes, err := base64.StdEncoding.DecodeString(*after)
 
-	// databaseCommerceCommands, err := commands.CommerceGetPaginated(decodedCursor, *first, commerceID)
+		if err != nil {
+			return nil, err
+		}
 
-	// if err != nil {
-	// 	return nil, err
-	// }
+		decodedCursorString := string(bytes)
+		decodedCursor = &decodedCursorString
+	}
 
-	// // On construit les edges
-	// edges := []*model.CommerceCommandEdge{}
+	databaseCommands, err := commands.CommerceGetPaginated(decodedCursor, *first, filter)
 
-	// for _, datadatabaseCommerceCommand := range databaseCommerceCommands {
-	// 	commandEdge := model.CommerceCommandEdge{
-	// 		Cursor: base64.StdEncoding.EncodeToString([]byte(datadatabaseCommerceCommand.ID.Hex())),
-	// 		Node:   datadatabaseCommerceCommand.ToModel(),
-	// 	}
+	if err != nil {
+		return nil, err
+	}
 
-	// 	edges = append(edges, &commandEdge)
-	// }
+	// On construit les edges
+	edges := []*model.CommerceCommandEdge{}
 
-	// itemCount := len(edges)
+	for _, datadatabaseCommand := range databaseCommands {
+		commandEdge := model.CommerceCommandEdge{
+			Cursor: base64.StdEncoding.EncodeToString([]byte(datadatabaseCommand.ID.Hex())),
+			Node:   datadatabaseCommand.ToModel(),
+		}
 
-	// // Si jamais il n'y a pas de command, on veut quand même renvoyer un
-	// // tableau vide
-	// if itemCount == 0 {
-	// 	return &model.CommerceCommandConnection{
-	// 		Edges: edges,
-	// 		PageInfo: &model.CommerceCommandPageInfo{
-	// 			HasNextPage: false,
-	// 		},
-	// 	}, nil
-	// }
+		edges = append(edges, &commandEdge)
+	}
 
-	// hasNextPage := !databaseCommerceCommands[itemCount-1].IsLast()
+	itemCount := len(edges)
 
-	// pageInfo := model.CommerceCommandPageInfo{
-	// 	StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
-	// 	EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
-	// 	HasNextPage: hasNextPage,
-	// }
+	// Si jamais il n'y a pas de command, on veut quand même renvoyer un
+	// tableau vide
+	if itemCount == 0 {
+		return &model.CommerceCommandConnection{
+			Edges: edges,
+			PageInfo: &model.CommerceCommandPageInfo{
+				HasNextPage: false,
+			},
+		}, nil
+	}
 
-	// connection := model.CommerceCommandConnection{
-	// 	Edges:    edges[:itemCount],
-	// 	PageInfo: &pageInfo,
-	// }
+	hasNextPage := !databaseCommands[itemCount-1].IsLast()
 
-	// return &connection, nil
-	return nil, nil
+	pageInfo := model.CommerceCommandPageInfo{
+		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
+		EndCursor:   base64.StdEncoding.EncodeToString([]byte(edges[itemCount-1].Node.ID)),
+		HasNextPage: hasNextPage,
+	}
+
+	connection := model.CommerceCommandConnection{
+		Edges:    edges[:itemCount],
+		PageInfo: &pageInfo,
+	}
+
+	return &connection, nil
 }
 
 func (r *queryResolver) Command(ctx context.Context, id string) (*model.Command, error) {

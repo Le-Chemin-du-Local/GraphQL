@@ -40,6 +40,12 @@ type User struct {
 }
 
 func (user *User) ToModel() *model.User {
+	addresses := []*model.Address{}
+
+	for _, address := range user.Addresses {
+		addresses = append(addresses, address.ToModel())
+	}
+
 	return &model.User{
 		ID:        user.ID.Hex(),
 		CreatedAt: &user.CreatedAt,
@@ -49,6 +55,7 @@ func (user *User) ToModel() *model.User {
 		Gender:    user.Gender,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
+		Addresses: addresses,
 		Birthdate: user.Birthdate,
 	}
 }

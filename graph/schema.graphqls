@@ -279,6 +279,7 @@ type Product {
   unit: String!
   tva: Float!
   isBreton: Boolean!
+  hasGluten: Boolean!
 
   tags: [String!]
   allergens: [String!]
@@ -309,6 +310,7 @@ input NewProduct {
   unit: String!
   tva: Float!
   isBreton: Boolean!
+  hasGluten: Boolean!
 
   tags: [String!]
   allergens: [String!]
@@ -324,6 +326,7 @@ input ChangesProduct {
   unit: String
   tva: Float
   isBreton: Boolean
+  hasGluten: Boolean
 
   tags: [String!]
   allergens: [String!]

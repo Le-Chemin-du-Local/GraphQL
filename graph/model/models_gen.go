@@ -247,6 +247,7 @@ type NewProduct struct {
 	Unit        string          `json:"unit"`
 	Tva         float64         `json:"tva"`
 	IsBreton    bool            `json:"isBreton"`
+	HasGluten   bool            `json:"hasGluten"`
 	Tags        []string        `json:"tags"`
 	Allergens   []string        `json:"allergens"`
 	Categories  []string        `json:"categories"`
@@ -298,6 +299,7 @@ type Product struct {
 	Unit        string   `json:"unit"`
 	Tva         float64  `json:"tva"`
 	IsBreton    bool     `json:"isBreton"`
+	HasGluten   bool     `json:"hasGluten"`
 	Tags        []string `json:"tags"`
 	Allergens   []string `json:"allergens"`
 	Categories  []string `json:"categories"`

@@ -247,6 +247,7 @@ type ComplexityRoot struct {
 		Allergens   func(childComplexity int) int
 		Categories  func(childComplexity int) int
 		Description func(childComplexity int) int
+		HasGluten   func(childComplexity int) int
 		ID          func(childComplexity int) int
 		IsBreton    func(childComplexity int) int
 		Name        func(childComplexity int) int
@@ -1260,6 +1261,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Product.Description(childComplexity), true
 
+	case "Product.hasGluten":
+		if e.complexity.Product.HasGluten == nil {
+			break
+		}
+
+		return e.complexity.Product.HasGluten(childComplexity), true
+
 	case "Product.id":
 		if e.complexity.Product.ID == nil {
 			break
@@ -1953,6 +1961,7 @@ type Product {
   unit: String!
   tva: Float!
   isBreton: Boolean!
+  hasGluten: Boolean!
 
   tags: [String!]
   allergens: [String!]
@@ -1983,6 +1992,7 @@ input NewProduct {
   unit: String!
   tva: Float!
   isBreton: Boolean!
+  hasGluten: Boolean!
 
   tags: [String!]
   allergens: [String!]
@@ -1998,6 +2008,7 @@ input ChangesProduct {
   unit: String
   tva: Float
   isBreton: Boolean
+  hasGluten: Boolean
 
   tags: [String!]
   allergens: [String!]
@@ -7282,6 +7293,41 @@ func (ec *executionContext) _Product_isBreton(ctx context.Context, field graphql
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Product_hasGluten(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasGluten, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Product_tags(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -10957,6 +11003,14 @@ func (ec *executionContext) unmarshalInputNewProduct(ctx context.Context, obj in
 			if err != nil {
 				return it, err
 			}
+		case "hasGluten":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasGluten"))
+			it.HasGluten, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "tags":
 			var err error
 
@@ -12995,6 +13049,16 @@ func (ec *executionContext) _Product(ctx context.Context, sel ast.SelectionSet, 
 		case "isBreton":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Product_isBreton(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hasGluten":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Product_hasGluten(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)

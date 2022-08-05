@@ -310,7 +310,7 @@ func (r *commerceCommandResolver) User(ctx context.Context, obj *model.CommerceC
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
 	// On doit d'abord vérifier que l'email n'est pas déjà prise
-	existingUser, err := users.GetUserByEmail(input.Email)
+	existingUser, err := users.GetUserByEmail(strings.ToLower(input.Email))
 
 	if existingUser != nil {
 		return nil, &users.UserEmailAlreadyExistsError{}

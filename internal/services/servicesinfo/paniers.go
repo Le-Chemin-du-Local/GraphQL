@@ -4,6 +4,7 @@ import "chemin-du-local.bzh/graphql/graph/model"
 
 func Paniers() model.ServiceInfo {
 	return model.ServiceInfo{
+		ID:               "PANIERS",
 		Name:             "Paniers",
 		ShortDescription: "Le service de Paniers",
 		LongDescription:  "Je ne vais pas me faire trop chier sur la description pour l'instant, mais je vous aime quand même <3",

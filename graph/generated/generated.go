@@ -303,6 +303,7 @@ type ComplexityRoot struct {
 	}
 
 	ServiceInfo struct {
+		ID                    func(childComplexity int) int
 		LongDescription       func(childComplexity int) int
 		MonthAdvantages       func(childComplexity int) int
 		MonthConditions       func(childComplexity int) int
@@ -1571,6 +1572,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Schedule.Opening(childComplexity), true
 
+	case "ServiceInfo.id":
+		if e.complexity.ServiceInfo.ID == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.ID(childComplexity), true
+
 	case "ServiceInfo.longDescription":
 		if e.complexity.ServiceInfo.LongDescription == nil {
 			break
@@ -1849,6 +1857,7 @@ input ChangesAddress {
 ##############
 
 type ServiceInfo {
+  id: String!
   name: String!
   shortDescription: String!
   longDescription: String!
@@ -8715,6 +8724,41 @@ func (ec *executionContext) _Schedule_closing(ctx context.Context, field graphql
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _ServiceInfo_id(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ServiceInfo_name(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -14316,6 +14360,16 @@ func (ec *executionContext) _ServiceInfo(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ServiceInfo")
+		case "id":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "name":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._ServiceInfo_name(ctx, field, obj)

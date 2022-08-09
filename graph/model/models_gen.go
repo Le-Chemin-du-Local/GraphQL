@@ -343,6 +343,7 @@ type ScheduleInput struct {
 }
 
 type ServiceInfo struct {
+	ID                    string   `json:"id"`
 	Name                  string   `json:"name"`
 	ShortDescription      string   `json:"shortDescription"`
 	LongDescription       string   `json:"longDescription"`

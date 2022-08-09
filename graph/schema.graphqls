@@ -44,6 +44,7 @@ input ChangesAddress {
 ##############
 
 type ServiceInfo {
+  id: String!
   name: String!
   shortDescription: String!
   longDescription: String!

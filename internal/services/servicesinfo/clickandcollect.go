@@ -4,6 +4,7 @@ import "chemin-du-local.bzh/graphql/graph/model"
 
 func ClickAndCollect() model.ServiceInfo {
 	return model.ServiceInfo{
+		ID:               "CLICKANDCOLLECT",
 		Name:             "Click&Collect",
 		ShortDescription: "Le service de Click&Collect",
 		LongDescription:  "Je ne vais pas me faire trop chier sur la description pour l'instant, mais je vous aime quand même <3",

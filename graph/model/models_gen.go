@@ -342,6 +342,18 @@ type ScheduleInput struct {
 	Closing string `json:"closing"`
 }
 
+type ServiceInfo struct {
+	Name                  string   `json:"name"`
+	ShortDescription      string   `json:"shortDescription"`
+	LongDescription       string   `json:"longDescription"`
+	MonthPrice            float64  `json:"monthPrice"`
+	MonthConditions       []string `json:"monthConditions"`
+	MonthAdvantages       []string `json:"monthAdvantages"`
+	TransactionPercent    float64  `json:"transactionPercent"`
+	TransactionConditions []string `json:"transactionConditions"`
+	TransactionAdvantages []string `json:"transactionAdvantages"`
+}
+
 type Role string
 
 const (

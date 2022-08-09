@@ -20,6 +20,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/services/clickandcollect"
 	"chemin-du-local.bzh/graphql/internal/services/commands"
 	"chemin-du-local.bzh/graphql/internal/services/paniers"
+	"chemin-du-local.bzh/graphql/internal/services/servicesinfo"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/geojson"
 	"chemin-du-local.bzh/graphql/pkg/jwt"
@@ -1032,6 +1033,29 @@ func (r *queryResolver) Command(ctx context.Context, id string) (*model.Command,
 	}
 
 	return databaseCommand.ToModel(), nil
+}
+
+func (r *queryResolver) AllServicesInfo(ctx context.Context) ([]*model.ServiceInfo, error) {
+	clickandcollect := servicesinfo.ClickAndCollect()
+	paniers := servicesinfo.Paniers()
+
+	return []*model.ServiceInfo{
+		&clickandcollect,
+		&paniers,
+	}, nil
+}
+
+func (r *queryResolver) ServiceInfo(ctx context.Context, id string) (*model.ServiceInfo, error) {
+	clickandcollect := servicesinfo.ClickAndCollect()
+	paniers := servicesinfo.Paniers()
+
+	if strings.Contains(id, "CLICKANDCOLLECT") {
+		return &clickandcollect, nil
+	} else if strings.Contains(id, "PANIERS") {
+		return &paniers, nil
+	}
+
+	return nil, &servicesinfo.ServiceNotFoundError{}
 }
 
 func (r *queryResolver) Panier(ctx context.Context, id string) (*model.Panier, error) {

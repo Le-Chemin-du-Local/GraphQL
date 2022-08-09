@@ -40,6 +40,24 @@ input ChangesAddress {
 }
 
 ##############
+## SERVICES ##
+##############
+
+type ServiceInfo {
+  name: String!
+  shortDescription: String!
+  longDescription: String!
+
+  monthPrice: Float!
+  monthConditions: [String!]!
+  monthAdvantages: [String!]!
+
+  transactionPercent: Float!
+  transactionConditions: [String!]!
+  transactionAdvantages: [String!]!
+}
+
+##############
 ## PAYEMENT ##
 ##############
 
@@ -194,6 +212,11 @@ type Commerce { # Ici on utilise le nom "Commerce"
   # Services
   services: [String!]!
   productsAvailableForClickAndCollect: [Product!]!
+
+  firstBillingDate: Time
+  balance: Float!
+  dueBalance: Float!
+
 
   # Panier
   paniers(first: Int = 10, after: ID, filters: PanierFilter): PanierConnection!
@@ -617,6 +640,9 @@ type Query {
   commerceCommands(first: Int = 5, after: ID, filter: CommerceCommandsFilter): CommerceCommandConnection! @needAuthentication
 
   command(id: ID!): Command! @needAuthentication
+
+  allServicesInfo: [ServiceInfo!]!
+  serviceInfo(id: String!): ServiceInfo!
 
   # PANIERS
   panier(id: ID!): Panier!

@@ -124,12 +124,15 @@ type ComplexityRoot struct {
 
 	Commerce struct {
 		Address                             func(childComplexity int) int
+		Balance                             func(childComplexity int) int
 		BusinessHours                       func(childComplexity int) int
 		Categories                          func(childComplexity int) int
 		ClickAndCollectHours                func(childComplexity int) int
 		Description                         func(childComplexity int) int
+		DueBalance                          func(childComplexity int) int
 		Email                               func(childComplexity int) int
 		Facebook                            func(childComplexity int) int
+		FirstBillingDate                    func(childComplexity int) int
 		ID                                  func(childComplexity int) int
 		Instagram                           func(childComplexity int) int
 		Latitude                            func(childComplexity int) int
@@ -274,6 +277,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		AllServicesInfo  func(childComplexity int) int
 		Command          func(childComplexity int, id string) int
 		Commands         func(childComplexity int, first *int, after *string, filter *model.CommandsFilter) int
 		Commerce         func(childComplexity int, id *string) int
@@ -281,6 +285,7 @@ type ComplexityRoot struct {
 		Commerces        func(childComplexity int, first *int, after *string, filter *model.CommerceFilter) int
 		Panier           func(childComplexity int, id string) int
 		Product          func(childComplexity int, id string) int
+		ServiceInfo      func(childComplexity int, id string) int
 		User             func(childComplexity int, id *string) int
 		Users            func(childComplexity int) int
 	}
@@ -295,6 +300,18 @@ type ComplexityRoot struct {
 	Schedule struct {
 		Closing func(childComplexity int) int
 		Opening func(childComplexity int) int
+	}
+
+	ServiceInfo struct {
+		LongDescription       func(childComplexity int) int
+		MonthAdvantages       func(childComplexity int) int
+		MonthConditions       func(childComplexity int) int
+		MonthPrice            func(childComplexity int) int
+		Name                  func(childComplexity int) int
+		ShortDescription      func(childComplexity int) int
+		TransactionAdvantages func(childComplexity int) int
+		TransactionConditions func(childComplexity int) int
+		TransactionPercent    func(childComplexity int) int
 	}
 
 	User struct {
@@ -331,6 +348,7 @@ type CommerceResolver interface {
 	Products(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.ProductFilter) (*model.ProductConnection, error)
 
 	ProductsAvailableForClickAndCollect(ctx context.Context, obj *model.Commerce) ([]*model.Product, error)
+
 	Paniers(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.PanierFilter) (*model.PanierConnection, error)
 }
 type CommerceCommandResolver interface {
@@ -369,6 +387,8 @@ type QueryResolver interface {
 	Commands(ctx context.Context, first *int, after *string, filter *model.CommandsFilter) (*model.CommandConnection, error)
 	CommerceCommands(ctx context.Context, first *int, after *string, filter *model.CommerceCommandsFilter) (*model.CommerceCommandConnection, error)
 	Command(ctx context.Context, id string) (*model.Command, error)
+	AllServicesInfo(ctx context.Context) ([]*model.ServiceInfo, error)
+	ServiceInfo(ctx context.Context, id string) (*model.ServiceInfo, error)
 	Panier(ctx context.Context, id string) (*model.Panier, error)
 }
 type UserResolver interface {
@@ -645,6 +665,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Commerce.Address(childComplexity), true
 
+	case "Commerce.balance":
+		if e.complexity.Commerce.Balance == nil {
+			break
+		}
+
+		return e.complexity.Commerce.Balance(childComplexity), true
+
 	case "Commerce.businessHours":
 		if e.complexity.Commerce.BusinessHours == nil {
 			break
@@ -673,6 +700,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Commerce.Description(childComplexity), true
 
+	case "Commerce.dueBalance":
+		if e.complexity.Commerce.DueBalance == nil {
+			break
+		}
+
+		return e.complexity.Commerce.DueBalance(childComplexity), true
+
 	case "Commerce.email":
 		if e.complexity.Commerce.Email == nil {
 			break
@@ -686,6 +720,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Facebook(childComplexity), true
+
+	case "Commerce.firstBillingDate":
+		if e.complexity.Commerce.FirstBillingDate == nil {
+			break
+		}
+
+		return e.complexity.Commerce.FirstBillingDate(childComplexity), true
 
 	case "Commerce.id":
 		if e.complexity.Commerce.ID == nil {
@@ -1366,6 +1407,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ProductPageInfo.StartCursor(childComplexity), true
 
+	case "Query.allServicesInfo":
+		if e.complexity.Query.AllServicesInfo == nil {
+			break
+		}
+
+		return e.complexity.Query.AllServicesInfo(childComplexity), true
+
 	case "Query.command":
 		if e.complexity.Query.Command == nil {
 			break
@@ -1450,6 +1498,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Product(childComplexity, args["id"].(string)), true
 
+	case "Query.serviceInfo":
+		if e.complexity.Query.ServiceInfo == nil {
+			break
+		}
+
+		args, err := ec.field_Query_serviceInfo_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ServiceInfo(childComplexity, args["id"].(string)), true
+
 	case "Query.user":
 		if e.complexity.Query.User == nil {
 			break
@@ -1510,6 +1570,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Schedule.Opening(childComplexity), true
+
+	case "ServiceInfo.longDescription":
+		if e.complexity.ServiceInfo.LongDescription == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.LongDescription(childComplexity), true
+
+	case "ServiceInfo.monthAdvantages":
+		if e.complexity.ServiceInfo.MonthAdvantages == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.MonthAdvantages(childComplexity), true
+
+	case "ServiceInfo.monthConditions":
+		if e.complexity.ServiceInfo.MonthConditions == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.MonthConditions(childComplexity), true
+
+	case "ServiceInfo.monthPrice":
+		if e.complexity.ServiceInfo.MonthPrice == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.MonthPrice(childComplexity), true
+
+	case "ServiceInfo.name":
+		if e.complexity.ServiceInfo.Name == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.Name(childComplexity), true
+
+	case "ServiceInfo.shortDescription":
+		if e.complexity.ServiceInfo.ShortDescription == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.ShortDescription(childComplexity), true
+
+	case "ServiceInfo.transactionAdvantages":
+		if e.complexity.ServiceInfo.TransactionAdvantages == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.TransactionAdvantages(childComplexity), true
+
+	case "ServiceInfo.transactionConditions":
+		if e.complexity.ServiceInfo.TransactionConditions == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.TransactionConditions(childComplexity), true
+
+	case "ServiceInfo.transactionPercent":
+		if e.complexity.ServiceInfo.TransactionPercent == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.TransactionPercent(childComplexity), true
 
 	case "User.addresses":
 		if e.complexity.User.Addresses == nil {
@@ -1722,6 +1845,24 @@ input ChangesAddress {
 }
 
 ##############
+## SERVICES ##
+##############
+
+type ServiceInfo {
+  name: String!
+  shortDescription: String!
+  longDescription: String!
+
+  monthPrice: Float!
+  monthConditions: [String!]!
+  monthAdvantages: [String!]!
+
+  transactionPercent: Float!
+  transactionConditions: [String!]!
+  transactionAdvantages: [String!]!
+}
+
+##############
 ## PAYEMENT ##
 ##############
 
@@ -1876,6 +2017,11 @@ type Commerce { # Ici on utilise le nom "Commerce"
   # Services
   services: [String!]!
   productsAvailableForClickAndCollect: [Product!]!
+
+  firstBillingDate: Time
+  balance: Float!
+  dueBalance: Float!
+
 
   # Panier
   paniers(first: Int = 10, after: ID, filters: PanierFilter): PanierConnection!
@@ -2299,6 +2445,9 @@ type Query {
   commerceCommands(first: Int = 5, after: ID, filter: CommerceCommandsFilter): CommerceCommandConnection! @needAuthentication
 
   command(id: ID!): Command! @needAuthentication
+
+  allServicesInfo: [ServiceInfo!]!
+  serviceInfo(id: String!): ServiceInfo!
 
   # PANIERS
   panier(id: ID!): Panier!
@@ -2841,6 +2990,21 @@ func (ec *executionContext) field_Query_product_args(ctx context.Context, rawArg
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_serviceInfo_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4799,6 +4963,108 @@ func (ec *executionContext) _Commerce_productsAvailableForClickAndCollect(ctx co
 	res := resTmp.([]*model.Product)
 	fc.Result = res
 	return ec.marshalNProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProductᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_firstBillingDate(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FirstBillingDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_balance(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Balance, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_dueBalance(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DueBalance, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Commerce_paniers(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
@@ -8055,6 +8321,83 @@ func (ec *executionContext) _Query_command(ctx context.Context, field graphql.Co
 	return ec.marshalNCommand2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐCommand(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_allServicesInfo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AllServicesInfo(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ServiceInfo)
+	fc.Result = res
+	return ec.marshalNServiceInfo2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐServiceInfoᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_serviceInfo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_serviceInfo_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ServiceInfo(rctx, args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ServiceInfo)
+	fc.Result = res
+	return ec.marshalNServiceInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐServiceInfo(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_panier(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -8370,6 +8713,321 @@ func (ec *executionContext) _Schedule_closing(ctx context.Context, field graphql
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceInfo_name(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceInfo_shortDescription(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ShortDescription, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceInfo_longDescription(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LongDescription, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceInfo_monthPrice(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MonthPrice, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceInfo_monthConditions(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MonthConditions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceInfo_monthAdvantages(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MonthAdvantages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceInfo_transactionPercent(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TransactionPercent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceInfo_transactionConditions(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TransactionConditions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceInfo_transactionAdvantages(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TransactionAdvantages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -12044,6 +12702,33 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
+		case "firstBillingDate":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_firstBillingDate(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "balance":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_balance(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "dueBalance":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_dueBalance(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "paniers":
 			field := field
 
@@ -13431,6 +14116,52 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "allServicesInfo":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_allServicesInfo(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "serviceInfo":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_serviceInfo(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "panier":
 			field := field
 
@@ -13557,6 +14288,117 @@ func (ec *executionContext) _Schedule(ctx context.Context, sel ast.SelectionSet,
 		case "closing":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Schedule_closing(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var serviceInfoImplementors = []string{"ServiceInfo"}
+
+func (ec *executionContext) _ServiceInfo(ctx context.Context, sel ast.SelectionSet, obj *model.ServiceInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, serviceInfoImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ServiceInfo")
+		case "name":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_name(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "shortDescription":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_shortDescription(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "longDescription":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_longDescription(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "monthPrice":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_monthPrice(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "monthConditions":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_monthConditions(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "monthAdvantages":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_monthAdvantages(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "transactionPercent":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_transactionPercent(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "transactionConditions":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_transactionConditions(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "transactionAdvantages":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_transactionAdvantages(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -15457,6 +16299,64 @@ func (ec *executionContext) marshalNSchedule2ᚖcheminᚑduᚑlocalᚗbzhᚋgrap
 func (ec *executionContext) unmarshalNScheduleInput2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐScheduleInput(ctx context.Context, v interface{}) (*model.ScheduleInput, error) {
 	res, err := ec.unmarshalInputScheduleInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNServiceInfo2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐServiceInfo(ctx context.Context, sel ast.SelectionSet, v model.ServiceInfo) graphql.Marshaler {
+	return ec._ServiceInfo(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNServiceInfo2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐServiceInfoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ServiceInfo) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNServiceInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐServiceInfo(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNServiceInfo2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐServiceInfo(ctx context.Context, sel ast.SelectionSet, v *model.ServiceInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ServiceInfo(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

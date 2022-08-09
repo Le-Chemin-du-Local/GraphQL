@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 // Ici on utilise un modèle différent de celui généré car on
 // ne veut pas générer une requette pour certaines choses comme
 // le commerçant, les produits ou les commentaires temps
@@ -85,4 +87,7 @@ type Commerce struct {
 	BusinessHours        BusinessHours `json:"businessHours"`
 	ClickAndCollectHours BusinessHours `json:"clickAndCollectHours"`
 	Services             []string      `json:"services"`
+	FirstBillingDate     *time.Time    `json:"firstBillingDate"`
+	Balance              float64       `json:"balance"`
+	DueBalance           float64       `json:"dueBalance"`
 }

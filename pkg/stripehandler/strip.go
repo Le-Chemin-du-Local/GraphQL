@@ -183,6 +183,56 @@ func authentification(w http.ResponseWriter, r *http.Request) (*string, *users.U
 	return stripeCustomer, user
 }
 
+func authentificationForCommerce(w http.ResponseWriter, r *http.Request) (*string, *commerces.Commerce) {
+	// On doit créer le consumer Stripe si nécesaire
+	user := auth.ForContext(r.Context())
+
+	if user == nil {
+		http.Error(w, "access denied", http.StatusForbidden)
+		return nil, nil
+	}
+
+	commerce, err := commerces.GetForUser(user.ID.Hex())
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil, nil
+	}
+
+	if commerce == nil {
+		http.Error(w, "l'utilisateur connecté ne possède pas de commerce", http.StatusBadRequest)
+		return nil, nil
+	}
+
+	var stripeCustomer *string
+
+	if commerce.StripID == nil {
+		commerceStripeName := "(Commerce) " + commerce.Name
+		params := &stripe.CustomerParams{
+			Email: &user.Email,
+			Name:  &commerceStripeName,
+		}
+
+		createdStripeCustomer, err := customer.New(params)
+		stripeCustomer = &createdStripeCustomer.ID
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		commerce.StripID = stripeCustomer
+		err = commerces.Update(commerce, nil, nil)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	} else {
+		stripeCustomer = commerce.StripID
+	}
+
+	return stripeCustomer, commerce
+}
+
 func HanldeCreateSetupIntent(w http.ResponseWriter, r *http.Request) {
 	// Set Stripe API key
 	apiKey := config.Cfg.Stripe.Key
@@ -194,6 +244,7 @@ func HanldeCreateSetupIntent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
+		IsForCommerce   *bool   `json:"isForCommerce"`
 		UseStripeSDK    *bool   `json:"useStripeSKD"`
 		PaymentMethodID *string `json:"paymentMethodId"`
 	}
@@ -203,7 +254,27 @@ func HanldeCreateSetupIntent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var stripeCustomer, _ = authentification(w, r)
+	var stripeCustomer *string
+	var commerce *commerces.Commerce
+
+	if req.IsForCommerce != nil && *req.IsForCommerce {
+		stripeCustomer, commerce = authentificationForCommerce(w, r)
+
+		// Il faut mettre à jour le commerce
+		if commerce.LastBilledDate == nil {
+			now := time.Now().Local()
+			commerce.LastBilledDate = &now
+
+			err := commerces.Update(commerce, nil, nil)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+	} else {
+		stripeCustomer, _ = authentification(w, r)
+	}
 
 	if req.PaymentMethodID != nil {
 		params := &stripe.SetupIntentParams{

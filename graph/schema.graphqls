@@ -50,12 +50,18 @@ type ServiceInfo {
   longDescription: String!
 
   monthPrice: Float!
-  monthConditions: [String!]!
+  monthMinimumAllowedCA: Float!
+  monthRangePercentage: Float!
+  monthAugmentationPerRangePercentage: Float!
   monthAdvantages: [String!]!
 
-  transactionPercent: Float!
-  transactionConditions: [String!]!
+  transactionPercentage: Float!
   transactionAdvantages: [String!]!
+}
+
+input ChangesService {
+  serviceID: String!
+  updateType: String!
 }
 
 ##############
@@ -214,7 +220,7 @@ type Commerce { # Ici on utilise le nom "Commerce"
   services: [String!]!
   productsAvailableForClickAndCollect: [Product!]!
 
-  firstBillingDate: Time
+  lastBilledDate: Time
   balance: Float!
   dueBalance: Float!
 
@@ -283,6 +289,8 @@ input ChangesCommerce {
   facebook: String
   twitter: String
   instagram: String
+
+  services: [ChangesService!]
 
   businessHours: ChangesBusinessHours
   clickAndCollectHours: ChangesBusinessHours

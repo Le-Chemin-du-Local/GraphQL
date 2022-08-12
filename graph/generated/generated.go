@@ -132,9 +132,9 @@ type ComplexityRoot struct {
 		DueBalance                          func(childComplexity int) int
 		Email                               func(childComplexity int) int
 		Facebook                            func(childComplexity int) int
-		FirstBillingDate                    func(childComplexity int) int
 		ID                                  func(childComplexity int) int
 		Instagram                           func(childComplexity int) int
+		LastBilledDate                      func(childComplexity int) int
 		Latitude                            func(childComplexity int) int
 		Longitude                           func(childComplexity int) int
 		Name                                func(childComplexity int) int
@@ -303,16 +303,17 @@ type ComplexityRoot struct {
 	}
 
 	ServiceInfo struct {
-		ID                    func(childComplexity int) int
-		LongDescription       func(childComplexity int) int
-		MonthAdvantages       func(childComplexity int) int
-		MonthConditions       func(childComplexity int) int
-		MonthPrice            func(childComplexity int) int
-		Name                  func(childComplexity int) int
-		ShortDescription      func(childComplexity int) int
-		TransactionAdvantages func(childComplexity int) int
-		TransactionConditions func(childComplexity int) int
-		TransactionPercent    func(childComplexity int) int
+		ID                                  func(childComplexity int) int
+		LongDescription                     func(childComplexity int) int
+		MonthAdvantages                     func(childComplexity int) int
+		MonthAugmentationPerRangePercentage func(childComplexity int) int
+		MonthMinimumAllowedCa               func(childComplexity int) int
+		MonthPrice                          func(childComplexity int) int
+		MonthRangePercentage                func(childComplexity int) int
+		Name                                func(childComplexity int) int
+		ShortDescription                    func(childComplexity int) int
+		TransactionAdvantages               func(childComplexity int) int
+		TransactionPercentage               func(childComplexity int) int
 	}
 
 	User struct {
@@ -722,13 +723,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Commerce.Facebook(childComplexity), true
 
-	case "Commerce.firstBillingDate":
-		if e.complexity.Commerce.FirstBillingDate == nil {
-			break
-		}
-
-		return e.complexity.Commerce.FirstBillingDate(childComplexity), true
-
 	case "Commerce.id":
 		if e.complexity.Commerce.ID == nil {
 			break
@@ -742,6 +736,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Instagram(childComplexity), true
+
+	case "Commerce.lastBilledDate":
+		if e.complexity.Commerce.LastBilledDate == nil {
+			break
+		}
+
+		return e.complexity.Commerce.LastBilledDate(childComplexity), true
 
 	case "Commerce.latitude":
 		if e.complexity.Commerce.Latitude == nil {
@@ -1593,12 +1594,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceInfo.MonthAdvantages(childComplexity), true
 
-	case "ServiceInfo.monthConditions":
-		if e.complexity.ServiceInfo.MonthConditions == nil {
+	case "ServiceInfo.monthAugmentationPerRangePercentage":
+		if e.complexity.ServiceInfo.MonthAugmentationPerRangePercentage == nil {
 			break
 		}
 
-		return e.complexity.ServiceInfo.MonthConditions(childComplexity), true
+		return e.complexity.ServiceInfo.MonthAugmentationPerRangePercentage(childComplexity), true
+
+	case "ServiceInfo.monthMinimumAllowedCA":
+		if e.complexity.ServiceInfo.MonthMinimumAllowedCa == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.MonthMinimumAllowedCa(childComplexity), true
 
 	case "ServiceInfo.monthPrice":
 		if e.complexity.ServiceInfo.MonthPrice == nil {
@@ -1606,6 +1614,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ServiceInfo.MonthPrice(childComplexity), true
+
+	case "ServiceInfo.monthRangePercentage":
+		if e.complexity.ServiceInfo.MonthRangePercentage == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.MonthRangePercentage(childComplexity), true
 
 	case "ServiceInfo.name":
 		if e.complexity.ServiceInfo.Name == nil {
@@ -1628,19 +1643,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceInfo.TransactionAdvantages(childComplexity), true
 
-	case "ServiceInfo.transactionConditions":
-		if e.complexity.ServiceInfo.TransactionConditions == nil {
+	case "ServiceInfo.transactionPercentage":
+		if e.complexity.ServiceInfo.TransactionPercentage == nil {
 			break
 		}
 
-		return e.complexity.ServiceInfo.TransactionConditions(childComplexity), true
-
-	case "ServiceInfo.transactionPercent":
-		if e.complexity.ServiceInfo.TransactionPercent == nil {
-			break
-		}
-
-		return e.complexity.ServiceInfo.TransactionPercent(childComplexity), true
+		return e.complexity.ServiceInfo.TransactionPercentage(childComplexity), true
 
 	case "User.addresses":
 		if e.complexity.User.Addresses == nil {
@@ -1863,12 +1871,18 @@ type ServiceInfo {
   longDescription: String!
 
   monthPrice: Float!
-  monthConditions: [String!]!
+  monthMinimumAllowedCA: Float!
+  monthRangePercentage: Float!
+  monthAugmentationPerRangePercentage: Float!
   monthAdvantages: [String!]!
 
-  transactionPercent: Float!
-  transactionConditions: [String!]!
+  transactionPercentage: Float!
   transactionAdvantages: [String!]!
+}
+
+input ChangesService {
+  serviceID: String!
+  updateType: String!
 }
 
 ##############
@@ -2027,7 +2041,7 @@ type Commerce { # Ici on utilise le nom "Commerce"
   services: [String!]!
   productsAvailableForClickAndCollect: [Product!]!
 
-  firstBillingDate: Time
+  lastBilledDate: Time
   balance: Float!
   dueBalance: Float!
 
@@ -2096,6 +2110,8 @@ input ChangesCommerce {
   facebook: String
   twitter: String
   instagram: String
+
+  services: [ChangesService!]
 
   businessHours: ChangesBusinessHours
   clickAndCollectHours: ChangesBusinessHours
@@ -4974,7 +4990,7 @@ func (ec *executionContext) _Commerce_productsAvailableForClickAndCollect(ctx co
 	return ec.marshalNProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProductᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Commerce_firstBillingDate(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+func (ec *executionContext) _Commerce_lastBilledDate(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4992,7 +5008,7 @@ func (ec *executionContext) _Commerce_firstBillingDate(ctx context.Context, fiel
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FirstBillingDate, nil
+		return obj.LastBilledDate, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8899,7 +8915,7 @@ func (ec *executionContext) _ServiceInfo_monthPrice(ctx context.Context, field g
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ServiceInfo_monthConditions(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+func (ec *executionContext) _ServiceInfo_monthMinimumAllowedCA(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -8917,7 +8933,7 @@ func (ec *executionContext) _ServiceInfo_monthConditions(ctx context.Context, fi
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.MonthConditions, nil
+		return obj.MonthMinimumAllowedCa, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8929,9 +8945,79 @@ func (ec *executionContext) _ServiceInfo_monthConditions(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceInfo_monthRangePercentage(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MonthRangePercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ServiceInfo_monthAugmentationPerRangePercentage(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ServiceInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MonthAugmentationPerRangePercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ServiceInfo_monthAdvantages(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
@@ -8969,7 +9055,7 @@ func (ec *executionContext) _ServiceInfo_monthAdvantages(ctx context.Context, fi
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ServiceInfo_transactionPercent(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+func (ec *executionContext) _ServiceInfo_transactionPercentage(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -8987,7 +9073,7 @@ func (ec *executionContext) _ServiceInfo_transactionPercent(ctx context.Context,
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TransactionPercent, nil
+		return obj.TransactionPercentage, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9002,41 +9088,6 @@ func (ec *executionContext) _ServiceInfo_transactionPercent(ctx context.Context,
 	res := resTmp.(float64)
 	fc.Result = res
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ServiceInfo_transactionConditions(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "ServiceInfo",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TransactionConditions, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]string)
-	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ServiceInfo_transactionAdvantages(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
@@ -10809,6 +10860,37 @@ func (ec *executionContext) unmarshalInputChangesRegistedPaymentMethod(ctx conte
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stripeID"))
 			it.StripeID, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputChangesService(ctx context.Context, obj interface{}) (model.ChangesService, error) {
+	var it model.ChangesService
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "serviceID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceID"))
+			it.ServiceID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateType"))
+			it.UpdateType, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -12746,9 +12828,9 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
-		case "firstBillingDate":
+		case "lastBilledDate":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Commerce_firstBillingDate(ctx, field, obj)
+				return ec._Commerce_lastBilledDate(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -14410,9 +14492,29 @@ func (ec *executionContext) _ServiceInfo(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "monthConditions":
+		case "monthMinimumAllowedCA":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._ServiceInfo_monthConditions(ctx, field, obj)
+				return ec._ServiceInfo_monthMinimumAllowedCA(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "monthRangePercentage":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_monthRangePercentage(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "monthAugmentationPerRangePercentage":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ServiceInfo_monthAugmentationPerRangePercentage(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -14430,19 +14532,9 @@ func (ec *executionContext) _ServiceInfo(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "transactionPercent":
+		case "transactionPercentage":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._ServiceInfo_transactionPercent(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "transactionConditions":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._ServiceInfo_transactionConditions(ctx, field, obj)
+				return ec._ServiceInfo_transactionPercentage(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -15402,6 +15494,11 @@ func (ec *executionContext) unmarshalNChangesProduct2map(ctx context.Context, v 
 
 func (ec *executionContext) unmarshalNChangesRegistedPaymentMethod2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesRegistedPaymentMethod(ctx context.Context, v interface{}) (*model.ChangesRegistedPaymentMethod, error) {
 	res, err := ec.unmarshalInputChangesRegistedPaymentMethod(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNChangesService2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesService(ctx context.Context, v interface{}) (*model.ChangesService, error) {
+	res, err := ec.unmarshalInputChangesService(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -16874,6 +16971,26 @@ func (ec *executionContext) unmarshalOChangesRegistedPaymentMethod2ᚕᚖchemin�
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
 		res[i], err = ec.unmarshalNChangesRegistedPaymentMethod2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesRegistedPaymentMethod(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOChangesService2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesServiceᚄ(ctx context.Context, v interface{}) ([]*model.ChangesService, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.ChangesService, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNChangesService2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐChangesService(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}

@@ -35,7 +35,9 @@ type Commerce struct {
 	ClickAndCollectHours                model.BusinessHours `bson:"clickAndCollectHours"`
 	Services                            []string            `bson:"services"`
 	ProductsAvailableForClickAndCollect []string            `bson:"productsAvailableForClickAndCollect"`
-	FirstBillingDate                    *time.Time          `bson:"firstBillingDate"`
+	StripID                             *string             `bson:"stripeID"`
+	UsedPaymentMethodID                 *string             `bson:"usedPaymentMethodID"`
+	LastBilledDate                      *time.Time          `bson:"lastBilledDate"`
 	Balance                             float64             `bson:"balance"`
 	DueBalance                          float64             `bson:"dueBalance"`
 }
@@ -59,7 +61,7 @@ func (commerce *Commerce) ToModel() *model.Commerce {
 		BusinessHours:        commerce.BusinessHours,
 		ClickAndCollectHours: commerce.ClickAndCollectHours,
 		Services:             commerce.Services,
-		FirstBillingDate:     commerce.FirstBillingDate,
+		LastBilledDate:       commerce.LastBilledDate,
 		Balance:              commerce.Balance,
 		DueBalance:           commerce.DueBalance,
 	}

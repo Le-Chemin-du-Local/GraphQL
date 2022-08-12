@@ -87,7 +87,7 @@ type Commerce struct {
 	BusinessHours        BusinessHours `json:"businessHours"`
 	ClickAndCollectHours BusinessHours `json:"clickAndCollectHours"`
 	Services             []string      `json:"services"`
-	FirstBillingDate     *time.Time    `json:"firstBillingDate"`
+	LastBilledDate       *time.Time    `json:"lastBilledDate"`
 	Balance              float64       `json:"balance"`
 	DueBalance           float64       `json:"dueBalance"`
 }

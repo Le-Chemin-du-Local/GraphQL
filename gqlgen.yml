@@ -68,3 +68,5 @@ models:
     model: "map[string]interface{}"
   ChangesPanier:
     model: "map[string]interface{}"
+  ChangesService:
+    model: "map[string]interface{}"

@@ -8,7 +8,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
+	"time"
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
@@ -398,8 +400,80 @@ func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, change
 		return nil, &commerces.CommerceErrorNotFound{}
 	}
 
+	// On a besoin d'un workaround pour les services
+	tempServices := databaseCommerce.Services
 	helper.ApplyChanges(changes, databaseCommerce)
+	databaseCommerce.Services = tempServices
 
+	// Les changements de service
+	if changes["services"] != nil {
+		servicesChanges := changes["services"].([]interface{})
+
+		for _, serviceChanges := range servicesChanges {
+			// On doit convertir la map en service
+			jsonString, _ := json.Marshal(serviceChanges)
+			castedServiceChange := model.ChangesService{}
+			json.Unmarshal(jsonString, &castedServiceChange)
+
+			var serviceInfo *model.ServiceInfo
+			nextBillingTime := databaseCommerce.LastBilledDate.AddDate(0, 0, 30)
+			nextBillingTimeRounded := time.Date(
+				nextBillingTime.Year(),
+				nextBillingTime.Month(),
+				nextBillingTime.Day(),
+				1, 0, 0, 0, time.Local,
+			)
+			nowRounded := time.Date(
+				time.Now().Year(),
+				time.Now().Month(),
+				time.Now().Day(),
+				1, 0, 0, 0, time.Local,
+			)
+
+			if strings.Contains(castedServiceChange.ServiceID, "CLICKANDCOLLECT") {
+				clickandcollectInfo := servicesinfo.ClickAndCollect()
+				serviceInfo = &clickandcollectInfo
+			}
+			if strings.Contains(castedServiceChange.ServiceID, "PANIERS") {
+				paniersInfo := servicesinfo.Paniers()
+				serviceInfo = &paniersInfo
+			}
+
+			if serviceInfo == nil {
+				return nil, &servicesinfo.ServiceNotFoundError{}
+			}
+
+			remainingDays := nextBillingTimeRounded.Sub(nowRounded).Hours() / 24
+			remainingPrice := serviceInfo.MonthPrice / 30 * remainingDays
+			remainingPriceRounded := math.Round(remainingPrice*100) / 100
+
+			if castedServiceChange.UpdateType == "ADD" {
+				if castedServiceChange.ServiceID[len(castedServiceChange.ServiceID)-1:] == "M" {
+					databaseCommerce.DueBalance = databaseCommerce.DueBalance + remainingPriceRounded
+				}
+
+				databaseCommerce.Services = append(databaseCommerce.Services, castedServiceChange.ServiceID)
+			}
+
+			if castedServiceChange.UpdateType == "UPDATE" {
+				for index, databaseService := range databaseCommerce.Services {
+					if strings.Contains(databaseService, strings.Split(castedServiceChange.ServiceID, "_")[0]) {
+						if strings.Split(castedServiceChange.ServiceID, "_")[1] == "M" {
+							if !strings.Contains(databaseService, "_UPDATE") {
+								databaseCommerce.DueBalance = databaseCommerce.DueBalance + remainingPriceRounded
+							}
+
+							databaseCommerce.Services[index] = castedServiceChange.ServiceID
+						} else {
+							databaseCommerce.Services[index] = databaseService + "_UPDATE"
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Les changements d'images
 	var image *graphql.Upload
 	var profilePicture *graphql.Upload
 

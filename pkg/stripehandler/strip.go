@@ -88,8 +88,6 @@ func order(user users.User, paymentMethod string, basket model.NewBasket) error 
 			return err
 		}
 
-		commerces.UpdateBalancesForOrder(commerce.CommerceID, int(price), priceClickAndCollect, pricePaniers)
-
 		// La command
 		databaseCommerceCommand, err := commands.CommerceCreate(model.NewCommerceCommand{
 			CommerceID:           commerce.CommerceID,
@@ -386,8 +384,6 @@ func HandleCompleteOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = commerces.UpdateBalancesForOrder(databaseCommerceCommand.CommerceID.Hex(), databaseCommerceCommand.Price, databaseCommerceCommand.PriceClickAndCollect, databaseCommerceCommand.PricePaniers)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -397,6 +393,13 @@ func HandleCompleteOrder(w http.ResponseWriter, r *http.Request) {
 
 	if req.PaymentIntentID != nil {
 		err := commands.CommerceUpdate(databaseCommerceCommand)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = commerces.UpdateBalancesForOrder(databaseCommerceCommand.CommerceID.Hex(), databaseCommerceCommand.Price, databaseCommerceCommand.PriceClickAndCollect, databaseCommerceCommand.PricePaniers)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -449,6 +452,13 @@ func HandleCompleteOrder(w http.ResponseWriter, r *http.Request) {
 
 		if pi.Status == stripe.PaymentIntentStatusSucceeded {
 			err := commands.CommerceUpdate(databaseCommerceCommand)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			err = commerces.UpdateBalancesForOrder(databaseCommerceCommand.CommerceID.Hex(), databaseCommerceCommand.Price, databaseCommerceCommand.PriceClickAndCollect, databaseCommerceCommand.PricePaniers)
 
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -2374,6 +2374,8 @@ input NewCommerceCommand {
   pickupDate: Time!
   paymentMethod: String!
   price: Int!
+  priceClickAndCollect: Float!
+  pricePaniers: Float!
 }
 
 input ChangesCommerceCommand {
@@ -11564,6 +11566,22 @@ func (ec *executionContext) unmarshalInputNewCommerceCommand(ctx context.Context
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
 			it.Price, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "priceClickAndCollect":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priceClickAndCollect"))
+			it.PriceClickAndCollect, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "pricePaniers":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pricePaniers"))
+			it.PricePaniers, err = ec.unmarshalNFloat2float64(ctx, v)
 			if err != nil {
 				return it, err
 			}

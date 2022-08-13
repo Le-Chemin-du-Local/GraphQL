@@ -553,6 +553,8 @@ input NewCommerceCommand {
   pickupDate: Time!
   paymentMethod: String!
   price: Int!
+  priceClickAndCollect: Float!
+  pricePaniers: Float!
 }
 
 input ChangesCommerceCommand {

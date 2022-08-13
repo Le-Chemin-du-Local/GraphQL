@@ -216,10 +216,12 @@ type NewCommerce struct {
 }
 
 type NewCommerceCommand struct {
-	CommerceID    string    `json:"commerceID"`
-	PickupDate    time.Time `json:"pickupDate"`
-	PaymentMethod string    `json:"paymentMethod"`
-	Price         int       `json:"price"`
+	CommerceID           string    `json:"commerceID"`
+	PickupDate           time.Time `json:"pickupDate"`
+	PaymentMethod        string    `json:"paymentMethod"`
+	Price                int       `json:"price"`
+	PriceClickAndCollect float64   `json:"priceClickAndCollect"`
+	PricePaniers         float64   `json:"pricePaniers"`
 }
 
 type NewPanier struct {

@@ -3,13 +3,16 @@ package commerces
 import (
 	"bytes"
 	"io/ioutil"
+	"math"
 	"os"
+	"strings"
 	"time"
 
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/address"
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
+	"chemin-du-local.bzh/graphql/internal/services/servicesinfo"
 	"chemin-du-local.bzh/graphql/pkg/geojson"
 	"github.com/99designs/gqlgen/graphql"
 	"go.mongodb.org/mongo-driver/bson"
@@ -235,6 +238,38 @@ func Update(
 			return err
 		}
 	}
+
+	return err
+}
+
+func UpdateBalancesForOrder(commerceID string, price int, priceClickAndCollect float64, pricePaniers float64) error {
+	commerce, err := GetById(commerceID)
+
+	if err != nil {
+		return err
+	}
+
+	if commerce == nil {
+		return &CommerceErrorNotFound{}
+	}
+
+	for _, service := range commerce.Services {
+		if strings.Contains(service, "CLICKANDCOLLECT_T") {
+			clickandcollectInfo := servicesinfo.ClickAndCollect()
+			priceToAdd := math.Round(clickandcollectInfo.TransactionPercentage*priceClickAndCollect) / 100
+
+			commerce.DueBalance = commerce.DueBalance + priceToAdd
+		} else if strings.Contains(service, "PANIERS_T") {
+			paniersInfo := servicesinfo.Paniers()
+			priceToAdd := math.Round(paniersInfo.TransactionPercentage*pricePaniers) / 100
+
+			commerce.DueBalance = commerce.DueBalance + priceToAdd
+		}
+	}
+
+	commerce.Balance = commerce.Balance + (float64(price) / 100)
+
+	err = Update(commerce, nil, nil)
 
 	return err
 }

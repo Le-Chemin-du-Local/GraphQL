@@ -23,48 +23,52 @@ import (
 	"github.com/stripe/stripe-go/v72/setupintent"
 )
 
-func calculateOrderAmountForCommerce(commerce model.NewBasketCommerce) (int64, error) {
+func calculateOrderAmountForCommerce(commerce model.NewBasketCommerce) (int64, float64, float64, error) {
 	result := 0
+	resultPaniers := 0.0
+	resultClickAndCollect := 0.0
 
 	databaseCommerce, err := commerces.GetById(commerce.CommerceID)
 
 	if err != nil {
-		return 0, err
+		return 0, 0, 0, err
 	}
 
 	if databaseCommerce == nil {
-		return 0, &commerces.CommerceErrorNotFound{}
+		return 0, 0, 0, &commerces.CommerceErrorNotFound{}
 	}
 
 	for _, product := range commerce.Products {
 		databaseProduct, err := products.GetById(product.ProductID)
 
 		if err != nil {
-			return 0, err
+			return 0, 0, 0, err
 		}
 
 		if databaseProduct == nil {
-			return 0, &products.ProductNotFoundError{}
+			return 0, 0, 0, &products.ProductNotFoundError{}
 		}
 
 		result = result + int(databaseProduct.Price*product.Quantity*100)
+		resultClickAndCollect = resultClickAndCollect + databaseProduct.Price*product.Quantity
 	}
 
 	for _, panier := range commerce.Paniers {
 		databasePanier, err := paniers.GetById(panier)
 
 		if err != nil {
-			return 0, err
+			return 0, 0, 0, err
 		}
 
 		if databasePanier == nil {
-			return 0, &paniers.PanierNotFoundError{}
+			return 0, 0, 0, &paniers.PanierNotFoundError{}
 		}
 
 		result = result + int(databasePanier.Price*100)
+		resultPaniers = resultPaniers + databasePanier.Price
 	}
 
-	return int64(result), nil
+	return int64(result), resultClickAndCollect, resultPaniers, nil
 }
 
 func order(user users.User, paymentMethod string, basket model.NewBasket) error {
@@ -78,28 +82,22 @@ func order(user users.User, paymentMethod string, basket model.NewBasket) error 
 	}
 
 	for _, commerce := range basket.Commerces {
-		price, err := calculateOrderAmountForCommerce(*commerce)
+		price, priceClickAndCollect, pricePaniers, err := calculateOrderAmountForCommerce(*commerce)
 
 		if err != nil {
 			return err
 		}
 
-		databaseCommerce, err := commerces.GetById(commerce.CommerceID)
-
-		if err != nil {
-			return err
-		}
-
-		if databaseCommerce == nil {
-			return &commerces.CommerceErrorNotFound{}
-		}
+		commerces.UpdateBalancesForOrder(commerce.CommerceID, int(price), priceClickAndCollect, pricePaniers)
 
 		// La command
 		databaseCommerceCommand, err := commands.CommerceCreate(model.NewCommerceCommand{
-			CommerceID:    databaseCommerce.ID.Hex(),
-			PickupDate:    *commerce.PickupDate,
-			PaymentMethod: paymentMethod,
-			Price:         int(price),
+			CommerceID:           commerce.CommerceID,
+			PickupDate:           *commerce.PickupDate,
+			PaymentMethod:        paymentMethod,
+			Price:                int(price),
+			PriceClickAndCollect: priceClickAndCollect,
+			PricePaniers:         pricePaniers,
 		}, databaseCommand.ID)
 
 		if err != nil {
@@ -385,6 +383,13 @@ func HandleCompleteOrder(w http.ResponseWriter, r *http.Request) {
 
 	if databaseCommerceCommand == nil {
 		http.Error(w, "la commande n'a pas été trouvée", http.StatusNotFound)
+		return
+	}
+
+	err = commerces.UpdateBalancesForOrder(databaseCommerceCommand.CommerceID.Hex(), databaseCommerceCommand.Price, databaseCommerceCommand.PriceClickAndCollect, databaseCommerceCommand.PricePaniers)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

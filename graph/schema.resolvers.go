@@ -27,6 +27,7 @@ import (
 	"chemin-du-local.bzh/graphql/pkg/geojson"
 	"chemin-du-local.bzh/graphql/pkg/jwt"
 	"chemin-du-local.bzh/graphql/pkg/stripehandler"
+	"chemin-du-local.bzh/graphql/pkg/utils"
 	"github.com/99designs/gqlgen/graphql"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -468,6 +469,25 @@ func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, change
 							databaseCommerce.Services[index] = databaseService + "_UPDATE"
 						}
 					}
+				}
+			}
+
+			fmt.Println(castedServiceChange)
+			if castedServiceChange.UpdateType == "REMOVE" {
+				indexesToRemove := []int{}
+
+				for index, databaseService := range databaseCommerce.Services {
+					if strings.Contains(databaseService, strings.Split(castedServiceChange.ServiceID, "_")[0]) {
+						if strings.Split(databaseService, "_")[1] == "M" {
+							databaseCommerce.Services[index] = strings.Split(castedServiceChange.ServiceID, "_")[0] + "_M_REMOVE"
+						} else {
+							indexesToRemove = append(indexesToRemove, index)
+						}
+					}
+				}
+
+				for _, index := range indexesToRemove {
+					databaseCommerce.Services = utils.RemoveString(databaseCommerce.Services, index)
 				}
 			}
 		}

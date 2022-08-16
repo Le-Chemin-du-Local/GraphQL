@@ -128,6 +128,7 @@ type ComplexityRoot struct {
 		BusinessHours                       func(childComplexity int) int
 		Categories                          func(childComplexity int) int
 		ClickAndCollectHours                func(childComplexity int) int
+		DefaultPaymentMethod                func(childComplexity int) int
 		Description                         func(childComplexity int) int
 		DueBalance                          func(childComplexity int) int
 		Email                               func(childComplexity int) int
@@ -350,6 +351,7 @@ type CommerceResolver interface {
 	Products(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.ProductFilter) (*model.ProductConnection, error)
 
 	ProductsAvailableForClickAndCollect(ctx context.Context, obj *model.Commerce) ([]*model.Product, error)
+	DefaultPaymentMethod(ctx context.Context, obj *model.Commerce) (*model.RegisteredPaymentMethod, error)
 
 	Paniers(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.PanierFilter) (*model.PanierConnection, error)
 }
@@ -694,6 +696,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.ClickAndCollectHours(childComplexity), true
+
+	case "Commerce.defaultPaymentMethod":
+		if e.complexity.Commerce.DefaultPaymentMethod == nil {
+			break
+		}
+
+		return e.complexity.Commerce.DefaultPaymentMethod(childComplexity), true
 
 	case "Commerce.description":
 		if e.complexity.Commerce.Description == nil {
@@ -2041,10 +2050,10 @@ type Commerce { # Ici on utilise le nom "Commerce"
   services: [String!]!
   productsAvailableForClickAndCollect: [Product!]!
 
+  defaultPaymentMethod: RegisteredPaymentMethod
   lastBilledDate: Time
   balance: Float!
   dueBalance: Float!
-
 
   # Panier
   paniers(first: Int = 10, after: ID, filters: PanierFilter): PanierConnection!
@@ -2118,6 +2127,8 @@ input ChangesCommerce {
 
   profilePicture: Upload
   image: Upload
+
+  defaultPaymentMethod: String
 
   productsAvailableForClickAndCollect: [ID!]
 }
@@ -4990,6 +5001,38 @@ func (ec *executionContext) _Commerce_productsAvailableForClickAndCollect(ctx co
 	res := resTmp.([]*model.Product)
 	fc.Result = res
 	return ec.marshalNProduct2ᚕᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐProductᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_defaultPaymentMethod(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Commerce().DefaultPaymentMethod(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.RegisteredPaymentMethod)
+	fc.Result = res
+	return ec.marshalORegisteredPaymentMethod2ᚖcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐRegisteredPaymentMethod(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Commerce_lastBilledDate(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
@@ -12839,6 +12882,23 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "defaultPaymentMethod":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Commerce_defaultPaymentMethod(ctx, field, obj)
 				return res
 			}
 

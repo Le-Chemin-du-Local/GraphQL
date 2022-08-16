@@ -201,6 +201,30 @@ func (r *commerceResolver) ProductsAvailableForClickAndCollect(ctx context.Conte
 	return productsResult, nil
 }
 
+func (r *commerceResolver) DefaultPaymentMethod(ctx context.Context, obj *model.Commerce) (*model.RegisteredPaymentMethod, error) {
+	databaseCommerce, err := commerces.GetById(obj.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if databaseCommerce == nil {
+		return nil, &commerces.CommerceErrorNotFound{}
+	}
+
+	if databaseCommerce.DefaultPaymentMethodID == nil {
+		return nil, nil
+	}
+
+	details, err := registeredpaymentmethod.GetPaymentMethodDetails(*databaseCommerce.DefaultPaymentMethodID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return details, nil
+}
+
 func (r *commerceResolver) Paniers(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.PanierFilter) (*model.PanierConnection, error) {
 	var decodedCursor *string
 

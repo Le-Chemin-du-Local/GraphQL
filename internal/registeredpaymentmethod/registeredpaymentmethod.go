@@ -2,6 +2,8 @@ package registeredpaymentmethod
 
 import (
 	"chemin-du-local.bzh/graphql/graph/model"
+	"chemin-du-local.bzh/graphql/internal/config"
+	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/paymentmethod"
 )
 
@@ -11,6 +13,10 @@ type RegisteredPaymentMethod struct {
 }
 
 func GetPaymentMethodDetails(paymentMethodId string) (*model.RegisteredPaymentMethod, error) {
+	// Set Stripe API key
+	apiKey := config.Cfg.Stripe.Key
+	stripe.Key = apiKey
+
 	paymentMethod, err := paymentmethod.Get(paymentMethodId, nil)
 
 	if err != nil {

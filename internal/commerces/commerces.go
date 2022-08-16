@@ -39,7 +39,7 @@ type Commerce struct {
 	Services                            []string            `bson:"services"`
 	ProductsAvailableForClickAndCollect []string            `bson:"productsAvailableForClickAndCollect"`
 	StripID                             *string             `bson:"stripeID"`
-	UsedPaymentMethodID                 *string             `bson:"usedPaymentMethodID"`
+	DefaultPaymentMethodID              *string             `bson:"defaultPaymentMethodID"`
 	LastBilledDate                      *time.Time          `bson:"lastBilledDate"`
 	Balance                             float64             `bson:"balance"`
 	DueBalance                          float64             `bson:"dueBalance"`

@@ -286,6 +286,17 @@ func HanldeCreateSetupIntent(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if req.IsForCommerce != nil && *req.IsForCommerce && commerce.DefaultPaymentMethodID == nil {
+			commerce.DefaultPaymentMethodID = req.PaymentMethodID
+
+			err := commerces.Update(commerce, nil, nil)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
 		writeJSON(w, struct {
 			ClientSecret   string `json:"clientSecret"`
 			RequiresAction bool   `json:"requiresAction"`

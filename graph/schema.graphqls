@@ -220,10 +220,10 @@ type Commerce { # Ici on utilise le nom "Commerce"
   services: [String!]!
   productsAvailableForClickAndCollect: [Product!]!
 
+  defaultPaymentMethod: RegisteredPaymentMethod
   lastBilledDate: Time
   balance: Float!
   dueBalance: Float!
-
 
   # Panier
   paniers(first: Int = 10, after: ID, filters: PanierFilter): PanierConnection!
@@ -297,6 +297,8 @@ input ChangesCommerce {
 
   profilePicture: Upload
   image: Upload
+
+  defaultPaymentMethod: String
 
   productsAvailableForClickAndCollect: [ID!]
 }

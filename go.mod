@@ -7,6 +7,7 @@ require (
 	github.com/go-chi/chi v1.5.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/mitchellh/mapstructure v1.4.3
+	github.com/robfig/cron v1.2.0
 	github.com/stripe/stripe-go/v72 v72.99.0
 	github.com/vektah/gqlparser/v2 v2.3.1
 	go.mongodb.org/mongo-driver v1.8.3

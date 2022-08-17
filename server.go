@@ -10,6 +10,7 @@ import (
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/auth"
+	"chemin-du-local.bzh/graphql/internal/banking"
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
 	"chemin-du-local.bzh/graphql/internal/users"
@@ -19,6 +20,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
+	"github.com/robfig/cron"
 	"github.com/rs/cors"
 )
 
@@ -70,6 +72,12 @@ func main() {
 
 		return next(ctx)
 	}
+
+	// Creation des taches régulières
+	cron := cron.New()
+
+	cron.AddFunc("0 0 1 * * *", banking.SendBalance)
+	cron.Start()
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(c))
 	fs := http.FileServer(http.Dir("static"))

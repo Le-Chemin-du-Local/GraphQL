@@ -205,6 +205,11 @@ type Commerce { # Ici on utilise le nom "Commerce"
   phone: String!
   email: String!
 
+  # bancaire 
+  ibanOwner: String
+  iban: String
+  bic: String
+
   facebook: String
   twitter: String
   instagram: String
@@ -285,6 +290,11 @@ input ChangesCommerce {
   longitude: Float
   phone: String
   email: String
+
+  # bancaire 
+  ibanOwner: String
+  iban: String
+  bic: String
 
   facebook: String
   twitter: String

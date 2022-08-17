@@ -31,6 +31,9 @@ type Commerce struct {
 	AddressGeo                          geojson.GeoJSON     `bson:"addressGeo"`
 	Phone                               string              `bson:"phone"`
 	Email                               string              `bson:"email"`
+	IBANOwner                           *string             `bson:"ibanOwner"`
+	IBAN                                *string             `bson:"iban"`
+	BIC                                 *string             `bson:"bic"`
 	Facebook                            *string             `bson:"facebook"`
 	Twitter                             *string             `bson:"twitter"`
 	Instagram                           *string             `bson:"instagram"`
@@ -58,6 +61,9 @@ func (commerce *Commerce) ToModel() *model.Commerce {
 		Longitude:            commerce.AddressGeo.Coordinates[0],
 		Phone:                commerce.Phone,
 		Email:                commerce.Email,
+		IBANOwner:            commerce.IBANOwner,
+		IBAN:                 commerce.IBAN,
+		BIC:                  commerce.BIC,
 		Facebook:             commerce.Facebook,
 		Twitter:              commerce.Twitter,
 		Instagram:            commerce.Instagram,

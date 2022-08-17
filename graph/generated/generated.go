@@ -124,6 +124,7 @@ type ComplexityRoot struct {
 
 	Commerce struct {
 		Address                             func(childComplexity int) int
+		BIC                                 func(childComplexity int) int
 		Balance                             func(childComplexity int) int
 		BusinessHours                       func(childComplexity int) int
 		Categories                          func(childComplexity int) int
@@ -133,6 +134,8 @@ type ComplexityRoot struct {
 		DueBalance                          func(childComplexity int) int
 		Email                               func(childComplexity int) int
 		Facebook                            func(childComplexity int) int
+		IBAN                                func(childComplexity int) int
+		IBANOwner                           func(childComplexity int) int
 		ID                                  func(childComplexity int) int
 		Instagram                           func(childComplexity int) int
 		LastBilledDate                      func(childComplexity int) int
@@ -669,6 +672,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Commerce.Address(childComplexity), true
 
+	case "Commerce.bic":
+		if e.complexity.Commerce.BIC == nil {
+			break
+		}
+
+		return e.complexity.Commerce.BIC(childComplexity), true
+
 	case "Commerce.balance":
 		if e.complexity.Commerce.Balance == nil {
 			break
@@ -731,6 +741,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.Facebook(childComplexity), true
+
+	case "Commerce.iban":
+		if e.complexity.Commerce.IBAN == nil {
+			break
+		}
+
+		return e.complexity.Commerce.IBAN(childComplexity), true
+
+	case "Commerce.ibanOwner":
+		if e.complexity.Commerce.IBANOwner == nil {
+			break
+		}
+
+		return e.complexity.Commerce.IBANOwner(childComplexity), true
 
 	case "Commerce.id":
 		if e.complexity.Commerce.ID == nil {
@@ -2035,6 +2059,11 @@ type Commerce { # Ici on utilise le nom "Commerce"
   phone: String!
   email: String!
 
+  # bancaire 
+  ibanOwner: String
+  iban: String
+  bic: String
+
   facebook: String
   twitter: String
   instagram: String
@@ -2115,6 +2144,11 @@ input ChangesCommerce {
   longitude: Float
   phone: String
   email: String
+
+  # bancaire 
+  ibanOwner: String
+  iban: String
+  bic: String
 
   facebook: String
   twitter: String
@@ -4688,6 +4722,102 @@ func (ec *executionContext) _Commerce_email(ctx context.Context, field graphql.C
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_ibanOwner(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IBANOwner, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_iban(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IBAN, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_bic(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BIC, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Commerce_facebook(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
@@ -12778,6 +12908,27 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "ibanOwner":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_ibanOwner(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "iban":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_iban(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		case "bic":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_bic(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
 		case "facebook":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Commerce_facebook(ctx, field, obj)

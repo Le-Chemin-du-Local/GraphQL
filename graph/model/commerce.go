@@ -81,6 +81,9 @@ type Commerce struct {
 	Longitude            float64       `json:"longitude"`
 	Phone                string        `json:"phone"`
 	Email                string        `json:"email"`
+	IBANOwner            *string       `json:"ibanOwner"`
+	IBAN                 *string       `json:"iban"`
+	BIC                  *string       `json:"bic"`
 	Facebook             *string       `json:"facebook"`
 	Twitter              *string       `json:"twitter"`
 	Instagram            *string       `json:"instagram"`

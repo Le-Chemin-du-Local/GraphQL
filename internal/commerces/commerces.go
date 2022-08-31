@@ -46,6 +46,7 @@ type Commerce struct {
 	LastBilledDate                      *time.Time          `bson:"lastBilledDate"`
 	Balance                             float64             `bson:"balance"`
 	DueBalance                          float64             `bson:"dueBalance"`
+	Transferts                          []model.Transfert   `bson:"transferts"`
 }
 
 func (commerce *Commerce) ToModel() *model.Commerce {
@@ -73,6 +74,7 @@ func (commerce *Commerce) ToModel() *model.Commerce {
 		LastBilledDate:       commerce.LastBilledDate,
 		Balance:              commerce.Balance,
 		DueBalance:           commerce.DueBalance,
+		Transferts:           commerce.Transferts,
 	}
 }
 

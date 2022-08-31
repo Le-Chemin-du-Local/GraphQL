@@ -113,6 +113,8 @@ type CommerceCommandPageInfo struct {
 type CommerceCommandsFilter struct {
 	CommerceID *string  `json:"commerceID"`
 	Status     []string `json:"status"`
+	Year       *int     `json:"year"`
+	Month      *int     `json:"month"`
 }
 
 type CommerceConnection struct {
@@ -361,6 +363,13 @@ type ServiceInfo struct {
 	MonthAdvantages                     []string `json:"monthAdvantages"`
 	TransactionPercentage               float64  `json:"transactionPercentage"`
 	TransactionAdvantages               []string `json:"transactionAdvantages"`
+}
+
+type Transfert struct {
+	Value     float64 `json:"value"`
+	IbanOwner string  `json:"ibanOwner"`
+	Iban      string  `json:"iban"`
+	Bic       string  `json:"bic"`
 }
 
 type Role string

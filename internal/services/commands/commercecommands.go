@@ -233,6 +233,57 @@ func CommerceGetPaginated(startValue *string, first int, filter *model.CommerceC
 		}
 	}
 
+	if filter != nil && filter.Year != nil {
+		// Premier cas, on ne précise que l'année
+		if filter.Month == nil {
+			finalFilter = bson.M{
+				"$and": []bson.M{
+					finalFilter,
+					{
+						"pickupDate": bson.M{
+							"$gte": time.Date(
+								*filter.Year,
+								1, 1, 0, 0, 1, 0, time.Local,
+							),
+						},
+					},
+					{
+						"pickupDate": bson.M{
+							"$lte": time.Date(
+								*filter.Year+1,
+								1, 1, 0, 0, 1, 0, time.Local,
+							),
+						},
+					},
+				},
+			}
+		} else {
+			finalFilter = bson.M{
+				"$and": []bson.M{
+					finalFilter,
+					{
+						"pickupDate": bson.M{
+							"$gte": time.Date(
+								*filter.Year,
+								time.Month(*filter.Month),
+								1, 0, 0, 1, 0, time.Local,
+							),
+						},
+					},
+					{
+						"pickupDate": bson.M{
+							"$lte": time.Date(
+								*filter.Year,
+								time.Month(*filter.Month),
+								31, 0, 0, 1, 0, time.Local,
+							),
+						},
+					},
+				},
+			}
+		}
+	}
+
 	opts := options.Find()
 	opts.SetLimit(int64(first))
 

@@ -39,6 +39,13 @@ input ChangesAddress {
   city: String
 }
 
+type Transfert {
+  value: Float!
+  ibanOwner: String!
+  iban: String!
+  bic: String!
+}
+
 ##############
 ## SERVICES ##
 ##############
@@ -229,6 +236,8 @@ type Commerce { # Ici on utilise le nom "Commerce"
   lastBilledDate: Time
   balance: Float!
   dueBalance: Float!
+
+  transferts: [Transfert!]!
 
   # Panier
   paniers(first: Int = 10, after: ID, filters: PanierFilter): PanierConnection!
@@ -642,6 +651,8 @@ input CommandsFilter {
 input CommerceCommandsFilter {
   commerceID: ID
   status: [String!]
+  year: Int
+  month: Int
 }
 
 input PanierFilter {

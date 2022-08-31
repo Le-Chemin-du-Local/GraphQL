@@ -150,6 +150,7 @@ type ComplexityRoot struct {
 		Siret                               func(childComplexity int) int
 		Storekeeper                         func(childComplexity int) int
 		StorekeeperWord                     func(childComplexity int) int
+		Transferts                          func(childComplexity int) int
 		Twitter                             func(childComplexity int) int
 	}
 
@@ -318,6 +319,13 @@ type ComplexityRoot struct {
 		ShortDescription                    func(childComplexity int) int
 		TransactionAdvantages               func(childComplexity int) int
 		TransactionPercentage               func(childComplexity int) int
+	}
+
+	Transfert struct {
+		Bic       func(childComplexity int) int
+		Iban      func(childComplexity int) int
+		IbanOwner func(childComplexity int) int
+		Value     func(childComplexity int) int
 	}
 
 	User struct {
@@ -863,6 +871,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.StorekeeperWord(childComplexity), true
+
+	case "Commerce.transferts":
+		if e.complexity.Commerce.Transferts == nil {
+			break
+		}
+
+		return e.complexity.Commerce.Transferts(childComplexity), true
 
 	case "Commerce.twitter":
 		if e.complexity.Commerce.Twitter == nil {
@@ -1683,6 +1698,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceInfo.TransactionPercentage(childComplexity), true
 
+	case "Transfert.bic":
+		if e.complexity.Transfert.Bic == nil {
+			break
+		}
+
+		return e.complexity.Transfert.Bic(childComplexity), true
+
+	case "Transfert.iban":
+		if e.complexity.Transfert.Iban == nil {
+			break
+		}
+
+		return e.complexity.Transfert.Iban(childComplexity), true
+
+	case "Transfert.ibanOwner":
+		if e.complexity.Transfert.IbanOwner == nil {
+			break
+		}
+
+		return e.complexity.Transfert.IbanOwner(childComplexity), true
+
+	case "Transfert.value":
+		if e.complexity.Transfert.Value == nil {
+			break
+		}
+
+		return e.complexity.Transfert.Value(childComplexity), true
+
 	case "User.addresses":
 		if e.complexity.User.Addresses == nil {
 			break
@@ -1893,6 +1936,13 @@ input ChangesAddress {
   city: String
 }
 
+type Transfert {
+  value: Float!
+  ibanOwner: String!
+  iban: String!
+  bic: String!
+}
+
 ##############
 ## SERVICES ##
 ##############
@@ -2083,6 +2133,8 @@ type Commerce { # Ici on utilise le nom "Commerce"
   lastBilledDate: Time
   balance: Float!
   dueBalance: Float!
+
+  transferts: [Transfert!]!
 
   # Panier
   paniers(first: Int = 10, after: ID, filters: PanierFilter): PanierConnection!
@@ -2496,6 +2548,8 @@ input CommandsFilter {
 input CommerceCommandsFilter {
   commerceID: ID
   status: [String!]
+  year: Int
+  month: Int
 }
 
 input PanierFilter {
@@ -5265,6 +5319,41 @@ func (ec *executionContext) _Commerce_dueBalance(ctx context.Context, field grap
 	res := resTmp.(float64)
 	fc.Result = res
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Commerce_transferts(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Transferts, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.Transfert)
+	fc.Result = res
+	return ec.marshalNTransfert2ᚕcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐTransfertᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Commerce_paniers(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
@@ -9300,6 +9389,146 @@ func (ec *executionContext) _ServiceInfo_transactionAdvantages(ctx context.Conte
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Transfert_value(ctx context.Context, field graphql.CollectedField, obj *model.Transfert) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Transfert",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Transfert_ibanOwner(ctx context.Context, field graphql.CollectedField, obj *model.Transfert) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Transfert",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IbanOwner, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Transfert_iban(ctx context.Context, field graphql.CollectedField, obj *model.Transfert) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Transfert",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Iban, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Transfert_bic(ctx context.Context, field graphql.CollectedField, obj *model.Transfert) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Transfert",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Bic, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -11128,6 +11357,22 @@ func (ec *executionContext) unmarshalInputCommerceCommandsFilter(ctx context.Con
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
 			it.Status, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "year":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+			it.Year, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "month":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("month"))
+			it.Month, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -13084,6 +13329,16 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "transferts":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Commerce_transferts(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "paniers":
 			field := field
 
@@ -14774,6 +15029,67 @@ func (ec *executionContext) _ServiceInfo(ctx context.Context, sel ast.SelectionS
 		case "transactionAdvantages":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._ServiceInfo_transactionAdvantages(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var transfertImplementors = []string{"Transfert"}
+
+func (ec *executionContext) _Transfert(ctx context.Context, sel ast.SelectionSet, obj *model.Transfert) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, transfertImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Transfert")
+		case "value":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Transfert_value(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "ibanOwner":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Transfert_ibanOwner(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "iban":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Transfert_iban(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "bic":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Transfert_bic(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -16799,6 +17115,54 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNTransfert2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐTransfert(ctx context.Context, sel ast.SelectionSet, v model.Transfert) graphql.Marshaler {
+	return ec._Transfert(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTransfert2ᚕcheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐTransfertᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Transfert) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTransfert2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐTransfert(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNUser2cheminᚑduᚑlocalᚗbzhᚋgraphqlᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {

@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 // Ici on utilise un modèle différent de celui généré car on
 // ne veut pas générer une requette pour certaines choses comme
@@ -93,4 +95,5 @@ type Commerce struct {
 	LastBilledDate       *time.Time    `json:"lastBilledDate"`
 	Balance              float64       `json:"balance"`
 	DueBalance           float64       `json:"dueBalance"`
+	Transferts           []Transfert   `json:"transferts"`
 }

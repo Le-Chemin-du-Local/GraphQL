@@ -33,10 +33,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Products is the resolver for the products field.
 func (r *cCCommandResolver) Products(ctx context.Context, obj *model.CCCommand) ([]*model.CCProduct, error) {
 	return clickandcollect.GetProducts(obj.ID)
 }
 
+// User is the resolver for the user field.
 func (r *commandResolver) User(ctx context.Context, obj *model.Command) (*model.User, error) {
 	user, err := commands.GetUser(obj.ID)
 
@@ -47,6 +49,7 @@ func (r *commandResolver) User(ctx context.Context, obj *model.Command) (*model.
 	return user, nil
 }
 
+// Commerces is the resolver for the commerces field.
 func (r *commandResolver) Commerces(ctx context.Context, obj *model.Command) ([]*model.CommerceCommand, error) {
 	databaseCommerceCommands, err := commands.CommerceGetForCommand(obj.ID)
 
@@ -63,6 +66,7 @@ func (r *commandResolver) Commerces(ctx context.Context, obj *model.Command) ([]
 	return commerceCommands, nil
 }
 
+// Status is the resolver for the status field.
 func (r *commandResolver) Status(ctx context.Context, obj *model.Command) (string, error) {
 	status, err := commands.GetStatus(obj.ID)
 
@@ -73,6 +77,7 @@ func (r *commandResolver) Status(ctx context.Context, obj *model.Command) (strin
 	return *status, nil
 }
 
+// Storekeeper is the resolver for the storekeeper field.
 func (r *commerceResolver) Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error) {
 	storekeeper, err := users.GetUserById(obj.StorekeeperID)
 
@@ -83,6 +88,7 @@ func (r *commerceResolver) Storekeeper(ctx context.Context, obj *model.Commerce)
 	return storekeeper.ToModel(), nil
 }
 
+// Categories is the resolver for the categories field.
 func (r *commerceResolver) Categories(ctx context.Context, obj *model.Commerce) ([]string, error) {
 	commerceObjectID, err := primitive.ObjectIDFromHex(obj.ID)
 
@@ -115,6 +121,7 @@ func (r *commerceResolver) Categories(ctx context.Context, obj *model.Commerce) 
 	return categories, nil
 }
 
+// Products is the resolver for the products field.
 func (r *commerceResolver) Products(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.ProductFilter) (*model.ProductConnection, error) {
 	var decodedCursor *string
 
@@ -174,6 +181,7 @@ func (r *commerceResolver) Products(ctx context.Context, obj *model.Commerce, fi
 	return &connection, nil
 }
 
+// ProductsAvailableForClickAndCollect is the resolver for the productsAvailableForClickAndCollect field.
 func (r *commerceResolver) ProductsAvailableForClickAndCollect(ctx context.Context, obj *model.Commerce) ([]*model.Product, error) {
 	databaseCommere, err := commerces.GetById(obj.ID)
 
@@ -201,6 +209,7 @@ func (r *commerceResolver) ProductsAvailableForClickAndCollect(ctx context.Conte
 	return productsResult, nil
 }
 
+// DefaultPaymentMethod is the resolver for the defaultPaymentMethod field.
 func (r *commerceResolver) DefaultPaymentMethod(ctx context.Context, obj *model.Commerce) (*model.RegisteredPaymentMethod, error) {
 	databaseCommerce, err := commerces.GetById(obj.ID)
 
@@ -225,6 +234,7 @@ func (r *commerceResolver) DefaultPaymentMethod(ctx context.Context, obj *model.
 	return details, nil
 }
 
+// Paniers is the resolver for the paniers field.
 func (r *commerceResolver) Paniers(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.PanierFilter) (*model.PanierConnection, error) {
 	var decodedCursor *string
 
@@ -284,6 +294,7 @@ func (r *commerceResolver) Paniers(ctx context.Context, obj *model.Commerce, fir
 	return &connection, nil
 }
 
+// Commerce is the resolver for the commerce field.
 func (r *commerceCommandResolver) Commerce(ctx context.Context, obj *model.CommerceCommand) (*model.Commerce, error) {
 	commerce, err := commands.CommerceGetCommerce(obj.ID)
 
@@ -294,6 +305,7 @@ func (r *commerceCommandResolver) Commerce(ctx context.Context, obj *model.Comme
 	return commerce, nil
 }
 
+// Cccommands is the resolver for the cccommands field.
 func (r *commerceCommandResolver) Cccommands(ctx context.Context, obj *model.CommerceCommand) ([]*model.CCCommand, error) {
 	databaseCCCommands, err := clickandcollect.GetForCommmerceCommand(obj.ID)
 
@@ -310,6 +322,7 @@ func (r *commerceCommandResolver) Cccommands(ctx context.Context, obj *model.Com
 	return cccommands, nil
 }
 
+// Paniers is the resolver for the paniers field.
 func (r *commerceCommandResolver) Paniers(ctx context.Context, obj *model.CommerceCommand) ([]*model.PanierCommand, error) {
 	databasePanierCommands, err := paniers.GetCommandsForCommerceCommand(obj.ID)
 
@@ -326,6 +339,7 @@ func (r *commerceCommandResolver) Paniers(ctx context.Context, obj *model.Commer
 	return panierCommands, nil
 }
 
+// User is the resolver for the user field.
 func (r *commerceCommandResolver) User(ctx context.Context, obj *model.CommerceCommand) (*model.User, error) {
 	user, err := commands.CommerceGetUser(obj.ID)
 
@@ -336,6 +350,7 @@ func (r *commerceCommandResolver) User(ctx context.Context, obj *model.CommerceC
 	return user, nil
 }
 
+// CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
 	// On doit d'abord vérifier que l'email n'est pas déjà prise
 	existingUser, err := users.GetUserByEmail(strings.ToLower(input.Email))
@@ -357,6 +372,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	return databaseUser.ToModel(), nil
 }
 
+// Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string, error) {
 	// On check d'abord le mot de passe
 	isPasswordCorrect := users.Authenticate(input)
@@ -381,10 +397,12 @@ func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string
 	return token, nil
 }
 
+// UpdateUser is the resolver for the updateUser field.
 func (r *mutationResolver) UpdateUser(ctx context.Context, id *string, input map[string]interface{}) (*model.User, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
+// CreateCommerce is the resolver for the createCommerce field.
 func (r *mutationResolver) CreateCommerce(ctx context.Context, userID string, input model.NewCommerce) (*model.Commerce, error) {
 	// TODO: s'assurer de n'avoir qu'un seul commerce par commerçant
 
@@ -414,6 +432,7 @@ func (r *mutationResolver) CreateCommerce(ctx context.Context, userID string, in
 	return databaseCommerce.ToModel(), nil
 }
 
+// UpdateCommerce is the resolver for the updateCommerce field.
 func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, changes map[string]interface{}) (*model.Commerce, error) {
 	databaseCommerce, err := commerces.GetById(id)
 
@@ -558,6 +577,7 @@ func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, change
 	return databaseCommerce.ToModel(), nil
 }
 
+// CreateProduct is the resolver for the createProduct field.
 func (r *mutationResolver) CreateProduct(ctx context.Context, commerceID *string, input model.NewProduct) (*model.Product, error) {
 	user := auth.ForContext(ctx)
 
@@ -589,6 +609,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, commerceID *string
 	return databaseProduct.ToModel(), nil
 }
 
+// CreateProducts is the resolver for the createProducts field.
 func (r *mutationResolver) CreateProducts(ctx context.Context, commerceID *string, input []*model.NewProduct) ([]*model.Product, error) {
 	user := auth.ForContext(ctx)
 
@@ -626,6 +647,7 @@ func (r *mutationResolver) CreateProducts(ctx context.Context, commerceID *strin
 	return result, nil
 }
 
+// UpdateProduct is the resolver for the updateProduct field.
 func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, changes map[string]interface{}) (*model.Product, error) {
 	databaseProduct, err := products.GetById(id)
 
@@ -655,6 +677,7 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, changes
 	return databaseProduct.ToModel(), nil
 }
 
+// UpdateProducts is the resolver for the updateProducts field.
 func (r *mutationResolver) UpdateProducts(ctx context.Context, changes []*model.BulkChangesProduct) ([]*model.Product, error) {
 	result := []*model.Product{}
 
@@ -690,6 +713,7 @@ func (r *mutationResolver) UpdateProducts(ctx context.Context, changes []*model.
 	return result, nil
 }
 
+// UpdateCommerceCommand is the resolver for the updateCommerceCommand field.
 func (r *mutationResolver) UpdateCommerceCommand(ctx context.Context, id string, changes map[string]interface{}) (*model.CommerceCommand, error) {
 	databaseCommerceCommand, err := commands.CommerceGetById(id)
 
@@ -712,6 +736,7 @@ func (r *mutationResolver) UpdateCommerceCommand(ctx context.Context, id string,
 	return databaseCommerceCommand.ToModel(), nil
 }
 
+// CreatePanier is the resolver for the createPanier field.
 func (r *mutationResolver) CreatePanier(ctx context.Context, commerceID *string, input model.NewPanier) (*model.Panier, error) {
 	user := auth.ForContext(ctx)
 
@@ -749,6 +774,7 @@ func (r *mutationResolver) CreatePanier(ctx context.Context, commerceID *string,
 	return databasePanier.ToModel(), nil
 }
 
+// UpdatePanier is the resolver for the updatePanier field.
 func (r *mutationResolver) UpdatePanier(ctx context.Context, id string, changes map[string]interface{}) (*model.Panier, error) {
 	databasePanier, err := paniers.GetById(id)
 
@@ -810,10 +836,12 @@ func (r *mutationResolver) UpdatePanier(ctx context.Context, id string, changes 
 	return databasePanier.ToModel(), nil
 }
 
+// Products is the resolver for the products field.
 func (r *panierResolver) Products(ctx context.Context, obj *model.Panier) ([]*model.PanierProduct, error) {
 	return paniers.GetProducts(obj.ID)
 }
 
+// Panier is the resolver for the panier field.
 func (r *panierCommandResolver) Panier(ctx context.Context, obj *model.PanierCommand) (*model.Panier, error) {
 	databasePanierCommand, err := paniers.GetCommandById(obj.ID)
 
@@ -838,6 +866,7 @@ func (r *panierCommandResolver) Panier(ctx context.Context, obj *model.PanierCom
 	return databasePanier.ToModel(), nil
 }
 
+// Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	databaseUsers, err := users.GetAllUser()
 
@@ -856,6 +885,7 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	return users, nil
 }
 
+// User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, id *string) (*model.User, error) {
 	if id == nil {
 		if auth.ForContext(ctx) == nil {
@@ -878,6 +908,7 @@ func (r *queryResolver) User(ctx context.Context, id *string) (*model.User, erro
 	return databaseUser.ToModel(), nil
 }
 
+// Commerces is the resolver for the commerces field.
 func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string, filter *model.CommerceFilter) (*model.CommerceConnection, error) {
 	var decodedCursor *string
 
@@ -892,7 +923,7 @@ func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string
 		decodedCursor = &decodedCursorString
 	}
 
-	databaseCommerces, err := commerces.GetPaginated(decodedCursor, *first, filter)
+	databaseCommerces, totalCount, err := commerces.GetPaginated(decodedCursor, *first, filter)
 
 	if err != nil {
 		return nil, err
@@ -916,8 +947,9 @@ func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string
 	// tableau vide
 	if itemCount == 0 {
 		return &model.CommerceConnection{
-			Edges:    edges,
-			PageInfo: &model.CommercePageInfo{},
+			TotalCount: totalCount,
+			Edges:      edges,
+			PageInfo:   &model.CommercePageInfo{},
 		}, nil
 	}
 
@@ -930,13 +962,15 @@ func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string
 	}
 
 	connection := model.CommerceConnection{
-		Edges:    edges[:itemCount],
-		PageInfo: &pageInfo,
+		TotalCount: totalCount,
+		Edges:      edges[:itemCount],
+		PageInfo:   &pageInfo,
 	}
 
 	return &connection, nil
 }
 
+// Commerce is the resolver for the commerce field.
 func (r *queryResolver) Commerce(ctx context.Context, id *string) (*model.Commerce, error) {
 	if id != nil {
 		databaseCommerce, err := commerces.GetById(*id)
@@ -971,6 +1005,7 @@ func (r *queryResolver) Commerce(ctx context.Context, id *string) (*model.Commer
 	return databaseCommerce.ToModel(), nil
 }
 
+// Product is the resolver for the product field.
 func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product, error) {
 	databaseProduct, err := products.GetById(id)
 
@@ -981,6 +1016,7 @@ func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product,
 	return databaseProduct.ToModel(), nil
 }
 
+// Commands is the resolver for the commands field.
 func (r *queryResolver) Commands(ctx context.Context, first *int, after *string, filter *model.CommandsFilter) (*model.CommandConnection, error) {
 	if filter == nil {
 		filter = &model.CommandsFilter{}
@@ -1052,6 +1088,7 @@ func (r *queryResolver) Commands(ctx context.Context, first *int, after *string,
 	return &connection, nil
 }
 
+// CommerceCommands is the resolver for the commerceCommands field.
 func (r *queryResolver) CommerceCommands(ctx context.Context, first *int, after *string, filter *model.CommerceCommandsFilter) (*model.CommerceCommandConnection, error) {
 	if filter == nil {
 		filter = &model.CommerceCommandsFilter{}
@@ -1139,6 +1176,7 @@ func (r *queryResolver) CommerceCommands(ctx context.Context, first *int, after 
 	return &connection, nil
 }
 
+// Command is the resolver for the command field.
 func (r *queryResolver) Command(ctx context.Context, id string) (*model.Command, error) {
 	databaseCommand, err := commands.GetById(id)
 
@@ -1153,6 +1191,7 @@ func (r *queryResolver) Command(ctx context.Context, id string) (*model.Command,
 	return databaseCommand.ToModel(), nil
 }
 
+// AllServicesInfo is the resolver for the allServicesInfo field.
 func (r *queryResolver) AllServicesInfo(ctx context.Context) ([]*model.ServiceInfo, error) {
 	clickandcollect := servicesinfo.ClickAndCollect()
 	paniers := servicesinfo.Paniers()
@@ -1163,6 +1202,7 @@ func (r *queryResolver) AllServicesInfo(ctx context.Context) ([]*model.ServiceIn
 	}, nil
 }
 
+// ServiceInfo is the resolver for the serviceInfo field.
 func (r *queryResolver) ServiceInfo(ctx context.Context, id string) (*model.ServiceInfo, error) {
 	clickandcollect := servicesinfo.ClickAndCollect()
 	paniers := servicesinfo.Paniers()
@@ -1176,6 +1216,7 @@ func (r *queryResolver) ServiceInfo(ctx context.Context, id string) (*model.Serv
 	return nil, &servicesinfo.ServiceNotFoundError{}
 }
 
+// Panier is the resolver for the panier field.
 func (r *queryResolver) Panier(ctx context.Context, id string) (*model.Panier, error) {
 	databasePanier, err := paniers.GetById(id)
 
@@ -1190,6 +1231,7 @@ func (r *queryResolver) Panier(ctx context.Context, id string) (*model.Panier, e
 	return databasePanier.ToModel(), nil
 }
 
+// Commerce is the resolver for the commerce field.
 func (r *userResolver) Commerce(ctx context.Context, obj *model.User) (*model.Commerce, error) {
 	databaseCommerce, err := commerces.GetForUser(obj.ID)
 
@@ -1204,10 +1246,12 @@ func (r *userResolver) Commerce(ctx context.Context, obj *model.User) (*model.Co
 	return databaseCommerce.ToModel(), nil
 }
 
+// Basket is the resolver for the basket field.
 func (r *userResolver) Basket(ctx context.Context, obj *model.User) (*model.Basket, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
+// RegisteredPaymentMethods is the resolver for the registeredPaymentMethods field.
 func (r *userResolver) RegisteredPaymentMethods(ctx context.Context, obj *model.User) ([]*model.RegisteredPaymentMethod, error) {
 	if obj == nil {
 		return nil, &users.UserAccessDenied{}
@@ -1230,6 +1274,7 @@ func (r *userResolver) RegisteredPaymentMethods(ctx context.Context, obj *model.
 	return stripehandler.GetPaymentMethods(*databaseUser.StripID), nil
 }
 
+// DefaultPaymentMethod is the resolver for the defaultPaymentMethod field.
 func (r *userResolver) DefaultPaymentMethod(ctx context.Context, obj *model.User) (*model.RegisteredPaymentMethod, error) {
 	databaseUser, err := users.GetUserById(obj.ID)
 
@@ -1309,9 +1354,9 @@ type userResolver struct{ *Resolver }
 // !!! WARNING !!!
 // The code below was going to be deleted when updating resolvers. It has been copied here so you have
 // one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
 func (r *commerceResolver) AddressDetailed(ctx context.Context, obj *model.Commerce) (*model.Address, error) {
 	panic(fmt.Errorf("not implemented"))
 }

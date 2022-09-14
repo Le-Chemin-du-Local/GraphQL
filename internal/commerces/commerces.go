@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -344,22 +346,36 @@ func GetForUser(userID string) (*Commerce, error) {
 	return &commerces[0], nil
 }
 
-func GetPaginated(startValue *string, first int, filter *model.CommerceFilter) ([]Commerce, error) {
+func GetPaginated(startValue *string, first int, filter *model.CommerceFilter) ([]Commerce, int, error) {
 	// On doit faire un filtre spécifique si on veut commencer
 	// le curseur à l'ID de départ
 	var finalFilter bson.M
+	var matchStage bson.D
+
+	skip := 0
 
 	if startValue != nil {
-		objectID, err := primitive.ObjectIDFromHex(*startValue)
+		if strings.Split(*startValue, ":")[0] == "offset" {
+			skipValue, err := strconv.Atoi(strings.Split(*startValue, ":")[1])
 
-		if err != nil {
-			return nil, err
-		}
+			if err != nil {
+				return nil, 0, err
+			}
 
-		finalFilter = bson.M{
-			"_id": bson.M{
-				"$gt": objectID,
-			},
+			skip = skipValue
+
+		} else {
+			objectID, err := primitive.ObjectIDFromHex(*startValue)
+
+			if err != nil {
+				return nil, 0, err
+			}
+
+			finalFilter = bson.M{
+				"_id": bson.M{
+					"$gt": objectID,
+				},
+			}
 		}
 	} else {
 		finalFilter = bson.M{}
@@ -391,12 +407,54 @@ func GetPaginated(startValue *string, first int, filter *model.CommerceFilter) (
 				},
 			},
 		}
+
+		matchStage = bson.D{{Key: "$geoNear", Value: bson.M{
+			"near": bson.M{
+				"type": "Point",
+				"coordinates": []float64{
+					*filter.NearLongitude,
+					*filter.NearLatitude,
+				},
+			},
+			"distanceField": "dist.calculated",
+			"maxDistance":   maxDistance,
+		}}}
 	}
 
 	opts := options.Find()
 	opts.SetLimit(int64(first))
+	opts.SetSkip(int64(skip))
 
-	return GetFiltered(finalFilter, opts)
+	result, err := GetFiltered(finalFilter, opts)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	countStage := bson.D{{Key: "$count", Value: "total_documents"}}
+
+	pipeline := mongo.Pipeline{}
+
+	if matchStage != nil {
+		pipeline = append(pipeline, matchStage)
+	}
+
+	pipeline = append(pipeline, countStage)
+
+	cursor, err := database.CollectionCommerces.Aggregate(database.MongoContext, pipeline)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var results []bson.D
+	if err = cursor.All(database.MongoContext, &results); err != nil {
+		return nil, 0, err
+	}
+
+	count := results[0][0].Value.(int32)
+
+	return result, int(count), err
 }
 
 func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Commerce, error) {

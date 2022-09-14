@@ -118,8 +118,9 @@ type CommerceCommandsFilter struct {
 }
 
 type CommerceConnection struct {
-	Edges    []*CommerceEdge   `json:"edges"`
-	PageInfo *CommercePageInfo `json:"pageInfo"`
+	TotalCount int               `json:"totalCount"`
+	Edges      []*CommerceEdge   `json:"edges"`
+	PageInfo   *CommercePageInfo `json:"pageInfo"`
 }
 
 type CommerceEdge struct {

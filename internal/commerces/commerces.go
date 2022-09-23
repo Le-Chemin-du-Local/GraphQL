@@ -364,6 +364,8 @@ func GetPaginated(startValue *string, first int, filter *model.CommerceFilter) (
 
 			skip = skipValue
 
+			finalFilter = bson.M{}
+
 		} else {
 			objectID, err := primitive.ObjectIDFromHex(*startValue)
 
@@ -452,9 +454,13 @@ func GetPaginated(startValue *string, first int, filter *model.CommerceFilter) (
 		return nil, 0, err
 	}
 
-	count := results[0][0].Value.(int32)
+	count := 0
 
-	return result, int(count), err
+	if len(results) > 0 && len(results[0]) > 0 {
+		count = int(results[0][0].Value.(int32))
+	}
+
+	return result, count, err
 }
 
 func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Commerce, error) {

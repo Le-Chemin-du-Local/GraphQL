@@ -15,6 +15,7 @@ import (
 const COMMERCE_COMMAND_STATUS_IN_PROGRESS = "INPROGRESS"
 const COMMERCE_COMMAND_STATUS_READY = "READY"
 const COMMERCE_COMMAND_STATUS_DONE = "DONE"
+const COMMERCE_COMMAND_STATUS_CANCELED = "CANCELED"
 
 type CommerceCommand struct {
 	ID                   primitive.ObjectID `bson:"_id"`

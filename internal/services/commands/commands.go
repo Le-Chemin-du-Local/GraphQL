@@ -14,6 +14,7 @@ import (
 const COMMAND_STATUS_IN_PROGRESS = "INPROGRESS"
 const COMMAND_STATUS_READY = "READY"
 const COMMAND_STATUS_DONE = "DONE"
+const COMMAND_STATUS_CANCELED = "CANCELED"
 
 type Command struct {
 	ID           primitive.ObjectID `bson:"_id"`
@@ -215,7 +216,24 @@ func GetStatus(commandID string) (*string, error) {
 		return nil, err
 	}
 
-	result := COMMAND_STATUS_DONE
+	result := COMMAND_STATUS_CANCELED
+	isCanceled := false
+
+	// On doit vérifier qu'elle n'est pas annuler en premier
+	for _, databaseCommerceCommand := range databaseCommerceCommands {
+		if databaseCommerceCommand.Status != COMMERCE_COMMAND_STATUS_CANCELED {
+			break
+		}
+
+		isCanceled = true
+	}
+
+	if isCanceled {
+		return &result, nil
+	}
+
+	// Sinon on fait le classique
+	result = COMMAND_STATUS_DONE
 
 	for _, databaseCommerceCommand := range databaseCommerceCommands {
 		if databaseCommerceCommand.Status == COMMERCE_COMMAND_STATUS_IN_PROGRESS {

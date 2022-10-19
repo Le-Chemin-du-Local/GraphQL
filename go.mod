@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/99designs/gqlgen v0.17.16
+	github.com/adlio/trello v1.10.0
 	github.com/go-chi/chi v1.5.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/mitchellh/mapstructure v1.5.0
@@ -18,6 +19,7 @@ require (
 require (
 	github.com/montanaflynn/stats v0.6.6 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
+	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 )
 
 require (

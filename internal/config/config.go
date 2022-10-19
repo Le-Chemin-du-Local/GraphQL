@@ -20,6 +20,13 @@ type Config struct {
 	Stripe struct {
 		Key string `yaml:"key"`
 	} `yaml:"stripe"`
+	Trello struct {
+		Key                          string `yaml:"key"`
+		Token                        string `yaml:"token"`
+		ListID                       string `yaml:"listID"`
+		NonBankRegisteredLabelID     string `yaml:"nonBankRegisteredLabelID"`
+		AlreadyBankRegisteredLabelID string `yaml:"alreadyBankRegisteredLabelID"`
+	} `yaml:"trello"`
 	Paths struct {
 		Static string `yaml:"static"`
 	} `yaml:"paths"`
@@ -67,6 +74,12 @@ func InitFromEnv() {
 	Cfg.Settings.AuthSecret = os.Getenv("AUTH_SECRET")
 
 	Cfg.Stripe.Key = os.Getenv("STRIPE_KEY")
+
+	Cfg.Trello.Key = os.Getenv("TRELLO_KEY")
+	Cfg.Trello.Token = os.Getenv("TRELLO_TOKEN")
+	Cfg.Trello.ListID = os.Getenv("TRELLO_LISTID")
+	Cfg.Trello.NonBankRegisteredLabelID = os.Getenv("TRELLO_NONBANKREGISTEREDLABELID")
+	Cfg.Trello.AlreadyBankRegisteredLabelID = os.Getenv("TRELLO_ALREADYBANKREGISTEREDLABELID")
 
 	Cfg.Maps.Key = os.Getenv("MAPS_API_KEY")
 

@@ -7,6 +7,13 @@ maps:
 stripe:
   key: "sk_test_51Kk7OzKhjFSu7ugoEVC6c1ysZgx992GmddroFiisV2pU5y4hyGXkMb0rthQdqfB3N6LyChNkfVyOy6h118CmZaiG00gmAvHQRL"
 
+trello:
+  key: "36ba4a3546e20f209ee754f58a1887f5"
+  token: "18e7048d1ef764b2680f81ce841a0172485c47286a66089c6d74f9b039b1b954"
+  listID: "62fe8cab722001008b9a8940"
+  nonBankRegisteredLabelID: "62fe8cab1818e60499aa7f67"
+  alreadyBankRegisteredLabelID: "62fe8cab1818e60499aa7f5f"
+
 paths:
   static: "static"
 

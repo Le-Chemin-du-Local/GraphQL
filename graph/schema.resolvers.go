@@ -497,6 +497,19 @@ func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, change
 				}
 
 				databaseCommerce.Services = append(databaseCommerce.Services, castedServiceChange.ServiceID)
+
+				// Pour le Click&Collect, on veut ajouter tous les produits par défaut
+				productsOfCommerce, err := products.GetForCommerce(databaseCommerce.ID.Hex())
+
+				if err != nil {
+					productsId := []string{}
+
+					for _, product := range productsOfCommerce {
+						productsId = append(productsId, product.ID.Hex())
+					}
+
+					databaseCommerce.ProductsAvailableForClickAndCollect = productsId
+				}
 			}
 
 			if castedServiceChange.UpdateType == "UPDATE" {

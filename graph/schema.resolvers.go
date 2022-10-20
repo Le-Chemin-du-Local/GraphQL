@@ -619,6 +619,28 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, commerceID *string
 		return nil, err
 	}
 
+	// Si le commerçant a souscrit au Click&Collect, le produit doit automatiquement y être ajouté
+	databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+
+	if err != nil {
+		return databaseProduct.ToModel(), nil
+	}
+
+	commerceSubscribedToCC := false
+
+	for _, service := range databaseCommerce.Services {
+		if strings.Contains(service, "CLICKANDCOLLECT") {
+			commerceSubscribedToCC = true
+			break
+		}
+	}
+
+	if commerceSubscribedToCC {
+		databaseCommerce.ProductsAvailableForClickAndCollect = append(databaseCommerce.ProductsAvailableForClickAndCollect, databaseProduct.ID.Hex())
+	}
+
+	commerces.Update(databaseCommerce, nil, nil)
+
 	return databaseProduct.ToModel(), nil
 }
 

@@ -20,6 +20,7 @@ import (
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/customer"
 	"github.com/stripe/stripe-go/v72/paymentintent"
+	"github.com/stripe/stripe-go/v72/paymentmethod"
 	"github.com/stripe/stripe-go/v72/setupintent"
 )
 
@@ -286,7 +287,11 @@ func HanldeCreateSetupIntent(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if req.IsForCommerce != nil && *req.IsForCommerce && commerce.DefaultPaymentMethodID == nil {
+		if req.IsForCommerce != nil && *req.IsForCommerce {
+			if commerce.DefaultPaymentMethodID != nil {
+				paymentmethod.Detach(*commerce.DefaultPaymentMethodID, nil)
+			}
+
 			commerce.DefaultPaymentMethodID = req.PaymentMethodID
 
 			err := commerces.Update(commerce, nil, nil)

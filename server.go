@@ -41,7 +41,6 @@ func main() {
 		AllowedOrigins:   []string{"*"},
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
-		Debug:            true,
 	}).Handler)
 
 	// Initialisation des config

@@ -79,7 +79,7 @@ func (r *commandResolver) Status(ctx context.Context, obj *model.Command) (strin
 
 // Storekeeper is the resolver for the storekeeper field.
 func (r *commerceResolver) Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error) {
-	storekeeper, err := users.GetUserById(obj.StorekeeperID)
+	storekeeper, err := r.UsersService.GetUserById(obj.StorekeeperID)
 
 	if err != nil {
 		return nil, err
@@ -353,7 +353,7 @@ func (r *commerceCommandResolver) User(ctx context.Context, obj *model.CommerceC
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
 	// On doit d'abord vérifier que l'email n'est pas déjà prise
-	existingUser, err := users.GetUserByEmail(strings.ToLower(input.Email))
+	existingUser, err := r.UsersService.GetUserByEmail(strings.ToLower(input.Email))
 
 	if existingUser != nil {
 		return nil, &users.UserEmailAlreadyExistsError{}
@@ -363,7 +363,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		return nil, err
 	}
 
-	databaseUser, err := users.Create(input)
+	databaseUser, err := r.UsersService.Create(input)
 
 	if err != nil {
 		return nil, err
@@ -375,14 +375,14 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string, error) {
 	// On check d'abord le mot de passe
-	isPasswordCorrect := users.Authenticate(input)
+	isPasswordCorrect := r.UsersService.Authenticate(input)
 
 	if !isPasswordCorrect {
 		return "", &users.UserPasswordIncorrect{}
 	}
 
 	// Puis on génère le token
-	user, err := users.GetUserByEmail(strings.ToLower(input.Email))
+	user, err := r.UsersService.GetUserByEmail(strings.ToLower(input.Email))
 
 	if user == nil || err != nil {
 		return "", err
@@ -406,7 +406,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id *string, input map
 func (r *mutationResolver) CreateCommerce(ctx context.Context, userID string, input model.NewCommerce) (*model.Commerce, error) {
 	// TODO: s'assurer de n'avoir qu'un seul commerce par commerçant
 
-	databaseUser, err := users.GetUserById(userID)
+	databaseUser, err := r.UsersService.GetUserById(userID)
 
 	if err != nil {
 		return nil, err
@@ -423,7 +423,7 @@ func (r *mutationResolver) CreateCommerce(ctx context.Context, userID string, in
 	}
 
 	databaseUser.Role = users.USERROLE_STOREKEEPER
-	err = users.Update(databaseUser)
+	err = r.UsersService.Update(databaseUser)
 
 	if err != nil {
 		return nil, err
@@ -903,7 +903,7 @@ func (r *panierCommandResolver) Panier(ctx context.Context, obj *model.PanierCom
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	databaseUsers, err := users.GetAllUser()
+	databaseUsers, err := r.UsersService.GetAllUser()
 
 	if err != nil {
 		return nil, err
@@ -930,7 +930,7 @@ func (r *queryResolver) User(ctx context.Context, id *string) (*model.User, erro
 		return auth.ForContext(ctx).ToModel(), nil
 	}
 
-	databaseUser, err := users.GetUserById(*id)
+	databaseUser, err := r.UsersService.GetUserById(*id)
 
 	if err != nil {
 		return nil, err
@@ -1292,7 +1292,7 @@ func (r *userResolver) RegisteredPaymentMethods(ctx context.Context, obj *model.
 		return nil, &users.UserAccessDenied{}
 	}
 
-	databaseUser, err := users.GetUserById(obj.ID)
+	databaseUser, err := r.UsersService.GetUserById(obj.ID)
 
 	if err != nil {
 		return nil, err
@@ -1311,7 +1311,7 @@ func (r *userResolver) RegisteredPaymentMethods(ctx context.Context, obj *model.
 
 // DefaultPaymentMethod is the resolver for the defaultPaymentMethod field.
 func (r *userResolver) DefaultPaymentMethod(ctx context.Context, obj *model.User) (*model.RegisteredPaymentMethod, error) {
-	databaseUser, err := users.GetUserById(obj.ID)
+	databaseUser, err := r.UsersService.GetUserById(obj.ID)
 
 	if err != nil {
 		return nil, err

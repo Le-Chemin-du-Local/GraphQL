@@ -77,6 +77,20 @@ func (user *User) HasRole(role model.Role) bool {
 	return false
 }
 
+// Service
+
+type UsersService interface {
+	Create(input model.NewUser) (*User, error)
+	Update(changes *User) error
+	GetAllUser() ([]User, error)
+	GetUserById(id string) (*User, error)
+	GetUserByEmail(email string) (*User, error)
+	GetFiltered(filter interface{}) ([]User, error)
+	Authenticate(login model.Login) bool
+	HashPassword(password string) (string, error)
+	CheckPasswordHash(password, hash string) bool
+}
+
 // Createur de base de données
 
 func Create(input model.NewUser) (*User, error) {

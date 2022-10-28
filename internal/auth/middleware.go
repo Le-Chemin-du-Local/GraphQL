@@ -8,7 +8,7 @@ import (
 	"chemin-du-local.bzh/graphql/pkg/jwt"
 )
 
-var userCtxKey = contextKey{"user"}
+var UserCtxKey = contextKey{"user"}
 
 type contextKey struct {
 	name string
@@ -39,7 +39,7 @@ func Middleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), userCtxKey, user)
+			ctx := context.WithValue(r.Context(), UserCtxKey, user)
 
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
@@ -48,7 +48,7 @@ func Middleware() func(http.Handler) http.Handler {
 }
 
 func ForContext(ctx context.Context) *users.User {
-	raw, _ := ctx.Value(userCtxKey).(*users.User)
+	raw, _ := ctx.Value(UserCtxKey).(*users.User)
 
 	return raw
 }

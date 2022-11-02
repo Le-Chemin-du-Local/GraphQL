@@ -143,6 +143,9 @@ func order(user users.User, paymentMethod string, basket model.NewBasket) error 
 }
 
 func authentification(w http.ResponseWriter, r *http.Request) (*string, *users.User) {
+	// On doit créer le service
+	usersService := users.NewUsersService()
+
 	// On doit créer le consumer Stripe si nécesaire
 	user := auth.ForContext(r.Context())
 
@@ -168,7 +171,7 @@ func authentification(w http.ResponseWriter, r *http.Request) (*string, *users.U
 		}
 
 		user.StripID = stripeCustomer
-		err = users.Update(user)
+		err = usersService.Update(user)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

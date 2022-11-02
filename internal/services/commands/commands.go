@@ -51,6 +51,21 @@ func (command Command) IsLast() bool {
 	return lastCommand[0].ID == command.ID
 }
 
+// Le service
+type commandsService struct {
+	UsersService users.UsersService
+}
+
+type CommandsService interface {
+	GetUser(commandID string) (*model.User, error)
+}
+
+func NewCommandsService(usersService users.UsersService) *commandsService {
+	return &commandsService{
+		UsersService: usersService,
+	}
+}
+
 func Create(input model.NewCommand) (*Command, error) {
 	userObjectID, err := primitive.ObjectIDFromHex(input.User)
 
@@ -249,7 +264,7 @@ func GetStatus(commandID string) (*string, error) {
 	return &result, nil
 }
 
-func GetUser(commandID string) (*model.User, error) {
+func (c *commandsService) GetUser(commandID string) (*model.User, error) {
 	databaseCommand, err := GetById(commandID)
 
 	if err != nil {
@@ -260,7 +275,7 @@ func GetUser(commandID string) (*model.User, error) {
 		return nil, &CommandNotFoundError{}
 	}
 
-	databaseUser, err := users.GetUserById(databaseCommand.UserID.Hex())
+	databaseUser, err := c.UsersService.GetUserById(databaseCommand.UserID.Hex())
 
 	if err != nil {
 		return nil, err

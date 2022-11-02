@@ -58,6 +58,21 @@ func (commerceCommand CommerceCommand) IsLast() bool {
 	return lastCommerceCommand[0].ID == commerceCommand.ID
 }
 
+// Le service
+type commerceCommandsService struct {
+	UsersService users.UsersService
+}
+
+type CommerceCommandsService interface {
+	GetUser(commerceCommandID string) (*model.User, error)
+}
+
+func NewCommerceCommandsService(usersService users.UsersService) *commerceCommandsService {
+	return &commerceCommandsService{
+		UsersService: usersService,
+	}
+}
+
 func CommerceCreate(input model.NewCommerceCommand, commandID primitive.ObjectID) (*CommerceCommand, error) {
 	commerceObjectID, err := primitive.ObjectIDFromHex(input.CommerceID)
 
@@ -343,7 +358,7 @@ func CommerceGetCommerce(commerceCommandID string) (*model.Commerce, error) {
 	return databaseCommerce.ToModel(), nil
 }
 
-func CommerceGetUser(commerceCommandID string) (*model.User, error) {
+func (c *commerceCommandsService) GetUser(commerceCommandID string) (*model.User, error) {
 	databaseCommerceCommand, err := CommerceGetById(commerceCommandID)
 
 	if err != nil {
@@ -364,7 +379,7 @@ func CommerceGetUser(commerceCommandID string) (*model.User, error) {
 		return nil, &CommandNotFoundError{}
 	}
 
-	databaseUser, err := users.GetUserById(databaseCommand.UserID.Hex())
+	databaseUser, err := c.UsersService.GetUserById(databaseCommand.UserID.Hex())
 
 	if err != nil {
 		return nil, err

@@ -14,7 +14,7 @@ type contextKey struct {
 	name string
 }
 
-func Middleware() func(http.Handler) http.Handler {
+func Middleware(u users.UsersService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get("Authorization")
@@ -32,7 +32,7 @@ func Middleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			user, err := users.GetUserById(userId)
+			user, err := u.GetUserById(userId)
 
 			if err != nil {
 				next.ServeHTTP(w, r)

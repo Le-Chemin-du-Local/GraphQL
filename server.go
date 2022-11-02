@@ -13,6 +13,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/banking"
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
+	"chemin-du-local.bzh/graphql/internal/services/commands"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/mapshandler"
 	"chemin-du-local.bzh/graphql/pkg/stripehandler"
@@ -33,8 +34,13 @@ func main() {
 		port = defaultPort
 	}
 
+	// Initialisation des services
+	usersService := users.NewUsersService()
+	commandsService := commands.NewCommandsService(usersService)
+	commerceCommandsService := commands.NewCommerceCommandsService(usersService)
+
 	router := chi.NewRouter()
-	router.Use(auth.Middleware())
+	router.Use(auth.Middleware(usersService))
 	// Add CORS middleware around every request
 	// See https://github.com/rs/cors for full option listing
 	router.Use(cors.New(cors.Options{
@@ -53,10 +59,16 @@ func main() {
 	}
 
 	// Initialisation de la base de données
-	database.Init()
+
+	shouldDropDb := false
+	database.Init(&shouldDropDb)
 
 	// Directives GraphQL
-	c := generated.Config{Resolvers: &graph.Resolver{}}
+	c := generated.Config{Resolvers: &graph.Resolver{
+		UsersService:            usersService,
+		CommandsService:         commandsService,
+		CommerceCommandsService: commerceCommandsService,
+	}}
 	c.Directives.NeedAuthentication = func(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
 		if auth.ForContext(ctx) == nil {
 			return nil, &users.UserAccessDenied{}

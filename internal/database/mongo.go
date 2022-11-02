@@ -22,7 +22,7 @@ var CollectionPaniers *mongo.Collection
 
 // Initialise la base de données à partir des informations données
 // dans la configuration
-func Init() {
+func Init(shouldDrop *bool) {
 	// Toutes les informations sont récupérés dans la configuration
 	// pour éviter de se retrouver avec des identifiants secrets présent
 	// dans le code
@@ -63,4 +63,9 @@ func Init() {
 	CollectionCCCommand = client.Database(databaseName).Collection(cccommandeCollectionName)
 	CollectionPanierCommands = client.Database(databaseName).Collection(panierCommandsCollectionName)
 	CollectionPaniers = client.Database(databaseName).Collection(panierCollectionName)
+
+	// Si on veut vider la bdd à l'initialisation, on le fait
+	if shouldDrop != nil && *shouldDrop {
+		client.Database(databaseName).Drop(MongoContext)
+	}
 }

@@ -79,6 +79,8 @@ func (user *User) HasRole(role model.Role) bool {
 
 // Service
 
+type userService struct{}
+
 type UsersService interface {
 	Create(input model.NewUser) (*User, error)
 	Update(changes *User) error
@@ -87,13 +89,15 @@ type UsersService interface {
 	GetUserByEmail(email string) (*User, error)
 	GetFiltered(filter interface{}) ([]User, error)
 	Authenticate(login model.Login) bool
-	HashPassword(password string) (string, error)
-	CheckPasswordHash(password, hash string) bool
+}
+
+func NewUsersService() *userService {
+	return &userService{}
 }
 
 // Createur de base de données
 
-func Create(input model.NewUser) (*User, error) {
+func (u *userService) Create(input model.NewUser) (*User, error) {
 	hashedPassword, err := HashPassword(input.Password)
 
 	if err != nil {
@@ -152,7 +156,7 @@ func Create(input model.NewUser) (*User, error) {
 
 // Mise à jour de la base de données
 
-func Update(changes *User) error {
+func (u *userService) Update(changes *User) error {
 	filter := bson.D{
 		primitive.E{
 			Key:   "_id",
@@ -167,13 +171,13 @@ func Update(changes *User) error {
 
 // Getter de base de données
 
-func GetAllUser() ([]User, error) {
+func (u *userService) GetAllUser() ([]User, error) {
 	filter := bson.D{{}}
 
-	return GetFiltered(filter)
+	return u.GetFiltered(filter)
 }
 
-func GetUserById(id string) (*User, error) {
+func (u *userService) GetUserById(id string) (*User, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
@@ -187,7 +191,7 @@ func GetUserById(id string) (*User, error) {
 		},
 	}
 
-	users, err := GetFiltered(filter)
+	users, err := u.GetFiltered(filter)
 
 	if err != nil {
 		return nil, err
@@ -200,7 +204,7 @@ func GetUserById(id string) (*User, error) {
 	return &users[0], nil
 }
 
-func GetUserByEmail(email string) (*User, error) {
+func (u *userService) GetUserByEmail(email string) (*User, error) {
 	filter := bson.D{
 		primitive.E{
 			Key:   "email",
@@ -208,7 +212,7 @@ func GetUserByEmail(email string) (*User, error) {
 		},
 	}
 
-	users, err := GetFiltered(filter)
+	users, err := u.GetFiltered(filter)
 
 	if err != nil {
 		return nil, err
@@ -221,7 +225,7 @@ func GetUserByEmail(email string) (*User, error) {
 	return &users[0], nil
 }
 
-func GetFiltered(filter interface{}) ([]User, error) {
+func (u *userService) GetFiltered(filter interface{}) ([]User, error) {
 	users := []User{}
 
 	cursor, err := database.CollectionUsers.Find(database.MongoContext, filter)
@@ -251,8 +255,8 @@ func GetFiltered(filter interface{}) ([]User, error) {
 
 // Authentification
 
-func Authenticate(login model.Login) bool {
-	user, err := GetUserByEmail(strings.ToLower(login.Email))
+func (u *userService) Authenticate(login model.Login) bool {
+	user, err := u.GetUserByEmail(strings.ToLower(login.Email))
 
 	if user == nil || err != nil {
 		return false

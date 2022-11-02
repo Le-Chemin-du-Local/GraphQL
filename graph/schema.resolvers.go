@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"net/mail"
 	"strings"
 	"time"
 
@@ -40,7 +41,7 @@ func (r *cCCommandResolver) Products(ctx context.Context, obj *model.CCCommand) 
 
 // User is the resolver for the user field.
 func (r *commandResolver) User(ctx context.Context, obj *model.Command) (*model.User, error) {
-	user, err := commands.GetUser(obj.ID)
+	user, err := r.CommandsService.GetUser(obj.ID)
 
 	if err != nil {
 		return nil, err
@@ -341,7 +342,7 @@ func (r *commerceCommandResolver) Paniers(ctx context.Context, obj *model.Commer
 
 // User is the resolver for the user field.
 func (r *commerceCommandResolver) User(ctx context.Context, obj *model.CommerceCommand) (*model.User, error) {
-	user, err := commands.CommerceGetUser(obj.ID)
+	user, err := r.CommerceCommandsService.GetUser(obj.ID)
 
 	if err != nil {
 		return nil, err
@@ -352,6 +353,13 @@ func (r *commerceCommandResolver) User(ctx context.Context, obj *model.CommerceC
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
+	// On vérifie que l'adresse mail est valide
+	_, err := mail.ParseAddress(input.Email)
+
+	if err != nil {
+		return nil, &users.UserEmailAddressInvalidError{}
+	}
+
 	// On doit d'abord vérifier que l'email n'est pas déjà prise
 	existingUser, err := r.UsersService.GetUserByEmail(strings.ToLower(input.Email))
 
@@ -369,7 +377,20 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		return nil, err
 	}
 
-	return databaseUser.ToModel(), nil
+	user := databaseUser.ToModel()
+
+	// if input.Commerce != nil {
+	// 	databaseCommerce, err := commerces.GetForUser(databaseUser.ID.Hex())
+
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+
+	// 	commerceID := databaseCommerce.ID.Hex()
+	// 	user.CommerceID = &commerceID
+	// }
+
+	return user, nil
 }
 
 // Login is the resolver for the login field.

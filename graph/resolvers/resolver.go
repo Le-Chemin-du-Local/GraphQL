@@ -1,4 +1,4 @@
-package graph
+package resolvers
 
 import (
 	"chemin-du-local.bzh/graphql/internal/services/commands"

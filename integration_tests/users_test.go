@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"chemin-du-local.bzh/graphql/graph"
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
+	"chemin-du-local.bzh/graphql/graph/resolvers"
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
 	"chemin-du-local.bzh/graphql/internal/users"
@@ -45,7 +45,7 @@ func TestIntegration(t *testing.T) {
 	database.Init(&shouldDropDb)
 
 	// Le client
-	resolvers := graph.Resolver{
+	resolvers := resolvers.Resolver{
 		UsersService: usersService,
 	}
 	c := client.New(

@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"chemin-du-local.bzh/graphql/graph"
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
+	"chemin-du-local.bzh/graphql/graph/resolvers"
 	"chemin-du-local.bzh/graphql/internal/auth"
 	"chemin-du-local.bzh/graphql/internal/banking"
 	"chemin-du-local.bzh/graphql/internal/config"
@@ -64,7 +64,7 @@ func main() {
 	database.Init(&shouldDropDb)
 
 	// Directives GraphQL
-	c := generated.Config{Resolvers: &graph.Resolver{
+	c := generated.Config{Resolvers: &resolvers.Resolver{
 		UsersService:            usersService,
 		CommandsService:         commandsService,
 		CommerceCommandsService: commerceCommandsService,

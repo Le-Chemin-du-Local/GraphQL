@@ -1,0 +1,56 @@
+##################
+## UTILISATEURS ##
+##################
+
+type User {
+  id: ID!
+  createdAt: Time
+  email: String!
+  phone: String!
+  role: String!
+  gender: String
+  firstName: String
+  lastName: String
+  birthdate: Time
+
+  addresses: [Address!]!
+  defaultAddress: Address
+
+  commerce: Commerce
+  basket: Basket
+
+  registeredPaymentMethods: [RegisteredPaymentMethod!]!
+  defaultPaymentMethod: RegisteredPaymentMethod
+}
+
+input NewUser {
+  email: String!
+  phone: String!
+  password: String!
+  gender: String
+  firstName: String
+  lastName: String
+  birthdate: Time
+  address: NewAddress
+
+  # Si on doit créer un commerçant
+  commerce: NewCommerce
+}
+
+input Login {
+  email: String!
+  password: String!
+}
+
+input ChangesUser {
+  gender: String
+  firstName: String 
+  lastName: String
+  birthdate: Time
+
+  addresses: [ChangesAddress!]
+  defaultAddressID: String
+
+  registedPaymentMethods: [ChangesRegistedPaymentMethod!]
+  defaultPaymentMethod: String
+}

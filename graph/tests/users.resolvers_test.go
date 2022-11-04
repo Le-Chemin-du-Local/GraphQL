@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"chemin-du-local.bzh/graphql/graph"
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
+	"chemin-du-local.bzh/graphql/graph/resolvers"
 	"chemin-du-local.bzh/graphql/internal/auth"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/mocks"
@@ -63,7 +63,7 @@ func TestMutationResolver_CreateUser(t *testing.T) {
 	}
 
 	testUsersService := new(mocks.UsersService)
-	resolvers := graph.Resolver{UsersService: testUsersService}
+	resolvers := resolvers.Resolver{UsersService: testUsersService}
 	c := client.New(
 		handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})),
 	)
@@ -217,7 +217,7 @@ func TestMutationResolver_Login(t *testing.T) {
 	}
 
 	testUsersService := new(mocks.UsersService)
-	resolvers := graph.Resolver{UsersService: testUsersService}
+	resolvers := resolvers.Resolver{UsersService: testUsersService}
 	c := client.New(
 		handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})),
 	)
@@ -317,7 +317,7 @@ func TestQueryResolver_Users(t *testing.T) {
 
 	t.Run("query all users", func(t *testing.T) {
 		testUsersService := new(mocks.UsersService)
-		resolvers := graph.Resolver{UsersService: testUsersService}
+		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
 			handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})),
 		)
@@ -405,7 +405,7 @@ func TestQueryResolver_User(t *testing.T) {
 	// Les tests
 	t.Run("query authenticated user", func(t *testing.T) {
 		testUsersService := new(mocks.UsersService)
-		resolvers := graph.Resolver{UsersService: testUsersService}
+		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
 			handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})),
 			addContext(&user),
@@ -436,7 +436,7 @@ func TestQueryResolver_User(t *testing.T) {
 
 	t.Run("query authenticated user without authentication", func(t *testing.T) {
 		testUsersService := new(mocks.UsersService)
-		resolvers := graph.Resolver{UsersService: testUsersService}
+		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
 			handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})),
 		)
@@ -466,7 +466,7 @@ func TestQueryResolver_User(t *testing.T) {
 
 	t.Run("query a user by its id", func(t *testing.T) {
 		testUsersService := new(mocks.UsersService)
-		resolvers := graph.Resolver{UsersService: testUsersService}
+		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
 			handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})),
 		)
@@ -496,7 +496,7 @@ func TestQueryResolver_User(t *testing.T) {
 
 	t.Run("query with authentified by its id", func(t *testing.T) {
 		testUsersService := new(mocks.UsersService)
-		resolvers := graph.Resolver{UsersService: testUsersService}
+		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
 			handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})),
 			addContext(&user),
@@ -527,7 +527,7 @@ func TestQueryResolver_User(t *testing.T) {
 
 	t.Run("query non existant user", func(t *testing.T) {
 		testUsersService := new(mocks.UsersService)
-		resolvers := graph.Resolver{UsersService: testUsersService}
+		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
 			handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})),
 		)
@@ -557,7 +557,7 @@ func TestQueryResolver_User(t *testing.T) {
 
 	t.Run("query with authentified non existant user", func(t *testing.T) {
 		testUsersService := new(mocks.UsersService)
-		resolvers := graph.Resolver{UsersService: testUsersService}
+		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
 			handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})),
 			addContext(&user),

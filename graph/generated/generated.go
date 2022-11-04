@@ -1934,7 +1934,52 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema.graphqls", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
+	{Name: "../shemas/root.resolver.graphqls", Input: `type Query {
+  # UTILISATEURS
+  users: [User!]!
+  user(id: ID): User!
+
+  # COMMERCES
+  commerces(first: Int = 5, after: String, filter: CommerceFilter): CommerceConnection! 
+  commerce(id: ID): Commerce
+  product(id: ID!): Product!
+
+  # SERVICES
+  commands(first: Int = 5, after: ID, filter: CommandsFilter): CommandConnection! @needAuthentication
+  commerceCommands(first: Int = 5, after: ID, filter: CommerceCommandsFilter): CommerceCommandConnection! @needAuthentication
+
+  command(id: ID!): Command! @needAuthentication
+
+  allServicesInfo: [ServiceInfo!]!
+  serviceInfo(id: String!): ServiceInfo!
+
+  # PANIERS
+  panier(id: ID!): Panier!
+}
+
+type Mutation {
+  # UTILISATEURS
+  createUser(input: NewUser!): User!
+  login(input: Login!): String!
+  updateUser(id: ID, input: ChangesUser): User! @needAuthentication
+
+  # COMMERCES
+  createCommerce(userID: ID!, input: NewCommerce!): Commerce! 
+  updateCommerce(id: ID!, changes: ChangesCommerce!): Commerce! @hasRole(role: STOREKEEPER)
+  createProduct(commerceID: ID, input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
+  createProducts(commerceID: ID, input: [NewProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
+  updateProduct(id: ID!, changes: ChangesProduct!): Product! @hasRole(role: STOREKEEPER)
+  updateProducts(changes: [BulkChangesProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
+
+  # SERVICES
+  updateCommerceCommand(id: ID!, changes: ChangesCommerceCommand!): CommerceCommand! @needAuthentication
+
+  # PANIER
+  createPanier(commerceID: ID, input: NewPanier!): Panier! @hasRole(role: STOREKEEPER)
+  updatePanier(id: ID! changes: ChangesPanier!): Panier! @hasRole(role: STOREKEEPER)
+}
+`, BuiltIn: false},
+	{Name: "../shemas/schema.graphqls", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
 directive @needAuthentication on FIELD_DEFINITION
 
 enum Role {
@@ -2021,63 +2066,6 @@ type RegisteredPaymentMethod {
 input ChangesRegistedPaymentMethod {
   name: String 
   stripeID: String
-}
-
-##################
-## UTILISATEURS ##
-##################
-
-type User {
-  id: ID!
-  createdAt: Time
-  email: String!
-  phone: String!
-  role: String!
-  gender: String
-  firstName: String
-  lastName: String
-  birthdate: Time
-
-  addresses: [Address!]!
-  defaultAddress: Address
-
-  commerce: Commerce
-  basket: Basket
-
-  registeredPaymentMethods: [RegisteredPaymentMethod!]!
-  defaultPaymentMethod: RegisteredPaymentMethod
-}
-
-input NewUser {
-  email: String!
-  phone: String!
-  password: String!
-  gender: String
-  firstName: String
-  lastName: String
-  birthdate: Time
-  address: NewAddress
-
-  # Si on doit créer un commerçant
-  commerce: NewCommerce
-}
-
-input Login {
-  email: String!
-  password: String!
-}
-
-input ChangesUser {
-  gender: String
-  firstName: String 
-  lastName: String
-  birthdate: Time
-
-  addresses: [ChangesAddress!]
-  defaultAddressID: String
-
-  registedPaymentMethods: [ChangesRegistedPaymentMethod!]
-  defaultPaymentMethod: String
 }
 
 ###############
@@ -2595,52 +2583,63 @@ input CommerceCommandsFilter {
 input PanierFilter {
   type: String
 }
-
-type Query {
-  # UTILISATEURS
-  users: [User!]!
-  user(id: ID): User!
-
-  # COMMERCES
-  commerces(first: Int = 5, after: String, filter: CommerceFilter): CommerceConnection! 
-  commerce(id: ID): Commerce
-  product(id: ID!): Product!
-
-  # SERVICES
-  commands(first: Int = 5, after: ID, filter: CommandsFilter): CommandConnection! @needAuthentication
-  commerceCommands(first: Int = 5, after: ID, filter: CommerceCommandsFilter): CommerceCommandConnection! @needAuthentication
-
-  command(id: ID!): Command! @needAuthentication
-
-  allServicesInfo: [ServiceInfo!]!
-  serviceInfo(id: String!): ServiceInfo!
-
-  # PANIERS
-  panier(id: ID!): Panier!
-}
-
-type Mutation {
-  # UTILISATEURS
-  createUser(input: NewUser!): User!
-  login(input: Login!): String!
-  updateUser(id: ID, input: ChangesUser): User! @needAuthentication
-
-  # COMMERCES
-  createCommerce(userID: ID!, input: NewCommerce!): Commerce! 
-  updateCommerce(id: ID!, changes: ChangesCommerce!): Commerce! @hasRole(role: STOREKEEPER)
-  createProduct(commerceID: ID, input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
-  createProducts(commerceID: ID, input: [NewProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
-  updateProduct(id: ID!, changes: ChangesProduct!): Product! @hasRole(role: STOREKEEPER)
-  updateProducts(changes: [BulkChangesProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
-
-  # SERVICES
-  updateCommerceCommand(id: ID!, changes: ChangesCommerceCommand!): CommerceCommand! @needAuthentication
-
-  # PANIER
-  createPanier(commerceID: ID, input: NewPanier!): Panier! @hasRole(role: STOREKEEPER)
-  updatePanier(id: ID! changes: ChangesPanier!): Panier! @hasRole(role: STOREKEEPER)
-}
 `, BuiltIn: false},
+	{Name: "../shemas/users.graphqls", Input: `##################
+## UTILISATEURS ##
+##################
+
+type User {
+  id: ID!
+  createdAt: Time
+  email: String!
+  phone: String!
+  role: String!
+  gender: String
+  firstName: String
+  lastName: String
+  birthdate: Time
+
+  addresses: [Address!]!
+  defaultAddress: Address
+
+  commerce: Commerce
+  basket: Basket
+
+  registeredPaymentMethods: [RegisteredPaymentMethod!]!
+  defaultPaymentMethod: RegisteredPaymentMethod
+}
+
+input NewUser {
+  email: String!
+  phone: String!
+  password: String!
+  gender: String
+  firstName: String
+  lastName: String
+  birthdate: Time
+  address: NewAddress
+
+  # Si on doit créer un commerçant
+  commerce: NewCommerce
+}
+
+input Login {
+  email: String!
+  password: String!
+}
+
+input ChangesUser {
+  gender: String
+  firstName: String 
+  lastName: String
+  birthdate: Time
+
+  addresses: [ChangesAddress!]
+  defaultAddressID: String
+
+  registedPaymentMethods: [ChangesRegistedPaymentMethod!]
+  defaultPaymentMethod: String
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 

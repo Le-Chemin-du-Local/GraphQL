@@ -8,12 +8,11 @@ import (
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
-	"chemin-du-local.bzh/graphql/internal/services/clickandcollect"
 )
 
 // Products is the resolver for the products field.
 func (r *cCCommandResolver) Products(ctx context.Context, obj *model.CCCommand) ([]*model.CCProduct, error) {
-	return clickandcollect.GetProducts(obj.ID)
+	return r.CCCommandsService.GetProducts(obj.ID)
 }
 
 // CCCommand returns generated.CCCommandResolver implementation.

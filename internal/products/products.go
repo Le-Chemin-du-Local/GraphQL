@@ -45,7 +45,7 @@ func (product *Product) ToModel() *model.Product {
 	}
 }
 
-func (product Product) IsLast() bool {
+func (product Product) IsLast(productsService ProductsService) bool {
 	filter := bson.D{
 		primitive.E{
 			Key:   "commerceID",
@@ -61,7 +61,7 @@ func (product Product) IsLast() bool {
 		},
 	})
 
-	lastProduct, err := GetFiltered(filter, &opts)
+	lastProduct, err := productsService.GetFiltered(filter, &opts)
 
 	if err != nil || len(lastProduct) <= 0 {
 		return false
@@ -70,9 +70,26 @@ func (product Product) IsLast() bool {
 	return lastProduct[0].ID == product.ID
 }
 
+// Service
+
+type productsService struct{}
+
+type ProductsService interface {
+	Create(commerceID string, input model.NewProduct) (*Product, error)
+	Update(changes *Product, image *graphql.Upload) error
+	GetById(id string) (*Product, error)
+	GetForCommerce(commerceID string) ([]Product, error)
+	GetPaginated(commerceID string, startValue *string, first int, filters *model.ProductFilter) ([]Product, error)
+	GetFiltered(filter interface{}, opts *options.FindOptions) ([]Product, error)
+}
+
+func NewProductsService() *productsService {
+	return &productsService{}
+}
+
 // Créateur de base de données
 
-func Create(commerceID string, input model.NewProduct) (*Product, error) {
+func (p *productsService) Create(commerceID string, input model.NewProduct) (*Product, error) {
 	commerceObjectID, err := primitive.ObjectIDFromHex(commerceID)
 
 	if err != nil {
@@ -123,7 +140,7 @@ func Create(commerceID string, input model.NewProduct) (*Product, error) {
 
 // Mise à jour de la base de données
 
-func Update(changes *Product, image *graphql.Upload) error {
+func (p *productsService) Update(changes *Product, image *graphql.Upload) error {
 	filter := bson.D{
 		primitive.E{
 			Key:   "_id",
@@ -155,7 +172,7 @@ func Update(changes *Product, image *graphql.Upload) error {
 
 // Getter de base de données
 
-func GetById(id string) (*Product, error) {
+func (p *productsService) GetById(id string) (*Product, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
@@ -169,7 +186,7 @@ func GetById(id string) (*Product, error) {
 		},
 	}
 
-	products, err := GetFiltered(filter, nil)
+	products, err := p.GetFiltered(filter, nil)
 
 	if err != nil {
 		return nil, err
@@ -182,7 +199,7 @@ func GetById(id string) (*Product, error) {
 	return &products[0], nil
 }
 
-func GetForCommerce(commerceID string) ([]Product, error) {
+func (p *productsService) GetForCommerce(commerceID string) ([]Product, error) {
 	commerceObjectId, err := primitive.ObjectIDFromHex(commerceID)
 
 	if err != nil {
@@ -196,10 +213,10 @@ func GetForCommerce(commerceID string) ([]Product, error) {
 		},
 	}
 
-	return GetFiltered(filter, nil)
+	return p.GetFiltered(filter, nil)
 }
 
-func GetPaginated(commerceID string, startValue *string, first int, filters *model.ProductFilter) ([]Product, error) {
+func (p *productsService) GetPaginated(commerceID string, startValue *string, first int, filters *model.ProductFilter) ([]Product, error) {
 	commerceObjectID, err := primitive.ObjectIDFromHex(commerceID)
 
 	if err != nil {
@@ -256,10 +273,10 @@ func GetPaginated(commerceID string, startValue *string, first int, filters *mod
 	opts := options.Find()
 	opts.SetLimit(int64(first))
 
-	return GetFiltered(finalFilter, opts)
+	return p.GetFiltered(finalFilter, opts)
 }
 
-func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Product, error) {
+func (p *productsService) GetFiltered(filter interface{}, opts *options.FindOptions) ([]Product, error) {
 	products := []Product{}
 
 	cursor, err := database.CollectionProducts.Find(database.MongoContext, filter, opts)

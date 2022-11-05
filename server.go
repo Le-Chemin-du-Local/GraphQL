@@ -14,7 +14,9 @@ import (
 	"chemin-du-local.bzh/graphql/internal/commerces"
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
+	"chemin-du-local.bzh/graphql/internal/products"
 	"chemin-du-local.bzh/graphql/internal/services/commands"
+	"chemin-du-local.bzh/graphql/internal/services/paniers"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/mapshandler"
 	"chemin-du-local.bzh/graphql/pkg/stripehandler"
@@ -38,8 +40,12 @@ func main() {
 	// Initialisation des services
 	commercesService := commerces.NewCommercesService()
 	usersService := users.NewUsersService(commercesService)
+	productsService := products.NewProductsService()
+	paniersService := paniers.NewPaniersService(productsService)
 	commandsService := commands.NewCommandsService(usersService)
 	commerceCommandsService := commands.NewCommerceCommandsService(usersService, commercesService, commandsService)
+	ccCommandsService := commands.NewCCCommandsService(productsService)
+	panierCommandsService := commands.NewPanierCommandsService()
 
 	router := chi.NewRouter()
 	router.Use(auth.Middleware(usersService))
@@ -69,8 +75,12 @@ func main() {
 	c := generated.Config{Resolvers: &resolvers.Resolver{
 		UsersService:            usersService,
 		CommercesService:        commercesService,
+		ProductsService:         productsService,
+		PaniersService:          paniersService,
 		CommandsService:         commandsService,
 		CommerceCommandsService: commerceCommandsService,
+		CCCommandsService:       ccCommandsService,
+		PanierCommandsService:   panierCommandsService,
 	}}
 	c.Directives.NeedAuthentication = func(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
 		if auth.ForContext(ctx) == nil {
@@ -99,9 +109,37 @@ func main() {
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 	router.Handle("/playground", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
-	router.HandleFunc("/create-setup-intent", stripehandler.HanldeCreateSetupIntent)
-	router.HandleFunc("/create-order", stripehandler.HandleCreateOrder)
-	router.HandleFunc("/complete-order", stripehandler.HandleCompleteOrder)
+	router.HandleFunc("/create-setup-intent", func(w http.ResponseWriter, r *http.Request) {
+		stripehandler.HanldeCreateSetupIntent(
+			w,
+			r,
+			usersService,
+			commercesService,
+		)
+	})
+	router.HandleFunc("/create-order", func(w http.ResponseWriter, r *http.Request) {
+		stripehandler.HandleCreateOrder(
+			w,
+			r,
+			usersService,
+			commercesService,
+			productsService,
+			paniersService,
+			commandsService,
+			commerceCommandsService,
+			ccCommandsService,
+			panierCommandsService,
+		)
+	})
+	router.HandleFunc("/complete-order", func(w http.ResponseWriter, r *http.Request) {
+		stripehandler.HandleCompleteOrder(
+			w,
+			r,
+			usersService,
+			commercesService,
+			commerceCommandsService,
+		)
+	})
 	router.HandleFunc("/maps/autocomplete", mapshandler.HandleAutocomplete)
 	router.HandleFunc("/maps/details", mapshandler.HandlePlaceDetails)
 

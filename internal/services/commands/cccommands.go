@@ -1,4 +1,4 @@
-package clickandcollect
+package commands
 
 import (
 	"chemin-du-local.bzh/graphql/graph/model"
@@ -27,9 +27,29 @@ func (cccommand *CCCommand) ToModel() *model.CCCommand {
 	}
 }
 
+// Service
+
+type ccCommandsService struct {
+	ProductsSerivce products.ProductsService
+}
+
+type CCCommandsService interface {
+	Create(commerceCommandID primitive.ObjectID, input model.NewCCCommand) (*CCCommand, error)
+	GetById(id string) (*CCCommand, error)
+	GetForCommmerceCommand(commerceCommandID string) ([]CCCommand, error)
+	GetFiltered(filter interface{}, opts *options.FindOptions) ([]CCCommand, error)
+	GetProducts(cccommandID string) ([]*model.CCProduct, error)
+}
+
+func NewCCCommandsService(productsService products.ProductsService) *ccCommandsService {
+	return &ccCommandsService{
+		ProductsSerivce: productsService,
+	}
+}
+
 // Créateur de base de données
 
-func Create(commerceCommandID primitive.ObjectID, input model.NewCCCommand) (*CCCommand, error) {
+func (c *ccCommandsService) Create(commerceCommandID primitive.ObjectID, input model.NewCCCommand) (*CCCommand, error) {
 	products := []CCProduct{}
 	for _, product := range input.ProductsID {
 		productObjectID, err := primitive.ObjectIDFromHex(product.ProductID)
@@ -62,7 +82,7 @@ func Create(commerceCommandID primitive.ObjectID, input model.NewCCCommand) (*CC
 
 // Getter de base de données
 
-func GetById(id string) (*CCCommand, error) {
+func (c *ccCommandsService) GetById(id string) (*CCCommand, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
@@ -76,7 +96,7 @@ func GetById(id string) (*CCCommand, error) {
 		},
 	}
 
-	cccommands, err := GetFiltered(filter, nil)
+	cccommands, err := c.GetFiltered(filter, nil)
 
 	if err != nil {
 		return nil, err
@@ -89,7 +109,7 @@ func GetById(id string) (*CCCommand, error) {
 	return &cccommands[0], nil
 }
 
-func GetForCommmerceCommand(commerceCommandID string) ([]CCCommand, error) {
+func (c *ccCommandsService) GetForCommmerceCommand(commerceCommandID string) ([]CCCommand, error) {
 	commerceCommandObjectId, err := primitive.ObjectIDFromHex(commerceCommandID)
 
 	if err != nil {
@@ -103,10 +123,10 @@ func GetForCommmerceCommand(commerceCommandID string) ([]CCCommand, error) {
 		},
 	}
 
-	return GetFiltered(filter, nil)
+	return c.GetFiltered(filter, nil)
 }
 
-func GetFiltered(filter interface{}, opts *options.FindOptions) ([]CCCommand, error) {
+func (c *ccCommandsService) GetFiltered(filter interface{}, opts *options.FindOptions) ([]CCCommand, error) {
 	cccommands := []CCCommand{}
 
 	cursor, err := database.CollectionCCCommand.Find(database.MongoContext, filter, opts)
@@ -136,8 +156,8 @@ func GetFiltered(filter interface{}, opts *options.FindOptions) ([]CCCommand, er
 
 // Getter pour les produits
 
-func GetProducts(cccommandID string) ([]*model.CCProduct, error) {
-	databaseCCCommand, err := GetById(cccommandID)
+func (c *ccCommandsService) GetProducts(cccommandID string) ([]*model.CCProduct, error) {
+	databaseCCCommand, err := c.GetById(cccommandID)
 
 	if err != nil {
 		return nil, err
@@ -150,7 +170,7 @@ func GetProducts(cccommandID string) ([]*model.CCProduct, error) {
 	modelProducts := []*model.CCProduct{}
 
 	for _, product := range databaseCCCommand.Products {
-		databaseProduct, err := products.GetById(product.ProductID.Hex())
+		databaseProduct, err := c.ProductsSerivce.GetById(product.ProductID.Hex())
 
 		if err != nil {
 			return nil, err

@@ -1,4 +1,4 @@
-package paniers
+package commands
 
 import (
 	"chemin-du-local.bzh/graphql/graph/model"
@@ -20,9 +20,24 @@ func (panierCommand *PanierCommand) ToModel() *model.PanierCommand {
 	}
 }
 
+// Service
+
+type panierCommandsService struct{}
+
+type PanierCommandsService interface {
+	Create(commerceCommandID primitive.ObjectID, input model.NewPanierCommand) (*PanierCommand, error)
+	GetById(id string) (*PanierCommand, error)
+	GetForCommerceCommand(commerceCommandID string) ([]PanierCommand, error)
+	GetFiltered(filter interface{}, opts *options.FindOptions) ([]PanierCommand, error)
+}
+
+func NewPanierCommandsService() *panierCommandsService {
+	return &panierCommandsService{}
+}
+
 // Créateur de base de données
 
-func CreateCommand(commerceCommandID primitive.ObjectID, input model.NewPanierCommand) (*PanierCommand, error) {
+func (p *panierCommandsService) Create(commerceCommandID primitive.ObjectID, input model.NewPanierCommand) (*PanierCommand, error) {
 	panierObjectID, err := primitive.ObjectIDFromHex(input.PanierID)
 
 	if err != nil {
@@ -46,7 +61,7 @@ func CreateCommand(commerceCommandID primitive.ObjectID, input model.NewPanierCo
 
 // Getter de base de données
 
-func GetCommandById(id string) (*PanierCommand, error) {
+func (p *panierCommandsService) GetById(id string) (*PanierCommand, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
@@ -60,7 +75,7 @@ func GetCommandById(id string) (*PanierCommand, error) {
 		},
 	}
 
-	panierCommands, err := GetFilteredCommands(filter, nil)
+	panierCommands, err := p.GetFiltered(filter, nil)
 
 	if err != nil {
 		return nil, err
@@ -73,7 +88,7 @@ func GetCommandById(id string) (*PanierCommand, error) {
 	return &panierCommands[0], nil
 }
 
-func GetCommandsForCommerceCommand(commerceCommandID string) ([]PanierCommand, error) {
+func (p *panierCommandsService) GetForCommerceCommand(commerceCommandID string) ([]PanierCommand, error) {
 	commerceCommandObjectID, err := primitive.ObjectIDFromHex(commerceCommandID)
 
 	if err != nil {
@@ -87,10 +102,10 @@ func GetCommandsForCommerceCommand(commerceCommandID string) ([]PanierCommand, e
 		},
 	}
 
-	return GetFilteredCommands(filter, nil)
+	return p.GetFiltered(filter, nil)
 }
 
-func GetFilteredCommands(filter interface{}, opts *options.FindOptions) ([]PanierCommand, error) {
+func (p *panierCommandsService) GetFiltered(filter interface{}, opts *options.FindOptions) ([]PanierCommand, error) {
 	panierCommands := []PanierCommand{}
 
 	cursor, err := database.CollectionPanierCommands.Find(database.MongoContext, filter, opts)

@@ -199,7 +199,7 @@ func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, change
 				databaseCommerce.Services = append(databaseCommerce.Services, castedServiceChange.ServiceID)
 
 				// Pour le Click&Collect, on veut ajouter tous les produits par défaut
-				productsOfCommerce, err := products.GetForCommerce(databaseCommerce.ID.Hex())
+				productsOfCommerce, err := r.ProductsService.GetForCommerce(databaseCommerce.ID.Hex())
 
 				if err != nil {
 					productsId := []string{}
@@ -313,7 +313,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, commerceID *string
 		commerceID = &databaseCommerceID
 	}
 
-	databaseProduct, err := products.Create(*commerceID, input)
+	databaseProduct, err := r.ProductsService.Create(*commerceID, input)
 
 	if err != nil {
 		return nil, err
@@ -370,7 +370,7 @@ func (r *mutationResolver) CreateProducts(ctx context.Context, commerceID *strin
 	result := []*model.Product{}
 
 	for _, produdct := range input {
-		databaseProduct, err := products.Create(*commerceID, *produdct)
+		databaseProduct, err := r.ProductsService.Create(*commerceID, *produdct)
 
 		if err != nil {
 			return nil, err
@@ -384,7 +384,7 @@ func (r *mutationResolver) CreateProducts(ctx context.Context, commerceID *strin
 
 // UpdateProduct is the resolver for the updateProduct field.
 func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, changes map[string]interface{}) (*model.Product, error) {
-	databaseProduct, err := products.GetById(id)
+	databaseProduct, err := r.ProductsService.GetById(id)
 
 	if err != nil {
 		return nil, err
@@ -403,7 +403,7 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, changes
 		image = &castedImage
 	}
 
-	err = products.Update(databaseProduct, image)
+	err = r.ProductsService.Update(databaseProduct, image)
 
 	if err != nil {
 		return nil, err
@@ -417,7 +417,7 @@ func (r *mutationResolver) UpdateProducts(ctx context.Context, changes []*model.
 	result := []*model.Product{}
 
 	for _, change := range changes {
-		databaseProduct, err := products.GetById(change.ID)
+		databaseProduct, err := r.ProductsService.GetById(change.ID)
 
 		if err != nil {
 			return nil, err
@@ -436,7 +436,7 @@ func (r *mutationResolver) UpdateProducts(ctx context.Context, changes []*model.
 			image = &castedImage
 		}
 
-		err = products.Update(databaseProduct, image)
+		err = r.ProductsService.Update(databaseProduct, image)
 
 		if err != nil {
 			return nil, err
@@ -500,7 +500,7 @@ func (r *mutationResolver) CreatePanier(ctx context.Context, commerceID *string,
 		return nil, &commerces.CommerceErrorNotFound{}
 	}
 
-	databasePanier, err := paniers.Create(databaseCommerce.ID, input)
+	databasePanier, err := r.PaniersService.Create(databaseCommerce.ID, input)
 
 	if err != nil {
 		return nil, err
@@ -511,7 +511,7 @@ func (r *mutationResolver) CreatePanier(ctx context.Context, commerceID *string,
 
 // UpdatePanier is the resolver for the updatePanier field.
 func (r *mutationResolver) UpdatePanier(ctx context.Context, id string, changes map[string]interface{}) (*model.Panier, error) {
-	databasePanier, err := paniers.GetById(id)
+	databasePanier, err := r.PaniersService.GetById(id)
 
 	if err != nil {
 		return nil, err
@@ -562,7 +562,7 @@ func (r *mutationResolver) UpdatePanier(ctx context.Context, id string, changes 
 		image = &castedImage
 	}
 
-	err = paniers.Update(databasePanier, image)
+	err = r.PaniersService.Update(databasePanier, image)
 
 	if err != nil {
 		return nil, err
@@ -712,7 +712,7 @@ func (r *queryResolver) Commerce(ctx context.Context, id *string) (*model.Commer
 
 // Product is the resolver for the product field.
 func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product, error) {
-	databaseProduct, err := products.GetById(id)
+	databaseProduct, err := r.ProductsService.GetById(id)
 
 	if err != nil {
 		return nil, err
@@ -923,7 +923,7 @@ func (r *queryResolver) ServiceInfo(ctx context.Context, id string) (*model.Serv
 
 // Panier is the resolver for the panier field.
 func (r *queryResolver) Panier(ctx context.Context, id string) (*model.Panier, error) {
-	databasePanier, err := paniers.GetById(id)
+	databasePanier, err := r.PaniersService.GetById(id)
 
 	if err != nil {
 		return nil, err

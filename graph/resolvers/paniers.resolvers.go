@@ -13,12 +13,12 @@ import (
 
 // Products is the resolver for the products field.
 func (r *panierResolver) Products(ctx context.Context, obj *model.Panier) ([]*model.PanierProduct, error) {
-	return paniers.GetProducts(obj.ID)
+	return r.PaniersService.GetProducts(obj.ID)
 }
 
 // Panier is the resolver for the panier field.
 func (r *panierCommandResolver) Panier(ctx context.Context, obj *model.PanierCommand) (*model.Panier, error) {
-	databasePanierCommand, err := paniers.GetCommandById(obj.ID)
+	databasePanierCommand, err := r.PanierCommandsService.GetById(obj.ID)
 
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ func (r *panierCommandResolver) Panier(ctx context.Context, obj *model.PanierCom
 		return nil, &paniers.PanierNotFoundError{}
 	}
 
-	databasePanier, err := paniers.GetById(databasePanierCommand.PanierID.Hex())
+	databasePanier, err := r.PaniersService.GetById(databasePanierCommand.PanierID.Hex())
 
 	if err != nil {
 		return nil, err

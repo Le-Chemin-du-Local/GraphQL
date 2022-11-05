@@ -50,7 +50,7 @@ func (panier *Panier) ToModel() *model.Panier {
 	}
 }
 
-func (panier Panier) IsLast() bool {
+func (panier Panier) IsLast(paniersService PaniersService) bool {
 	filter := bson.D{
 		primitive.E{
 			Key:   "commerceID",
@@ -66,7 +66,7 @@ func (panier Panier) IsLast() bool {
 		},
 	})
 
-	lastPanier, err := GetFiltered(filter, &opts)
+	lastPanier, err := paniersService.GetFiltered(filter, &opts)
 
 	if err != nil || len(lastPanier) <= 0 {
 		return false
@@ -75,9 +75,30 @@ func (panier Panier) IsLast() bool {
 	return lastPanier[0].ID == panier.ID
 }
 
+// Service
+
+type paniersService struct {
+	ProductsService products.ProductsService
+}
+
+type PaniersService interface {
+	Create(commerceID primitive.ObjectID, input model.NewPanier) (*Panier, error)
+	Update(changes *Panier, image *graphql.Upload) error
+	GetById(id string) (*Panier, error)
+	GetPaginated(commerceID string, startValue *string, first int, filters *model.PanierFilter) ([]Panier, error)
+	GetFiltered(filter interface{}, opts *options.FindOptions) ([]Panier, error)
+	GetProducts(panierID string) ([]*model.PanierProduct, error)
+}
+
+func NewPaniersService(productsService products.ProductsService) *paniersService {
+	return &paniersService{
+		ProductsService: productsService,
+	}
+}
+
 // Créateur de base de données
 
-func Create(commerceID primitive.ObjectID, input model.NewPanier) (*Panier, error) {
+func (p *paniersService) Create(commerceID primitive.ObjectID, input model.NewPanier) (*Panier, error) {
 	products := []PanierProduct{}
 	for _, product := range input.Products {
 		productObjectID, err := primitive.ObjectIDFromHex(product.ProductID)
@@ -136,7 +157,7 @@ func Create(commerceID primitive.ObjectID, input model.NewPanier) (*Panier, erro
 
 // Mise à jour de la base de données
 
-func Update(changes *Panier, image *graphql.Upload) error {
+func (p *paniersService) Update(changes *Panier, image *graphql.Upload) error {
 	filter := bson.D{
 		primitive.E{
 			Key:   "_id",
@@ -168,7 +189,7 @@ func Update(changes *Panier, image *graphql.Upload) error {
 
 // Getter de base de données
 
-func GetById(id string) (*Panier, error) {
+func (p *paniersService) GetById(id string) (*Panier, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
@@ -182,7 +203,7 @@ func GetById(id string) (*Panier, error) {
 		},
 	}
 
-	paniers, err := GetFiltered(filter, nil)
+	paniers, err := p.GetFiltered(filter, nil)
 
 	if err != nil {
 		return nil, err
@@ -195,7 +216,7 @@ func GetById(id string) (*Panier, error) {
 	return &paniers[0], nil
 }
 
-func GetPaginated(commerceID string, startValue *string, first int, filters *model.PanierFilter) ([]Panier, error) {
+func (p *paniersService) GetPaginated(commerceID string, startValue *string, first int, filters *model.PanierFilter) ([]Panier, error) {
 	commerceObjectID, err := primitive.ObjectIDFromHex(commerceID)
 
 	if err != nil {
@@ -261,10 +282,10 @@ func GetPaginated(commerceID string, startValue *string, first int, filters *mod
 	opts := options.Find()
 	opts.SetLimit(int64(first))
 
-	return GetFiltered(finalFilter, opts)
+	return p.GetFiltered(finalFilter, opts)
 }
 
-func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Panier, error) {
+func (p *paniersService) GetFiltered(filter interface{}, opts *options.FindOptions) ([]Panier, error) {
 	paniers := []Panier{}
 
 	cursor, err := database.CollectionPaniers.Find(database.MongoContext, filter, opts)
@@ -294,8 +315,8 @@ func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Panier, error
 
 // Getter pour les produits
 
-func GetProducts(panierID string) ([]*model.PanierProduct, error) {
-	databasePanier, err := GetById(panierID)
+func (p *paniersService) GetProducts(panierID string) ([]*model.PanierProduct, error) {
+	databasePanier, err := p.GetById(panierID)
 
 	if err != nil {
 		return nil, err
@@ -308,7 +329,7 @@ func GetProducts(panierID string) ([]*model.PanierProduct, error) {
 	modelProducts := []*model.PanierProduct{}
 
 	for _, product := range databasePanier.Products {
-		databaseProduct, err := products.GetById(product.ProductID.Hex())
+		databaseProduct, err := p.ProductsService.GetById(product.ProductID.Hex())
 
 		if err != nil {
 			return nil, err

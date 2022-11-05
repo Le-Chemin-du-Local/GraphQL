@@ -8,8 +8,6 @@ import (
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
-	"chemin-du-local.bzh/graphql/internal/services/clickandcollect"
-	"chemin-du-local.bzh/graphql/internal/services/paniers"
 )
 
 // User is the resolver for the user field.
@@ -53,7 +51,7 @@ func (r *commerceCommandResolver) Commerce(ctx context.Context, obj *model.Comme
 
 // Cccommands is the resolver for the cccommands field.
 func (r *commerceCommandResolver) Cccommands(ctx context.Context, obj *model.CommerceCommand) ([]*model.CCCommand, error) {
-	databaseCCCommands, err := clickandcollect.GetForCommmerceCommand(obj.ID)
+	databaseCCCommands, err := r.CCCommandsService.GetForCommmerceCommand(obj.ID)
 
 	if err != nil {
 		return nil, err
@@ -70,7 +68,7 @@ func (r *commerceCommandResolver) Cccommands(ctx context.Context, obj *model.Com
 
 // Paniers is the resolver for the paniers field.
 func (r *commerceCommandResolver) Paniers(ctx context.Context, obj *model.CommerceCommand) ([]*model.PanierCommand, error) {
-	databasePanierCommands, err := paniers.GetCommandsForCommerceCommand(obj.ID)
+	databasePanierCommands, err := r.PanierCommandsService.GetForCommerceCommand(obj.ID)
 
 	if err != nil {
 		return nil, err

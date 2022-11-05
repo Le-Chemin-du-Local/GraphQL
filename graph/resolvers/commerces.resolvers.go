@@ -11,9 +11,7 @@ import (
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/internal/commerces"
 	"chemin-du-local.bzh/graphql/internal/helper"
-	"chemin-du-local.bzh/graphql/internal/products"
 	"chemin-du-local.bzh/graphql/internal/registeredpaymentmethod"
-	"chemin-du-local.bzh/graphql/internal/services/paniers"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -44,7 +42,7 @@ func (r *commerceResolver) Categories(ctx context.Context, obj *model.Commerce) 
 		},
 	}
 
-	databaseProducts, err := products.GetFiltered(filter, nil)
+	databaseProducts, err := r.ProductsService.GetFiltered(filter, nil)
 	categories := []string{}
 
 	if err != nil {
@@ -77,7 +75,7 @@ func (r *commerceResolver) Products(ctx context.Context, obj *model.Commerce, fi
 		decodedCursor = &decodedCursorString
 	}
 
-	databaseProducts, err := products.GetPaginated(obj.ID, decodedCursor, *first, filters)
+	databaseProducts, err := r.ProductsService.GetPaginated(obj.ID, decodedCursor, *first, filters)
 
 	if err != nil {
 		return nil, err
@@ -106,7 +104,7 @@ func (r *commerceResolver) Products(ctx context.Context, obj *model.Commerce, fi
 		}, nil
 	}
 
-	hasNextPage := !databaseProducts[itemCount-1].IsLast()
+	hasNextPage := !databaseProducts[itemCount-1].IsLast(r.ProductsService)
 
 	pageInfo := model.ProductPageInfo{
 		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
@@ -136,7 +134,7 @@ func (r *commerceResolver) ProductsAvailableForClickAndCollect(ctx context.Conte
 
 	productsResult := []*model.Product{}
 	for _, productId := range databaseCommere.ProductsAvailableForClickAndCollect {
-		databaseProduct, err := products.GetById(productId)
+		databaseProduct, err := r.ProductsService.GetById(productId)
 
 		if err != nil {
 			return nil, err
@@ -190,7 +188,7 @@ func (r *commerceResolver) Paniers(ctx context.Context, obj *model.Commerce, fir
 		decodedCursor = &decodedCursorString
 	}
 
-	databasePaniers, err := paniers.GetPaginated(obj.ID, decodedCursor, *first, filters)
+	databasePaniers, err := r.PaniersService.GetPaginated(obj.ID, decodedCursor, *first, filters)
 
 	if err != nil {
 		return nil, err
@@ -219,7 +217,7 @@ func (r *commerceResolver) Paniers(ctx context.Context, obj *model.Commerce, fir
 		}, nil
 	}
 
-	hasNextPage := !databasePaniers[itemCount-1].IsLast()
+	hasNextPage := !databasePaniers[itemCount-1].IsLast(r.PaniersService)
 
 	pageInfo := model.PanierPageInfo{
 		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),

@@ -116,7 +116,7 @@ func (r *mutationResolver) CreateCommerce(ctx context.Context, userID string, in
 		return nil, &users.UserNotFoundError{}
 	}
 
-	databaseCommerce, err := commerces.Create(input, databaseUser.ID)
+	databaseCommerce, err := r.CommercesService.Create(input, databaseUser.ID)
 
 	if err != nil {
 		return nil, err
@@ -134,7 +134,7 @@ func (r *mutationResolver) CreateCommerce(ctx context.Context, userID string, in
 
 // UpdateCommerce is the resolver for the updateCommerce field.
 func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, changes map[string]interface{}) (*model.Commerce, error) {
-	databaseCommerce, err := commerces.GetById(id)
+	databaseCommerce, err := r.CommercesService.GetById(id)
 
 	if err != nil {
 		return nil, err
@@ -281,7 +281,7 @@ func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, change
 
 	}
 
-	err = commerces.Update(databaseCommerce, image, profilePicture)
+	err = r.CommercesService.Update(databaseCommerce, image, profilePicture)
 
 	if err != nil {
 		return nil, err
@@ -301,7 +301,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, commerceID *string
 	// Si l'utilisateur est un commerçant, il doit créer des produits
 	// pour son commerce
 	if user.Role == users.USERROLE_STOREKEEPER {
-		databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+		databaseCommerce, err := r.CommercesService.GetForUser(user.ID.Hex())
 
 		// Cela permet aussi d'éviter qu'un commerçant créer un
 		// produit sans commerce
@@ -320,7 +320,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, commerceID *string
 	}
 
 	// Si le commerçant a souscrit au Click&Collect, le produit doit automatiquement y être ajouté
-	databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+	databaseCommerce, err := r.CommercesService.GetForUser(user.ID.Hex())
 
 	if err != nil {
 		return databaseProduct.ToModel(), nil
@@ -339,7 +339,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, commerceID *string
 		databaseCommerce.ProductsAvailableForClickAndCollect = append(databaseCommerce.ProductsAvailableForClickAndCollect, databaseProduct.ID.Hex())
 	}
 
-	commerces.Update(databaseCommerce, nil, nil)
+	r.CommercesService.Update(databaseCommerce, nil, nil)
 
 	return databaseProduct.ToModel(), nil
 }
@@ -355,7 +355,7 @@ func (r *mutationResolver) CreateProducts(ctx context.Context, commerceID *strin
 	// Si l'utilisateur est un commerçant, il doit créer des produits
 	// pour son commerce
 	if user.Role == users.USERROLE_STOREKEEPER {
-		databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+		databaseCommerce, err := r.CommercesService.GetForUser(user.ID.Hex())
 
 		// Cela permet aussi d'éviter qu'un commerçant créer un
 		// produit sans commerce
@@ -450,7 +450,7 @@ func (r *mutationResolver) UpdateProducts(ctx context.Context, changes []*model.
 
 // UpdateCommerceCommand is the resolver for the updateCommerceCommand field.
 func (r *mutationResolver) UpdateCommerceCommand(ctx context.Context, id string, changes map[string]interface{}) (*model.CommerceCommand, error) {
-	databaseCommerceCommand, err := commands.CommerceGetById(id)
+	databaseCommerceCommand, err := r.CommerceCommandsService.GetById(id)
 
 	if err != nil {
 		return nil, err
@@ -462,7 +462,7 @@ func (r *mutationResolver) UpdateCommerceCommand(ctx context.Context, id string,
 
 	helper.ApplyChanges(changes, databaseCommerceCommand)
 
-	err = commands.CommerceUpdate(databaseCommerceCommand)
+	err = r.CommerceCommandsService.Update(databaseCommerceCommand)
 
 	if err != nil {
 		return nil, err
@@ -479,7 +479,7 @@ func (r *mutationResolver) CreatePanier(ctx context.Context, commerceID *string,
 
 	// On a d'abord besoin de trouver le commerce de l'utilisateur ou celui en paramètre
 	if commerceID == nil {
-		userDatabaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+		userDatabaseCommerce, err := r.CommercesService.GetForUser(user.ID.Hex())
 
 		if err != nil {
 			return nil, err
@@ -487,7 +487,7 @@ func (r *mutationResolver) CreatePanier(ctx context.Context, commerceID *string,
 
 		databaseCommerce = userDatabaseCommerce
 	} else {
-		commerceDatabaseCommerce, err := commerces.GetById(*commerceID)
+		commerceDatabaseCommerce, err := r.CommercesService.GetById(*commerceID)
 
 		if err != nil {
 			return nil, err
@@ -628,7 +628,7 @@ func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string
 		decodedCursor = &decodedCursorString
 	}
 
-	databaseCommerces, totalCount, err := commerces.GetPaginated(decodedCursor, *first, filter)
+	databaseCommerces, totalCount, err := r.CommercesService.GetPaginated(decodedCursor, *first, filter)
 
 	if err != nil {
 		return nil, err
@@ -658,7 +658,7 @@ func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string
 		}, nil
 	}
 
-	hasNextPage := !databaseCommerces[itemCount-1].IsLast()
+	hasNextPage := !databaseCommerces[itemCount-1].IsLast(r.CommercesService)
 
 	pageInfo := model.CommercePageInfo{
 		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
@@ -678,7 +678,7 @@ func (r *queryResolver) Commerces(ctx context.Context, first *int, after *string
 // Commerce is the resolver for the commerce field.
 func (r *queryResolver) Commerce(ctx context.Context, id *string) (*model.Commerce, error) {
 	if id != nil {
-		databaseCommerce, err := commerces.GetById(*id)
+		databaseCommerce, err := r.CommercesService.GetById(*id)
 
 		if err != nil {
 			return nil, err
@@ -697,7 +697,7 @@ func (r *queryResolver) Commerce(ctx context.Context, id *string) (*model.Commer
 		return nil, &commerces.CommerceErrorNotFound{}
 	}
 
-	databaseCommerce, err := commerces.GetForUser(user.ID.Hex())
+	databaseCommerce, err := r.CommercesService.GetForUser(user.ID.Hex())
 
 	if err != nil {
 		return nil, err
@@ -746,7 +746,7 @@ func (r *queryResolver) Commands(ctx context.Context, first *int, after *string,
 		decodedCursor = &decodedCursorString
 	}
 
-	databaseCommands, err := commands.GetPaginated(decodedCursor, *first, filter)
+	databaseCommands, err := r.CommandsService.GetPaginated(decodedCursor, *first, filter)
 
 	if err != nil {
 		return nil, err
@@ -777,7 +777,7 @@ func (r *queryResolver) Commands(ctx context.Context, first *int, after *string,
 		}, nil
 	}
 
-	hasNextPage := !databaseCommands[itemCount-1].IsLast()
+	hasNextPage := !databaseCommands[itemCount-1].IsLast(r.CommandsService)
 
 	pageInfo := model.CommandPageInfo{
 		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
@@ -807,7 +807,7 @@ func (r *queryResolver) CommerceCommands(ctx context.Context, first *int, after 
 	if filter.CommerceID == nil {
 		userIDValue := user.ID.Hex()
 
-		databaseCommerce, err := commerces.GetForUser(userIDValue)
+		databaseCommerce, err := r.CommercesService.GetForUser(userIDValue)
 
 		if err != nil {
 			return nil, err
@@ -834,7 +834,7 @@ func (r *queryResolver) CommerceCommands(ctx context.Context, first *int, after 
 		decodedCursor = &decodedCursorString
 	}
 
-	databaseCommands, err := commands.CommerceGetPaginated(decodedCursor, *first, filter)
+	databaseCommands, err := r.CommerceCommandsService.GetPaginated(decodedCursor, *first, filter)
 
 	if err != nil {
 		return nil, err
@@ -865,7 +865,7 @@ func (r *queryResolver) CommerceCommands(ctx context.Context, first *int, after 
 		}, nil
 	}
 
-	hasNextPage := !databaseCommands[itemCount-1].IsLast()
+	hasNextPage := !databaseCommands[itemCount-1].IsLast(r.CommerceCommandsService)
 
 	pageInfo := model.CommerceCommandPageInfo{
 		StartCursor: base64.StdEncoding.EncodeToString([]byte(edges[0].Node.ID)),
@@ -883,7 +883,7 @@ func (r *queryResolver) CommerceCommands(ctx context.Context, first *int, after 
 
 // Command is the resolver for the command field.
 func (r *queryResolver) Command(ctx context.Context, id string) (*model.Command, error) {
-	databaseCommand, err := commands.GetById(id)
+	databaseCommand, err := r.CommandsService.GetById(id)
 
 	if err != nil {
 		return nil, err

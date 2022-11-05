@@ -38,7 +38,7 @@ func (command *CommerceCommand) ToModel() *model.CommerceCommand {
 	}
 }
 
-func (commerceCommand CommerceCommand) IsLast() bool {
+func (commerceCommand CommerceCommand) IsLast(commerceCommandsService CommerceCommandsService) bool {
 	filter := bson.D{{}}
 
 	opts := options.FindOptions{}
@@ -49,7 +49,7 @@ func (commerceCommand CommerceCommand) IsLast() bool {
 		},
 	})
 
-	lastCommerceCommand, err := GetFiltered(filter, &opts)
+	lastCommerceCommand, err := commerceCommandsService.GetFiltered(filter, &opts)
 
 	if err != nil || len(lastCommerceCommand) <= 0 {
 		return false
@@ -60,20 +60,36 @@ func (commerceCommand CommerceCommand) IsLast() bool {
 
 // Le service
 type commerceCommandsService struct {
-	UsersService users.UsersService
+	UsersService     users.UsersService
+	CommercesService commerces.CommercesService
+	CommandsService  CommandsService
 }
 
 type CommerceCommandsService interface {
+	Create(input model.NewCommerceCommand, commandID primitive.ObjectID) (*CommerceCommand, error)
+	Update(changes *CommerceCommand) error
+	GetAll() ([]CommerceCommand, error)
+	GetById(id string) (*CommerceCommand, error)
+	GetForCommand(commandID string) ([]CommerceCommand, error)
+	GetPaginated(startValue *string, first int, filter *model.CommerceCommandsFilter) ([]CommerceCommand, error)
+	GetFiltered(filter interface{}, opts *options.FindOptions) ([]CommerceCommand, error)
+	GetCommerce(commerceCommandID string) (*model.Commerce, error)
 	GetUser(commerceCommandID string) (*model.User, error)
 }
 
-func NewCommerceCommandsService(usersService users.UsersService) *commerceCommandsService {
+func NewCommerceCommandsService(
+	usersService users.UsersService,
+	commercesService commerces.CommercesService,
+	commandsService CommandsService,
+) *commerceCommandsService {
 	return &commerceCommandsService{
-		UsersService: usersService,
+		UsersService:     usersService,
+		CommercesService: commercesService,
+		CommandsService:  commandsService,
 	}
 }
 
-func CommerceCreate(input model.NewCommerceCommand, commandID primitive.ObjectID) (*CommerceCommand, error) {
+func (c *commerceCommandsService) Create(input model.NewCommerceCommand, commandID primitive.ObjectID) (*CommerceCommand, error) {
 	commerceObjectID, err := primitive.ObjectIDFromHex(input.CommerceID)
 
 	if err != nil {
@@ -103,8 +119,8 @@ func CommerceCreate(input model.NewCommerceCommand, commandID primitive.ObjectID
 
 // Mise à jour de la base de données
 
-func CommerceUpdate(changes *CommerceCommand) error {
-	databaseCommand, err := GetById(changes.CommandID.Hex())
+func (c *commerceCommandsService) Update(changes *CommerceCommand) error {
+	databaseCommand, err := c.CommandsService.GetById(changes.CommandID.Hex())
 
 	if err != nil {
 		return err
@@ -127,7 +143,7 @@ func CommerceUpdate(changes *CommerceCommand) error {
 		return err
 	}
 
-	commandStatus, err := GetStatus(databaseCommand.ID.Hex())
+	commandStatus, err := c.CommandsService.GetTheoricalStatus(databaseCommand.ID.Hex(), c)
 
 	if err != nil {
 		return err
@@ -135,20 +151,20 @@ func CommerceUpdate(changes *CommerceCommand) error {
 
 	databaseCommand.Status = *commandStatus
 
-	err = Update(databaseCommand)
+	err = c.CommandsService.Update(databaseCommand)
 
 	return err
 }
 
 // Getters
 
-func CommerceGetAll() ([]CommerceCommand, error) {
+func (c *commerceCommandsService) GetAll() ([]CommerceCommand, error) {
 	filter := bson.D{{}}
 
-	return CommerceGetFiltered(filter, nil)
+	return c.GetFiltered(filter, nil)
 }
 
-func CommerceGetById(id string) (*CommerceCommand, error) {
+func (c *commerceCommandsService) GetById(id string) (*CommerceCommand, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
@@ -162,7 +178,7 @@ func CommerceGetById(id string) (*CommerceCommand, error) {
 		},
 	}
 
-	commerceCommands, err := CommerceGetFiltered(filter, nil)
+	commerceCommands, err := c.GetFiltered(filter, nil)
 
 	if err != nil {
 		return nil, err
@@ -175,7 +191,7 @@ func CommerceGetById(id string) (*CommerceCommand, error) {
 	return &commerceCommands[0], nil
 }
 
-func CommerceGetForCommand(commandID string) ([]CommerceCommand, error) {
+func (c *commerceCommandsService) GetForCommand(commandID string) ([]CommerceCommand, error) {
 	commandObjectId, err := primitive.ObjectIDFromHex(commandID)
 
 	if err != nil {
@@ -189,7 +205,7 @@ func CommerceGetForCommand(commandID string) ([]CommerceCommand, error) {
 		},
 	}
 
-	commerceCommands, err := CommerceGetFiltered(filter, nil)
+	commerceCommands, err := c.GetFiltered(filter, nil)
 
 	if err != nil {
 		return nil, err
@@ -198,7 +214,7 @@ func CommerceGetForCommand(commandID string) ([]CommerceCommand, error) {
 	return commerceCommands, nil
 }
 
-func CommerceGetPaginated(startValue *string, first int, filter *model.CommerceCommandsFilter) ([]CommerceCommand, error) {
+func (c *commerceCommandsService) GetPaginated(startValue *string, first int, filter *model.CommerceCommandsFilter) ([]CommerceCommand, error) {
 	var finalFilter bson.M
 
 	if startValue != nil {
@@ -303,10 +319,10 @@ func CommerceGetPaginated(startValue *string, first int, filter *model.CommerceC
 	opts := options.Find()
 	opts.SetLimit(int64(first))
 
-	return CommerceGetFiltered(finalFilter, opts)
+	return c.GetFiltered(finalFilter, opts)
 }
 
-func CommerceGetFiltered(filter interface{}, opts *options.FindOptions) ([]CommerceCommand, error) {
+func (c *commerceCommandsService) GetFiltered(filter interface{}, opts *options.FindOptions) ([]CommerceCommand, error) {
 	commerceCommands := []CommerceCommand{}
 
 	cursor, err := database.CollectionCommerceCommand.Find(database.MongoContext, filter, opts)
@@ -334,8 +350,8 @@ func CommerceGetFiltered(filter interface{}, opts *options.FindOptions) ([]Comme
 	return commerceCommands, nil
 }
 
-func CommerceGetCommerce(commerceCommandID string) (*model.Commerce, error) {
-	databaseCommerceCommand, err := CommerceGetById(commerceCommandID)
+func (c *commerceCommandsService) GetCommerce(commerceCommandID string) (*model.Commerce, error) {
+	databaseCommerceCommand, err := c.GetById(commerceCommandID)
 
 	if err != nil {
 		return nil, err
@@ -345,7 +361,7 @@ func CommerceGetCommerce(commerceCommandID string) (*model.Commerce, error) {
 		return nil, &CommerceCommandNotFoundError{}
 	}
 
-	databaseCommerce, err := commerces.GetById(databaseCommerceCommand.CommerceID.Hex())
+	databaseCommerce, err := c.CommercesService.GetById(databaseCommerceCommand.CommerceID.Hex())
 
 	if err != nil {
 		return nil, err
@@ -359,7 +375,7 @@ func CommerceGetCommerce(commerceCommandID string) (*model.Commerce, error) {
 }
 
 func (c *commerceCommandsService) GetUser(commerceCommandID string) (*model.User, error) {
-	databaseCommerceCommand, err := CommerceGetById(commerceCommandID)
+	databaseCommerceCommand, err := c.GetById(commerceCommandID)
 
 	if err != nil {
 		return nil, err
@@ -369,7 +385,7 @@ func (c *commerceCommandsService) GetUser(commerceCommandID string) (*model.User
 		return nil, &CommerceCommandNotFoundError{}
 	}
 
-	databaseCommand, err := GetById(databaseCommerceCommand.CommandID.Hex())
+	databaseCommand, err := c.CommandsService.GetById(databaseCommerceCommand.CommandID.Hex())
 
 	if err != nil {
 		return nil, err

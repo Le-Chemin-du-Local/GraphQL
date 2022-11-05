@@ -1,0 +1,91 @@
+#############
+## PANIERS ##
+#############
+
+
+type PanierProduct {
+  quantity: Int!
+  product: Product!
+}
+
+type Panier {
+  id: ID!
+  name: String!
+  description: String!
+  type: String!
+  category: String!
+
+  quantity: Int!
+  price: Float!
+  reduction: Float!
+
+  endingDate: Time
+
+  products: [PanierProduct!]!
+}
+
+# Pagination 
+type PanierConnection {
+  edges: [PanierEdge!]!
+  pageInfo: PanierPageInfo!
+}
+
+type PanierEdge {
+  cursor: ID!
+  node: Panier
+}
+
+type PanierPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+# Edition/création
+
+input NewPanierProduct {
+  quantity: Int!
+  productID: ID!
+}
+
+input NewPanier {
+  name: String!
+  description: String!
+  type: String!
+  category: String!
+
+  quantity: Int!
+  price: Float!
+  reduction: Float!
+
+  image: Upload
+  endingDate: Time
+
+  products: [NewPanierProduct!]
+}
+
+input ChangesPanier {
+  name: String
+  description: String
+  type: String
+  category: String
+
+  quantity: Int
+  price: Float
+  reduction: Float
+
+  image: Upload
+  endingDate: Time
+
+  products: [NewPanierProduct!]
+}
+
+type PanierCommand {
+  id: ID!
+  panier: Panier!
+}
+
+input NewPanierCommand {
+  panierID: String!
+  pickupDate: Time!
+}

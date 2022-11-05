@@ -1,0 +1,35 @@
+#############
+## FILTERS ##
+#############
+
+input Filter {
+  key: String!
+  value: String!
+}
+
+input CommerceFilter {
+  nearLatitude: Float
+  nearLongitude: Float
+  radius: Float
+}
+
+
+input ProductFilter {
+  category: String
+}
+
+input CommandsFilter {
+  userID: ID
+  status: [String!]
+}
+
+input CommerceCommandsFilter {
+  commerceID: ID
+  status: [String!]
+  year: Int
+  month: Int
+}
+
+input PanierFilter {
+  type: String
+}

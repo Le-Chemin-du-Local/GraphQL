@@ -1,0 +1,34 @@
+############
+## BASKET ##
+############
+
+type BasketProduct {
+  quantity: Float!
+  product: Product!
+}
+
+type BasketCommerce {
+  commerce: Commerce!
+  products: [BasketProduct!]!
+  paniers: [Panier]!
+}
+
+type Basket {
+  commerces: [BasketCommerce!]!
+}
+
+input NewBasket {
+  commerces: [NewBasketCommerce!]!
+}
+
+input NewBasketCommerce {
+  commerceID: ID!,
+  products: [NewBasketProduct!]!
+  paniers: [ID!]!
+  pickupDate: Time
+}
+
+input NewBasketProduct {
+  quantity: Float!
+  productID: ID!
+}

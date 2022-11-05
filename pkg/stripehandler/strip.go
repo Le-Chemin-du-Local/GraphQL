@@ -25,11 +25,14 @@ import (
 )
 
 func calculateOrderAmountForCommerce(commerce model.NewBasketCommerce) (int64, float64, float64, error) {
+	// On doit créer les services
+	commercesService := commerces.NewCommercesService()
+
 	result := 0
 	resultPaniers := 0.0
 	resultClickAndCollect := 0.0
 
-	databaseCommerce, err := commerces.GetById(commerce.CommerceID)
+	databaseCommerce, err := commercesService.GetById(commerce.CommerceID)
 
 	if err != nil {
 		return 0, 0, 0, err
@@ -73,7 +76,13 @@ func calculateOrderAmountForCommerce(commerce model.NewBasketCommerce) (int64, f
 }
 
 func order(user users.User, paymentMethod string, basket model.NewBasket) error {
-	databaseCommand, err := commands.Create(model.NewCommand{
+	// On doit créer les services
+	commercesService := commerces.NewCommercesService()
+	usersService := users.NewUsersService(commercesService)
+	commandsService := commands.NewCommandsService(usersService)
+	commerceCommandsService := commands.NewCommerceCommandsService(usersService, commercesService, commandsService)
+
+	databaseCommand, err := commandsService.Create(model.NewCommand{
 		CreationDate: time.Now(),
 		User:         user.ID.Hex(),
 	})
@@ -90,7 +99,7 @@ func order(user users.User, paymentMethod string, basket model.NewBasket) error 
 		}
 
 		// La command
-		databaseCommerceCommand, err := commands.CommerceCreate(model.NewCommerceCommand{
+		databaseCommerceCommand, err := commerceCommandsService.Create(model.NewCommerceCommand{
 			CommerceID:           commerce.CommerceID,
 			PickupDate:           *commerce.PickupDate,
 			PaymentMethod:        paymentMethod,
@@ -143,8 +152,9 @@ func order(user users.User, paymentMethod string, basket model.NewBasket) error 
 }
 
 func authentification(w http.ResponseWriter, r *http.Request) (*string, *users.User) {
-	// On doit créer le service
-	usersService := users.NewUsersService()
+	// On doit créer les services
+	commercesService := commerces.NewCommercesService()
+	usersService := users.NewUsersService(commercesService)
 
 	// On doit créer le consumer Stripe si nécesaire
 	user := auth.ForContext(r.Context())
@@ -184,6 +194,9 @@ func authentification(w http.ResponseWriter, r *http.Request) (*string, *users.U
 }
 
 func authentificationForCommerce(w http.ResponseWriter, r *http.Request) (*string, *commerces.Commerce) {
+	// On doit créer les services
+	commercesService := commerces.NewCommercesService()
+
 	// On doit créer le consumer Stripe si nécesaire
 	user := auth.ForContext(r.Context())
 
@@ -192,7 +205,7 @@ func authentificationForCommerce(w http.ResponseWriter, r *http.Request) (*strin
 		return nil, nil
 	}
 
-	commerce, err := commerces.GetForUser(user.ID.Hex())
+	commerce, err := commercesService.GetForUser(user.ID.Hex())
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -221,7 +234,7 @@ func authentificationForCommerce(w http.ResponseWriter, r *http.Request) (*strin
 		}
 
 		commerce.StripID = stripeCustomer
-		err = commerces.Update(commerce, nil, nil)
+		err = commercesService.Update(commerce, nil, nil)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -234,6 +247,9 @@ func authentificationForCommerce(w http.ResponseWriter, r *http.Request) (*strin
 }
 
 func HanldeCreateSetupIntent(w http.ResponseWriter, r *http.Request) {
+	// On doit créer les services
+	commercesService := commerces.NewCommercesService()
+
 	// Set Stripe API key
 	apiKey := config.Cfg.Stripe.Key
 	stripe.Key = apiKey
@@ -265,7 +281,7 @@ func HanldeCreateSetupIntent(w http.ResponseWriter, r *http.Request) {
 			now := time.Now().Local()
 			commerce.LastBilledDate = &now
 
-			err := commerces.Update(commerce, nil, nil)
+			err := commercesService.Update(commerce, nil, nil)
 
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -297,7 +313,7 @@ func HanldeCreateSetupIntent(w http.ResponseWriter, r *http.Request) {
 
 			commerce.DefaultPaymentMethodID = req.PaymentMethodID
 
-			err := commerces.Update(commerce, nil, nil)
+			err := commercesService.Update(commerce, nil, nil)
 
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -371,6 +387,12 @@ func HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleCompleteOrder(w http.ResponseWriter, r *http.Request) {
+	// On doit créer les services
+	commercesService := commerces.NewCommercesService()
+	usersService := users.NewUsersService(commercesService)
+	commandsService := commands.NewCommandsService(usersService)
+	commerceCommandsService := commands.NewCommerceCommandsService(usersService, commercesService, commandsService)
+
 	// Set Stripe API key
 	apiKey := config.Cfg.Stripe.Key
 	stripe.Key = apiKey
@@ -391,7 +413,7 @@ func HandleCompleteOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var stripeCustomer, _ = authentification(w, r)
-	databaseCommerceCommand, err := commands.CommerceGetById(*req.CommerceCommandID)
+	databaseCommerceCommand, err := commerceCommandsService.GetById(*req.CommerceCommandID)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -411,14 +433,14 @@ func HandleCompleteOrder(w http.ResponseWriter, r *http.Request) {
 	databaseCommerceCommand.Status = commands.COMMERCE_COMMAND_STATUS_DONE
 
 	if req.PaymentIntentID != nil {
-		err := commands.CommerceUpdate(databaseCommerceCommand)
+		err := commerceCommandsService.Update(databaseCommerceCommand)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		err = commerces.UpdateBalancesForOrder(databaseCommerceCommand.CommerceID.Hex(), databaseCommerceCommand.Price, databaseCommerceCommand.PriceClickAndCollect, databaseCommerceCommand.PricePaniers)
+		err = commercesService.UpdateBalancesForOrder(databaseCommerceCommand.CommerceID.Hex(), databaseCommerceCommand.Price, databaseCommerceCommand.PriceClickAndCollect, databaseCommerceCommand.PricePaniers)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -470,14 +492,14 @@ func HandleCompleteOrder(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if pi.Status == stripe.PaymentIntentStatusSucceeded {
-			err := commands.CommerceUpdate(databaseCommerceCommand)
+			err := commerceCommandsService.Update(databaseCommerceCommand)
 
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
-			err = commerces.UpdateBalancesForOrder(databaseCommerceCommand.CommerceID.Hex(), databaseCommerceCommand.Price, databaseCommerceCommand.PriceClickAndCollect, databaseCommerceCommand.PricePaniers)
+			err = commercesService.UpdateBalancesForOrder(databaseCommerceCommand.CommerceID.Hex(), databaseCommerceCommand.Price, databaseCommerceCommand.PriceClickAndCollect, databaseCommerceCommand.PricePaniers)
 
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)

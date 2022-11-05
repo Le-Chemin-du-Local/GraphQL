@@ -1,0 +1,23 @@
+#######################
+## CLICK AND COLLECT ##
+#######################
+
+type CCProduct {
+  quantity: Int!
+  product: Product!
+}
+
+type CCCommand {
+  id: ID!
+  products: [CCProduct!]!
+}
+
+input NewCCProcuct {
+  quantity: Int!
+  productID: ID!
+}
+
+input NewCCCommand {
+  productsID: [NewCCProcuct!]
+  pickupDate: Time!
+}

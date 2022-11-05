@@ -11,6 +11,7 @@ import (
 	"chemin-du-local.bzh/graphql/graph/resolvers"
 	"chemin-du-local.bzh/graphql/internal/auth"
 	"chemin-du-local.bzh/graphql/internal/banking"
+	"chemin-du-local.bzh/graphql/internal/commerces"
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
 	"chemin-du-local.bzh/graphql/internal/services/commands"
@@ -35,9 +36,10 @@ func main() {
 	}
 
 	// Initialisation des services
-	usersService := users.NewUsersService()
+	commercesService := commerces.NewCommercesService()
+	usersService := users.NewUsersService(commercesService)
 	commandsService := commands.NewCommandsService(usersService)
-	commerceCommandsService := commands.NewCommerceCommandsService(usersService)
+	commerceCommandsService := commands.NewCommerceCommandsService(usersService, commercesService, commandsService)
 
 	router := chi.NewRouter()
 	router.Use(auth.Middleware(usersService))
@@ -66,6 +68,7 @@ func main() {
 	// Directives GraphQL
 	c := generated.Config{Resolvers: &resolvers.Resolver{
 		UsersService:            usersService,
+		CommercesService:        commercesService,
 		CommandsService:         commandsService,
 		CommerceCommandsService: commerceCommandsService,
 	}}

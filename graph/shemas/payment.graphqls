@@ -1,0 +1,15 @@
+##############
+## PAYEMENT ##
+##############
+
+type RegisteredPaymentMethod {
+  name: String!
+  stripeID: String!
+  cardBrand: String 
+  cardLast4Digits: String
+}
+
+input ChangesRegistedPaymentMethod {
+  name: String 
+  stripeID: String
+}

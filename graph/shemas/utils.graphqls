@@ -1,0 +1,47 @@
+directive @hasRole(role: Role!) on FIELD_DEFINITION
+directive @needAuthentication on FIELD_DEFINITION
+
+enum Role {
+  ADMIN,
+  STOREKEEPER,
+  USER
+}
+
+scalar Time
+scalar Upload
+
+###########
+## UTILS ##
+###########
+
+type Address {
+  id: ID!
+  number: String
+  route: String
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
+input NewAddress {
+  number: String
+  route: String
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
+input ChangesAddress {
+  number: String 
+  route: String 
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
+type Transfert {
+  value: Float!
+  ibanOwner: String!
+  iban: String!
+  bic: String!
+}

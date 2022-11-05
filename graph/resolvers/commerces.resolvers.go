@@ -6,7 +6,6 @@ package resolvers
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
@@ -14,56 +13,10 @@ import (
 	"chemin-du-local.bzh/graphql/internal/helper"
 	"chemin-du-local.bzh/graphql/internal/products"
 	"chemin-du-local.bzh/graphql/internal/registeredpaymentmethod"
-	"chemin-du-local.bzh/graphql/internal/services/clickandcollect"
-	"chemin-du-local.bzh/graphql/internal/services/commands"
 	"chemin-du-local.bzh/graphql/internal/services/paniers"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-// Products is the resolver for the products field.
-func (r *cCCommandResolver) Products(ctx context.Context, obj *model.CCCommand) ([]*model.CCProduct, error) {
-	return clickandcollect.GetProducts(obj.ID)
-}
-
-// User is the resolver for the user field.
-func (r *commandResolver) User(ctx context.Context, obj *model.Command) (*model.User, error) {
-	user, err := r.CommandsService.GetUser(obj.ID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
-
-// Commerces is the resolver for the commerces field.
-func (r *commandResolver) Commerces(ctx context.Context, obj *model.Command) ([]*model.CommerceCommand, error) {
-	databaseCommerceCommands, err := commands.CommerceGetForCommand(obj.ID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	commerceCommands := []*model.CommerceCommand{}
-
-	for _, databaseCommerceCommand := range databaseCommerceCommands {
-		commerceCommands = append(commerceCommands, databaseCommerceCommand.ToModel())
-	}
-
-	return commerceCommands, nil
-}
-
-// Status is the resolver for the status field.
-func (r *commandResolver) Status(ctx context.Context, obj *model.Command) (string, error) {
-	status, err := commands.GetStatus(obj.ID)
-
-	if err != nil {
-		return "", err
-	}
-
-	return *status, nil
-}
 
 // Storekeeper is the resolver for the storekeeper field.
 func (r *commerceResolver) Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error) {
@@ -171,7 +124,7 @@ func (r *commerceResolver) Products(ctx context.Context, obj *model.Commerce, fi
 
 // ProductsAvailableForClickAndCollect is the resolver for the productsAvailableForClickAndCollect field.
 func (r *commerceResolver) ProductsAvailableForClickAndCollect(ctx context.Context, obj *model.Commerce) ([]*model.Product, error) {
-	databaseCommere, err := commerces.GetById(obj.ID)
+	databaseCommere, err := r.CommercesService.GetById(obj.ID)
 
 	if err != nil {
 		return nil, err
@@ -199,7 +152,7 @@ func (r *commerceResolver) ProductsAvailableForClickAndCollect(ctx context.Conte
 
 // DefaultPaymentMethod is the resolver for the defaultPaymentMethod field.
 func (r *commerceResolver) DefaultPaymentMethod(ctx context.Context, obj *model.Commerce) (*model.RegisteredPaymentMethod, error) {
-	databaseCommerce, err := commerces.GetById(obj.ID)
+	databaseCommerce, err := r.CommercesService.GetById(obj.ID)
 
 	if err != nil {
 		return nil, err
@@ -282,125 +235,7 @@ func (r *commerceResolver) Paniers(ctx context.Context, obj *model.Commerce, fir
 	return &connection, nil
 }
 
-// Commerce is the resolver for the commerce field.
-func (r *commerceCommandResolver) Commerce(ctx context.Context, obj *model.CommerceCommand) (*model.Commerce, error) {
-	commerce, err := commands.CommerceGetCommerce(obj.ID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return commerce, nil
-}
-
-// Cccommands is the resolver for the cccommands field.
-func (r *commerceCommandResolver) Cccommands(ctx context.Context, obj *model.CommerceCommand) ([]*model.CCCommand, error) {
-	databaseCCCommands, err := clickandcollect.GetForCommmerceCommand(obj.ID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	cccommands := []*model.CCCommand{}
-
-	for _, databaseCCCommand := range databaseCCCommands {
-		cccommands = append(cccommands, databaseCCCommand.ToModel())
-	}
-
-	return cccommands, nil
-}
-
-// Paniers is the resolver for the paniers field.
-func (r *commerceCommandResolver) Paniers(ctx context.Context, obj *model.CommerceCommand) ([]*model.PanierCommand, error) {
-	databasePanierCommands, err := paniers.GetCommandsForCommerceCommand(obj.ID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	panierCommands := []*model.PanierCommand{}
-
-	for _, databasePanierCommand := range databasePanierCommands {
-		panierCommands = append(panierCommands, databasePanierCommand.ToModel())
-	}
-
-	return panierCommands, nil
-}
-
-// User is the resolver for the user field.
-func (r *commerceCommandResolver) User(ctx context.Context, obj *model.CommerceCommand) (*model.User, error) {
-	user, err := r.CommerceCommandsService.GetUser(obj.ID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
-
-// Products is the resolver for the products field.
-func (r *panierResolver) Products(ctx context.Context, obj *model.Panier) ([]*model.PanierProduct, error) {
-	return paniers.GetProducts(obj.ID)
-}
-
-// Panier is the resolver for the panier field.
-func (r *panierCommandResolver) Panier(ctx context.Context, obj *model.PanierCommand) (*model.Panier, error) {
-	databasePanierCommand, err := paniers.GetCommandById(obj.ID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if databasePanierCommand == nil {
-		return nil, &paniers.PanierNotFoundError{}
-	}
-
-	databasePanier, err := paniers.GetById(databasePanierCommand.PanierID.Hex())
-
-	if err != nil {
-		return nil, err
-	}
-
-	if databasePanier == nil {
-		return nil, &paniers.PanierNotFoundError{}
-	}
-
-	return databasePanier.ToModel(), nil
-}
-
-// CCCommand returns generated.CCCommandResolver implementation.
-func (r *Resolver) CCCommand() generated.CCCommandResolver { return &cCCommandResolver{r} }
-
-// Command returns generated.CommandResolver implementation.
-func (r *Resolver) Command() generated.CommandResolver { return &commandResolver{r} }
-
 // Commerce returns generated.CommerceResolver implementation.
 func (r *Resolver) Commerce() generated.CommerceResolver { return &commerceResolver{r} }
 
-// CommerceCommand returns generated.CommerceCommandResolver implementation.
-func (r *Resolver) CommerceCommand() generated.CommerceCommandResolver {
-	return &commerceCommandResolver{r}
-}
-
-// Panier returns generated.PanierResolver implementation.
-func (r *Resolver) Panier() generated.PanierResolver { return &panierResolver{r} }
-
-// PanierCommand returns generated.PanierCommandResolver implementation.
-func (r *Resolver) PanierCommand() generated.PanierCommandResolver { return &panierCommandResolver{r} }
-
-type cCCommandResolver struct{ *Resolver }
-type commandResolver struct{ *Resolver }
 type commerceResolver struct{ *Resolver }
-type commerceCommandResolver struct{ *Resolver }
-type panierResolver struct{ *Resolver }
-type panierCommandResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *commerceResolver) AddressDetailed(ctx context.Context, obj *model.Commerce) (*model.Address, error) {
-	panic(fmt.Errorf("not implemented"))
-}

@@ -9,7 +9,6 @@ import (
 
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
-	"chemin-du-local.bzh/graphql/internal/commerces"
 	"chemin-du-local.bzh/graphql/internal/registeredpaymentmethod"
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/stripehandler"
@@ -17,7 +16,7 @@ import (
 
 // Commerce is the resolver for the commerce field.
 func (r *userResolver) Commerce(ctx context.Context, obj *model.User) (*model.Commerce, error) {
-	databaseCommerce, err := commerces.GetForUser(obj.ID)
+	databaseCommerce, err := r.CommercesService.GetForUser(obj.ID)
 
 	if err != nil {
 		return nil, err

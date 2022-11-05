@@ -79,7 +79,9 @@ func (user *User) HasRole(role model.Role) bool {
 
 // Service
 
-type userService struct{}
+type userService struct {
+	CommercesService commerces.CommercesService
+}
 
 type UsersService interface {
 	Create(input model.NewUser) (*User, error)
@@ -91,7 +93,9 @@ type UsersService interface {
 	Authenticate(login model.Login) bool
 }
 
-func NewUsersService() *userService {
+func NewUsersService(
+	commercesService commerces.CommercesService,
+) *userService {
 	return &userService{}
 }
 
@@ -144,7 +148,7 @@ func (u *userService) Create(input model.NewUser) (*User, error) {
 
 	// Si le commerce n'est pas nul, il faut le créer
 	if input.Commerce != nil {
-		_, err = commerces.Create(*input.Commerce, userID)
+		_, err = u.CommercesService.Create(*input.Commerce, userID)
 
 		if err != nil {
 			return nil, err

@@ -354,7 +354,6 @@ type CCCommandResolver interface {
 type CommandResolver interface {
 	User(ctx context.Context, obj *model.Command) (*model.User, error)
 	Commerces(ctx context.Context, obj *model.Command) ([]*model.CommerceCommand, error)
-	Status(ctx context.Context, obj *model.Command) (string, error)
 }
 type CommerceResolver interface {
 	Storekeeper(ctx context.Context, obj *model.Commerce) (*model.User, error)
@@ -1934,141 +1933,141 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../shemas/root.resolver.graphqls", Input: `type Query {
-  # UTILISATEURS
-  users: [User!]!
-  user(id: ID): User!
+	{Name: "../shemas/basket.graphqls", Input: `############
+## BASKET ##
+############
 
-  # COMMERCES
-  commerces(first: Int = 5, after: String, filter: CommerceFilter): CommerceConnection! 
-  commerce(id: ID): Commerce
-  product(id: ID!): Product!
-
-  # SERVICES
-  commands(first: Int = 5, after: ID, filter: CommandsFilter): CommandConnection! @needAuthentication
-  commerceCommands(first: Int = 5, after: ID, filter: CommerceCommandsFilter): CommerceCommandConnection! @needAuthentication
-
-  command(id: ID!): Command! @needAuthentication
-
-  allServicesInfo: [ServiceInfo!]!
-  serviceInfo(id: String!): ServiceInfo!
-
-  # PANIERS
-  panier(id: ID!): Panier!
+type BasketProduct {
+  quantity: Float!
+  product: Product!
 }
 
-type Mutation {
-  # UTILISATEURS
-  createUser(input: NewUser!): User!
-  login(input: Login!): String!
-  updateUser(id: ID, input: ChangesUser): User! @needAuthentication
+type BasketCommerce {
+  commerce: Commerce!
+  products: [BasketProduct!]!
+  paniers: [Panier]!
+}
 
-  # COMMERCES
-  createCommerce(userID: ID!, input: NewCommerce!): Commerce! 
-  updateCommerce(id: ID!, changes: ChangesCommerce!): Commerce! @hasRole(role: STOREKEEPER)
-  createProduct(commerceID: ID, input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
-  createProducts(commerceID: ID, input: [NewProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
-  updateProduct(id: ID!, changes: ChangesProduct!): Product! @hasRole(role: STOREKEEPER)
-  updateProducts(changes: [BulkChangesProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
+type Basket {
+  commerces: [BasketCommerce!]!
+}
 
-  # SERVICES
-  updateCommerceCommand(id: ID!, changes: ChangesCommerceCommand!): CommerceCommand! @needAuthentication
+input NewBasket {
+  commerces: [NewBasketCommerce!]!
+}
 
-  # PANIER
-  createPanier(commerceID: ID, input: NewPanier!): Panier! @hasRole(role: STOREKEEPER)
-  updatePanier(id: ID! changes: ChangesPanier!): Panier! @hasRole(role: STOREKEEPER)
+input NewBasketCommerce {
+  commerceID: ID!,
+  products: [NewBasketProduct!]!
+  paniers: [ID!]!
+  pickupDate: Time
+}
+
+input NewBasketProduct {
+  quantity: Float!
+  productID: ID!
+}`, BuiltIn: false},
+	{Name: "../shemas/clickandcollect.graphqls", Input: `#######################
+## CLICK AND COLLECT ##
+#######################
+
+type CCProduct {
+  quantity: Int!
+  product: Product!
+}
+
+type CCCommand {
+  id: ID!
+  products: [CCProduct!]!
+}
+
+input NewCCProcuct {
+  quantity: Int!
+  productID: ID!
+}
+
+input NewCCCommand {
+  productsID: [NewCCProcuct!]
+  pickupDate: Time!
+}`, BuiltIn: false},
+	{Name: "../shemas/commands.graphqls", Input: `#############
+## COMMAND ##
+#############
+
+type CommerceCommand {
+  id: ID!
+  commerce: Commerce! 
+
+  cccommands: [CCCommand!]!
+  paniers: [PanierCommand!]!
+  pickupDate: Time!
+  status: String!
+  user: User!
+  price: Float!
+}
+
+type Command {
+  id: ID!
+  creationDate: Time!
+
+  user: User!
+  commerces: [CommerceCommand]!
+  status: String!
+}
+
+# Pagination 
+type CommandConnection {
+  edges: [CommandEdge!]!
+  pageInfo: CommandPageInfo!
+}
+
+type CommandEdge {
+  cursor: ID!
+  node: Command
+}
+
+type CommandPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+type CommerceCommandConnection {
+  edges: [CommerceCommandEdge!]!
+  pageInfo: CommerceCommandPageInfo!
+}
+
+type CommerceCommandEdge {
+  cursor: ID!
+  node: CommerceCommand
+}
+
+type CommerceCommandPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+
+input NewCommerceCommand {
+  commerceID: ID!
+  pickupDate: Time!
+  paymentMethod: String!
+  price: Int!
+  priceClickAndCollect: Float!
+  pricePaniers: Float!
+}
+
+input ChangesCommerceCommand {
+  status: String
+}
+
+input NewCommand {
+  creationDate: Time!
+  user: ID!
 }
 `, BuiltIn: false},
-	{Name: "../shemas/schema.graphqls", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
-directive @needAuthentication on FIELD_DEFINITION
-
-enum Role {
-  ADMIN,
-  STOREKEEPER,
-  USER
-}
-
-scalar Time
-scalar Upload
-
-###########
-## UTILS ##
-###########
-
-type Address {
-  id: ID!
-  number: String
-  route: String
-  optionalRoute: String
-  postalCode: String
-  city: String
-}
-
-input NewAddress {
-  number: String
-  route: String
-  optionalRoute: String
-  postalCode: String
-  city: String
-}
-
-input ChangesAddress {
-  number: String 
-  route: String 
-  optionalRoute: String
-  postalCode: String
-  city: String
-}
-
-type Transfert {
-  value: Float!
-  ibanOwner: String!
-  iban: String!
-  bic: String!
-}
-
-##############
-## SERVICES ##
-##############
-
-type ServiceInfo {
-  id: String!
-  name: String!
-  shortDescription: String!
-  longDescription: String!
-
-  monthPrice: Float!
-  monthMinimumAllowedCA: Float!
-  monthRangePercentage: Float!
-  monthAugmentationPerRangePercentage: Float!
-  monthAdvantages: [String!]!
-
-  transactionPercentage: Float!
-  transactionAdvantages: [String!]!
-}
-
-input ChangesService {
-  serviceID: String!
-  updateType: String!
-}
-
-##############
-## PAYEMENT ##
-##############
-
-type RegisteredPaymentMethod {
-  name: String!
-  stripeID: String!
-  cardBrand: String 
-  cardLast4Digits: String
-}
-
-input ChangesRegistedPaymentMethod {
-  name: String 
-  stripeID: String
-}
-
-###############
+	{Name: "../shemas/commerces.graphqls", Input: `###############
 ## COMMERCE ##
 ###############
 
@@ -2245,104 +2244,44 @@ input ChangesCommerce {
   defaultPaymentMethod: String
 
   productsAvailableForClickAndCollect: [ID!]
-}
-
-# PRODUITS
-
-type Product {
-  id: ID!
-  name: String!
-  description: String!
-  price: Float!
-  unit: String!
-  tva: Float!
-  isBreton: Boolean!
-  hasGluten: Boolean!
-
-  tags: [String!]
-  allergens: [String!]
-  categories: [String!]!
-}
-
-# Pagination
-type ProductConnection {
-  edges: [ProductEdge!]!
-  pageInfo: ProductPageInfo!
-}
-
-type ProductEdge {
-  cursor: ID!
-  node: Product
-}
-
-type ProductPageInfo {
-  startCursor: ID!
-  endCursor: ID!
-  hasNextPage: Boolean!
-}
-
-input NewProduct {
-  name: String!
-  description: String!
-  price: Float!
-  unit: String!
-  tva: Float!
-  isBreton: Boolean!
-  hasGluten: Boolean!
-
-  tags: [String!]
-  allergens: [String!]
-  categories: [String!]!
-
-  image: Upload
-}
-
-input ChangesProduct {
-  name: String
-  description: String
-  price: Float
-  unit: String
-  tva: Float
-  isBreton: Boolean
-  hasGluten: Boolean
-
-  tags: [String!]
-  allergens: [String!]
-  categories: [String!]
-
-  image: Upload
-}
-
-input BulkChangesProduct {
-  id: ID!
-  changes: ChangesProduct!
-}
-
-#######################
-## CLICK AND COLLECT ##
-#######################
-
-type CCProduct {
-  quantity: Int!
-  product: Product!
-}
-
-type CCCommand {
-  id: ID!
-  products: [CCProduct!]!
-}
-
-input NewCCProcuct {
-  quantity: Int!
-  productID: ID!
-}
-
-input NewCCCommand {
-  productsID: [NewCCProcuct!]
-  pickupDate: Time!
-}
-
+}`, BuiltIn: false},
+	{Name: "../shemas/filters.graphqls", Input: `#############
+## FILTERS ##
 #############
+
+input Filter {
+  key: String!
+  value: String!
+}
+
+input CommerceFilter {
+  nearLatitude: Float
+  nearLongitude: Float
+  radius: Float
+}
+
+
+input ProductFilter {
+  category: String
+}
+
+input CommandsFilter {
+  userID: ID
+  status: [String!]
+}
+
+input CommerceCommandsFilter {
+  commerceID: ID
+  status: [String!]
+  year: Int
+  month: Int
+}
+
+input PanierFilter {
+  type: String
+}
+`, BuiltIn: false},
+	{Name: "../shemas/paniers.graphqls", Input: `#############
 ## PANIERS ##
 #############
 
@@ -2432,158 +2371,164 @@ type PanierCommand {
 input NewPanierCommand {
   panierID: String!
   pickupDate: Time!
+}`, BuiltIn: false},
+	{Name: "../shemas/payment.graphqls", Input: `##############
+## PAYEMENT ##
+##############
+
+type RegisteredPaymentMethod {
+  name: String!
+  stripeID: String!
+  cardBrand: String 
+  cardLast4Digits: String
 }
 
-
-#############
-## COMMAND ##
-#############
-
-type CommerceCommand {
-  id: ID!
-  commerce: Commerce! 
-
-  cccommands: [CCCommand!]!
-  paniers: [PanierCommand!]!
-  pickupDate: Time!
-  status: String!
-  user: User!
-  price: Float!
-}
-
-type Command {
-  id: ID!
-  creationDate: Time!
-
-  user: User!
-  commerces: [CommerceCommand]!
-  status: String!
-}
-
-# Pagination 
-type CommandConnection {
-  edges: [CommandEdge!]!
-  pageInfo: CommandPageInfo!
-}
-
-type CommandEdge {
-  cursor: ID!
-  node: Command
-}
-
-type CommandPageInfo {
-  startCursor: ID!
-  endCursor: ID!
-  hasNextPage: Boolean!
-}
-
-type CommerceCommandConnection {
-  edges: [CommerceCommandEdge!]!
-  pageInfo: CommerceCommandPageInfo!
-}
-
-type CommerceCommandEdge {
-  cursor: ID!
-  node: CommerceCommand
-}
-
-type CommerceCommandPageInfo {
-  startCursor: ID!
-  endCursor: ID!
-  hasNextPage: Boolean!
-}
-
-
-input NewCommerceCommand {
-  commerceID: ID!
-  pickupDate: Time!
-  paymentMethod: String!
-  price: Int!
-  priceClickAndCollect: Float!
-  pricePaniers: Float!
-}
-
-input ChangesCommerceCommand {
-  status: String
-}
-
-input NewCommand {
-  creationDate: Time!
-  user: ID!
-}
-
-
-############
-## BASKET ##
-############
-
-type BasketProduct {
-  quantity: Float!
-  product: Product!
-}
-
-type BasketCommerce {
-  commerce: Commerce!
-  products: [BasketProduct!]!
-  paniers: [Panier]!
-}
-
-type Basket {
-  commerces: [BasketCommerce!]!
-}
-
-input NewBasket {
-  commerces: [NewBasketCommerce!]!
-}
-
-input NewBasketCommerce {
-  commerceID: ID!,
-  products: [NewBasketProduct!]!
-  paniers: [ID!]!
-  pickupDate: Time
-}
-
-input NewBasketProduct {
-  quantity: Float!
-  productID: ID!
-}
-
-#############
-## FILTERS ##
-#############
-
-input Filter {
-  key: String!
-  value: String!
-}
-
-input CommerceFilter {
-  nearLatitude: Float
-  nearLongitude: Float
-  radius: Float
-}
-
-
-input ProductFilter {
-  category: String
-}
-
-input CommandsFilter {
-  userID: ID
-  status: [String!]
-}
-
-input CommerceCommandsFilter {
-  commerceID: ID
-  status: [String!]
-  year: Int
-  month: Int
-}
-
-input PanierFilter {
-  type: String
+input ChangesRegistedPaymentMethod {
+  name: String 
+  stripeID: String
 }
 `, BuiltIn: false},
+	{Name: "../shemas/products.graphqls", Input: `##############
+## PRODUITS ##
+##############
+
+type Product {
+  id: ID!
+  name: String!
+  description: String!
+  price: Float!
+  unit: String!
+  tva: Float!
+  isBreton: Boolean!
+  hasGluten: Boolean!
+
+  tags: [String!]
+  allergens: [String!]
+  categories: [String!]!
+}
+
+# Pagination
+type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: ProductPageInfo!
+}
+
+type ProductEdge {
+  cursor: ID!
+  node: Product
+}
+
+type ProductPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+input NewProduct {
+  name: String!
+  description: String!
+  price: Float!
+  unit: String!
+  tva: Float!
+  isBreton: Boolean!
+  hasGluten: Boolean!
+
+  tags: [String!]
+  allergens: [String!]
+  categories: [String!]!
+
+  image: Upload
+}
+
+input ChangesProduct {
+  name: String
+  description: String
+  price: Float
+  unit: String
+  tva: Float
+  isBreton: Boolean
+  hasGluten: Boolean
+
+  tags: [String!]
+  allergens: [String!]
+  categories: [String!]
+
+  image: Upload
+}
+
+input BulkChangesProduct {
+  id: ID!
+  changes: ChangesProduct!
+}`, BuiltIn: false},
+	{Name: "../shemas/root.graphqls", Input: `type Query {
+  # UTILISATEURS
+  users: [User!]!
+  user(id: ID): User!
+
+  # COMMERCES
+  commerces(first: Int = 5, after: String, filter: CommerceFilter): CommerceConnection! 
+  commerce(id: ID): Commerce
+  product(id: ID!): Product!
+
+  # SERVICES
+  commands(first: Int = 5, after: ID, filter: CommandsFilter): CommandConnection! @needAuthentication
+  commerceCommands(first: Int = 5, after: ID, filter: CommerceCommandsFilter): CommerceCommandConnection! @needAuthentication
+
+  command(id: ID!): Command! @needAuthentication
+
+  allServicesInfo: [ServiceInfo!]!
+  serviceInfo(id: String!): ServiceInfo!
+
+  # PANIERS
+  panier(id: ID!): Panier!
+}
+
+type Mutation {
+  # UTILISATEURS
+  createUser(input: NewUser!): User!
+  login(input: Login!): String!
+  updateUser(id: ID, input: ChangesUser): User! @needAuthentication
+
+  # COMMERCES
+  createCommerce(userID: ID!, input: NewCommerce!): Commerce! 
+  updateCommerce(id: ID!, changes: ChangesCommerce!): Commerce! @hasRole(role: STOREKEEPER)
+  createProduct(commerceID: ID, input: NewProduct!): Product! @hasRole(role: STOREKEEPER)
+  createProducts(commerceID: ID, input: [NewProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
+  updateProduct(id: ID!, changes: ChangesProduct!): Product! @hasRole(role: STOREKEEPER)
+  updateProducts(changes: [BulkChangesProduct!]!): [Product!]! @hasRole(role: STOREKEEPER)
+
+  # SERVICES
+  updateCommerceCommand(id: ID!, changes: ChangesCommerceCommand!): CommerceCommand! @needAuthentication
+
+  # PANIER
+  createPanier(commerceID: ID, input: NewPanier!): Panier! @hasRole(role: STOREKEEPER)
+  updatePanier(id: ID! changes: ChangesPanier!): Panier! @hasRole(role: STOREKEEPER)
+}
+`, BuiltIn: false},
+	{Name: "../shemas/services.graphqls", Input: `##############
+## SERVICES ##
+##############
+
+type ServiceInfo {
+  id: String!
+  name: String!
+  shortDescription: String!
+  longDescription: String!
+
+  monthPrice: Float!
+  monthMinimumAllowedCA: Float!
+  monthRangePercentage: Float!
+  monthAugmentationPerRangePercentage: Float!
+  monthAdvantages: [String!]!
+
+  transactionPercentage: Float!
+  transactionAdvantages: [String!]!
+}
+
+input ChangesService {
+  serviceID: String!
+  updateType: String!
+}`, BuiltIn: false},
 	{Name: "../shemas/users.graphqls", Input: `##################
 ## UTILISATEURS ##
 ##################
@@ -2639,6 +2584,53 @@ input ChangesUser {
 
   registedPaymentMethods: [ChangesRegistedPaymentMethod!]
   defaultPaymentMethod: String
+}`, BuiltIn: false},
+	{Name: "../shemas/utils.graphqls", Input: `directive @hasRole(role: Role!) on FIELD_DEFINITION
+directive @needAuthentication on FIELD_DEFINITION
+
+enum Role {
+  ADMIN,
+  STOREKEEPER,
+  USER
+}
+
+scalar Time
+scalar Upload
+
+###########
+## UTILS ##
+###########
+
+type Address {
+  id: ID!
+  number: String
+  route: String
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
+input NewAddress {
+  number: String
+  route: String
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
+input ChangesAddress {
+  number: String 
+  route: String 
+  optionalRoute: String
+  postalCode: String
+  city: String
+}
+
+type Transfert {
+  value: Float!
+  ibanOwner: String!
+  iban: String!
+  bic: String!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -4639,7 +4631,7 @@ func (ec *executionContext) _Command_status(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Command().Status(rctx, obj)
+		return obj.Status, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4660,8 +4652,8 @@ func (ec *executionContext) fieldContext_Command_status(ctx context.Context, fie
 	fc = &graphql.FieldContext{
 		Object:     "Command",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -16886,25 +16878,12 @@ func (ec *executionContext) _Command(ctx context.Context, sel ast.SelectionSet, 
 
 			})
 		case "status":
-			field := field
 
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Command_status(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
+			out.Values[i] = ec._Command_status(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
 			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

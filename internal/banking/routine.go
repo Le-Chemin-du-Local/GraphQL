@@ -11,9 +11,12 @@ import (
 )
 
 func SendBalance() {
+	// On doit créer les services
+	commercesService := commerces.NewCommercesService()
+
 	trelloClient := trello.NewClient(config.Cfg.Trello.Key, config.Cfg.Trello.Token)
 
-	dbCommerces, err := commerces.GetAll()
+	dbCommerces, err := commercesService.GetAll()
 
 	now := time.Now()
 	if err != nil {
@@ -64,7 +67,7 @@ func SendBalance() {
 		})
 		commerce.Balance = 0
 
-		err = commerces.Update(&commerce, nil, nil)
+		err = commercesService.Update(&commerce, nil, nil)
 
 		if err != nil {
 			errorCard := trello.Card{

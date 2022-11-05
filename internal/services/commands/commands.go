@@ -31,7 +31,7 @@ func (command *Command) ToModel() *model.Command {
 	}
 }
 
-func (command Command) IsLast() bool {
+func (command Command) IsLast(commandsService CommandsService) bool {
 	filter := bson.D{{}}
 
 	opts := options.FindOptions{}
@@ -42,7 +42,7 @@ func (command Command) IsLast() bool {
 		},
 	})
 
-	lastCommand, err := GetFiltered(filter, &opts)
+	lastCommand, err := commandsService.GetFiltered(filter, &opts)
 
 	if err != nil || len(lastCommand) <= 0 {
 		return false
@@ -57,6 +57,13 @@ type commandsService struct {
 }
 
 type CommandsService interface {
+	Create(input model.NewCommand) (*Command, error)
+	Update(changes *Command) error
+	GetAll() ([]Command, error)
+	GetById(id string) (*Command, error)
+	GetPaginated(startValue *string, first int, filter *model.CommandsFilter) ([]Command, error)
+	GetFiltered(filter interface{}, opts *options.FindOptions) ([]Command, error)
+	GetTheoricalStatus(commandID string, commerceCommandsService CommerceCommandsService) (*string, error)
 	GetUser(commandID string) (*model.User, error)
 }
 
@@ -66,7 +73,7 @@ func NewCommandsService(usersService users.UsersService) *commandsService {
 	}
 }
 
-func Create(input model.NewCommand) (*Command, error) {
+func (c *commandsService) Create(input model.NewCommand) (*Command, error) {
 	userObjectID, err := primitive.ObjectIDFromHex(input.User)
 
 	if err != nil {
@@ -91,7 +98,7 @@ func Create(input model.NewCommand) (*Command, error) {
 
 // Mise à jour de base de données
 
-func Update(changes *Command) error {
+func (c *commandsService) Update(changes *Command) error {
 	filter := bson.D{
 		primitive.E{
 			Key:   "_id",
@@ -106,13 +113,13 @@ func Update(changes *Command) error {
 
 // Getters
 
-func GetAll() ([]Command, error) {
+func (c *commandsService) GetAll() ([]Command, error) {
 	filter := bson.D{{}}
 
-	return GetFiltered(filter, nil)
+	return c.GetFiltered(filter, nil)
 }
 
-func GetById(id string) (*Command, error) {
+func (c *commandsService) GetById(id string) (*Command, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
@@ -126,7 +133,7 @@ func GetById(id string) (*Command, error) {
 		},
 	}
 
-	commands, err := GetFiltered(filter, nil)
+	commands, err := c.GetFiltered(filter, nil)
 
 	if err != nil {
 		return nil, err
@@ -139,7 +146,7 @@ func GetById(id string) (*Command, error) {
 	return &commands[0], nil
 }
 
-func GetPaginated(startValue *string, first int, filter *model.CommandsFilter) ([]Command, error) {
+func (c *commandsService) GetPaginated(startValue *string, first int, filter *model.CommandsFilter) ([]Command, error) {
 	var finalFilter bson.M
 
 	if startValue != nil {
@@ -193,10 +200,10 @@ func GetPaginated(startValue *string, first int, filter *model.CommandsFilter) (
 	opts := options.Find()
 	opts.SetLimit(int64(first))
 
-	return GetFiltered(finalFilter, opts)
+	return c.GetFiltered(finalFilter, opts)
 }
 
-func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Command, error) {
+func (c *commandsService) GetFiltered(filter interface{}, opts *options.FindOptions) ([]Command, error) {
 	commands := []Command{}
 
 	cursor, err := database.CollectionCommand.Find(database.MongoContext, filter, opts)
@@ -224,8 +231,8 @@ func GetFiltered(filter interface{}, opts *options.FindOptions) ([]Command, erro
 	return commands, nil
 }
 
-func GetStatus(commandID string) (*string, error) {
-	databaseCommerceCommands, err := CommerceGetForCommand(commandID)
+func (c *commandsService) GetTheoricalStatus(commandID string, commerceCommandsService CommerceCommandsService) (*string, error) {
+	databaseCommerceCommands, err := commerceCommandsService.GetForCommand(commandID)
 
 	if err != nil {
 		return nil, err
@@ -265,7 +272,7 @@ func GetStatus(commandID string) (*string, error) {
 }
 
 func (c *commandsService) GetUser(commandID string) (*model.User, error) {
-	databaseCommand, err := GetById(commandID)
+	databaseCommand, err := c.GetById(commandID)
 
 	if err != nil {
 		return nil, err

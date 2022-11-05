@@ -1,0 +1,72 @@
+##############
+## PRODUITS ##
+##############
+
+type Product {
+  id: ID!
+  name: String!
+  description: String!
+  price: Float!
+  unit: String!
+  tva: Float!
+  isBreton: Boolean!
+  hasGluten: Boolean!
+
+  tags: [String!]
+  allergens: [String!]
+  categories: [String!]!
+}
+
+# Pagination
+type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: ProductPageInfo!
+}
+
+type ProductEdge {
+  cursor: ID!
+  node: Product
+}
+
+type ProductPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+input NewProduct {
+  name: String!
+  description: String!
+  price: Float!
+  unit: String!
+  tva: Float!
+  isBreton: Boolean!
+  hasGluten: Boolean!
+
+  tags: [String!]
+  allergens: [String!]
+  categories: [String!]!
+
+  image: Upload
+}
+
+input ChangesProduct {
+  name: String
+  description: String
+  price: Float
+  unit: String
+  tva: Float
+  isBreton: Boolean
+  hasGluten: Boolean
+
+  tags: [String!]
+  allergens: [String!]
+  categories: [String!]
+
+  image: Upload
+}
+
+input BulkChangesProduct {
+  id: ID!
+  changes: ChangesProduct!
+}

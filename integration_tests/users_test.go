@@ -7,6 +7,7 @@ import (
 	"chemin-du-local.bzh/graphql/graph/generated"
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/graph/resolvers"
+	"chemin-du-local.bzh/graphql/internal/commerces"
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/internal/database"
 	"chemin-du-local.bzh/graphql/internal/users"
@@ -34,7 +35,8 @@ func TestIntegration(t *testing.T) {
 	commerceLongitude := -1.7779691219329834
 
 	// Initialisation des services
-	usersService := users.NewUsersService()
+	commercesService := commerces.NewCommercesService()
+	usersService := users.NewUsersService(commercesService)
 
 	// Initialisation des config
 	configPath := "config_tests.yml"
@@ -46,7 +48,8 @@ func TestIntegration(t *testing.T) {
 
 	// Le client
 	resolvers := resolvers.Resolver{
-		UsersService: usersService,
+		CommercesService: commercesService,
+		UsersService:     usersService,
 	}
 	c := client.New(
 		handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})),

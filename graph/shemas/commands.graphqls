@@ -1,0 +1,76 @@
+#############
+## COMMAND ##
+#############
+
+type CommerceCommand {
+  id: ID!
+  commerce: Commerce! 
+
+  cccommands: [CCCommand!]!
+  paniers: [PanierCommand!]!
+  pickupDate: Time!
+  status: String!
+  user: User!
+  price: Float!
+}
+
+type Command {
+  id: ID!
+  creationDate: Time!
+
+  user: User!
+  commerces: [CommerceCommand]!
+  status: String!
+}
+
+# Pagination 
+type CommandConnection {
+  edges: [CommandEdge!]!
+  pageInfo: CommandPageInfo!
+}
+
+type CommandEdge {
+  cursor: ID!
+  node: Command
+}
+
+type CommandPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+type CommerceCommandConnection {
+  edges: [CommerceCommandEdge!]!
+  pageInfo: CommerceCommandPageInfo!
+}
+
+type CommerceCommandEdge {
+  cursor: ID!
+  node: CommerceCommand
+}
+
+type CommerceCommandPageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+
+input NewCommerceCommand {
+  commerceID: ID!
+  pickupDate: Time!
+  paymentMethod: String!
+  price: Int!
+  priceClickAndCollect: Float!
+  pricePaniers: Float!
+}
+
+input ChangesCommerceCommand {
+  status: String
+}
+
+input NewCommand {
+  creationDate: Time!
+  user: ID!
+}

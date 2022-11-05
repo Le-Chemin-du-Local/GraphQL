@@ -1,0 +1,178 @@
+###############
+## COMMERCE ##
+###############
+
+# COMMERCE
+# Utilisation de la pagination par curseur : https://www.apollographql.com/blog/graphql/pagination/understanding-pagination-rest-graphql-and-relay/
+
+# Business hours related
+type Schedule {
+  opening: String!
+  closing: String!
+}
+
+input ScheduleInput {
+  opening: String!
+  closing: String!
+}
+
+type BusinessHours {
+  monday: [Schedule!]
+  tuesday: [Schedule!]
+  wednesday: [Schedule!]
+  thursday: [Schedule!]
+  friday: [Schedule!]
+  saturday: [Schedule!]
+  sunday: [Schedule!]
+}
+
+input NewBusinessHours {
+  monday: [ScheduleInput!]
+  tuesday: [ScheduleInput!]
+  wednesday: [ScheduleInput!]
+  thursday: [ScheduleInput!]
+  friday: [ScheduleInput!]
+  saturday: [ScheduleInput!]
+  sunday: [ScheduleInput!]
+}
+
+input ChangesBusinessHours {
+  monday: [ScheduleInput!]
+  tuesday: [ScheduleInput!]
+  wednesday: [ScheduleInput!]
+  thursday: [ScheduleInput!]
+  friday: [ScheduleInput!]
+  saturday: [ScheduleInput!]
+  sunday: [ScheduleInput!]
+}
+
+type Commerce { # Ici on utilise le nom "Commerce"
+                # plutôt que "Store" pour éviter de 
+                # futures conflits
+  id: ID!
+  storekeeper: User!
+  
+  siret: String!
+  
+  # Descriptif
+  name: String!
+  description: String!
+  storekeeperWord: String!
+
+  # Coordonnées
+  address: Address!
+  latitude: Float!
+  longitude: Float!
+  phone: String!
+  email: String!
+
+  # bancaire 
+  ibanOwner: String
+  iban: String
+  bic: String
+
+  facebook: String
+  twitter: String
+  instagram: String
+
+  businessHours: BusinessHours!
+  clickAndCollectHours: BusinessHours!
+
+  # Produits
+  categories: [String!]!
+  products(first: Int = 10, after: ID, filters: ProductFilter): ProductConnection!
+
+  # Services
+  services: [String!]!
+  productsAvailableForClickAndCollect: [Product!]!
+
+  defaultPaymentMethod: RegisteredPaymentMethod
+  lastBilledDate: Time
+  balance: Float!
+  dueBalance: Float!
+
+  transferts: [Transfert!]!
+
+  # Panier
+  paniers(first: Int = 10, after: ID, filters: PanierFilter): PanierConnection!
+} 
+
+# Pagination 
+type CommerceConnection {
+  totalCount: Int!
+  edges: [CommerceEdge!]!
+  pageInfo: CommercePageInfo!
+}
+
+type CommerceEdge {
+  cursor: ID!
+  node: Commerce
+}
+
+type CommercePageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}
+
+input NewCommerce {
+  siret: String!
+  # Descriptif
+  name: String!
+  description: String
+  storekeeperWord: String
+
+  # Coordonnées
+  address: NewAddress!
+  latitude: Float!
+  longitude: Float!
+  phone: String!
+  email: String!
+
+  facebook: String
+  twitter: String
+  instagram: String
+
+  businessHours: NewBusinessHours
+  clickAndCollectHours: NewBusinessHours
+
+  profilePicture: Upload
+  image: Upload
+}
+
+input ChangesCommerce {
+  siret: String
+
+  # Descriptif
+  name: String
+  description: String
+  storekeeperWord: String
+
+  # Coordonnées
+  address: ChangesAddress
+  latitude: Float
+  longitude: Float
+  phone: String
+  email: String
+
+  # bancaire 
+  ibanOwner: String
+  iban: String
+  bic: String
+
+  facebook: String
+  twitter: String
+  instagram: String
+
+  services: [ChangesService!]
+
+  businessHours: ChangesBusinessHours
+  clickAndCollectHours: ChangesBusinessHours
+
+  profilePicture: Upload
+  image: Upload
+
+  defaultPaymentMethod: String
+
+  productsAvailableForClickAndCollect: [ID!]
+}

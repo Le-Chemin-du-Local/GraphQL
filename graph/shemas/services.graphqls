@@ -1,0 +1,24 @@
+##############
+## SERVICES ##
+##############
+
+type ServiceInfo {
+  id: String!
+  name: String!
+  shortDescription: String!
+  longDescription: String!
+
+  monthPrice: Float!
+  monthMinimumAllowedCA: Float!
+  monthRangePercentage: Float!
+  monthAugmentationPerRangePercentage: Float!
+  monthAdvantages: [String!]!
+
+  transactionPercentage: Float!
+  transactionAdvantages: [String!]!
+}
+
+input ChangesService {
+  serviceID: String!
+  updateType: String!
+}

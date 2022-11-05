@@ -1,6 +1,7 @@
 package resolvers
 
 import (
+	"chemin-du-local.bzh/graphql/internal/commerces"
 	"chemin-du-local.bzh/graphql/internal/services/commands"
 	"chemin-du-local.bzh/graphql/internal/users"
 )
@@ -11,6 +12,7 @@ import (
 
 type Resolver struct {
 	UsersService            users.UsersService
+	CommercesService        commerces.CommercesService
 	CommandsService         commands.CommandsService
 	CommerceCommandsService commands.CommerceCommandsService
 }

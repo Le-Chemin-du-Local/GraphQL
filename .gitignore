@@ -2,3 +2,4 @@ go.sum
 config.production.yml
 
 static/
+database_save/

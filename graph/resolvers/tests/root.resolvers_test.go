@@ -1,7 +1,5 @@
 package resolver_test
 
-// TODO: Tests pour les methodes de paiements
-
 import (
 	"context"
 	"fmt"
@@ -13,8 +11,8 @@ import (
 	"chemin-du-local.bzh/graphql/graph/model"
 	"chemin-du-local.bzh/graphql/graph/resolvers"
 	"chemin-du-local.bzh/graphql/internal/auth"
+	"chemin-du-local.bzh/graphql/internal/mocks"
 	"chemin-du-local.bzh/graphql/internal/users"
-	"chemin-du-local.bzh/graphql/mocks"
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/stretchr/testify/mock"
@@ -72,25 +70,17 @@ func TestMutationResolver_CreateUser(t *testing.T) {
 	testUsersService.On("GetUserByEmail", mock.AnythingOfType("string")).Return(nil, nil)
 	testUsersService.On("Create", mock.AnythingOfType("model.NewUser")).Return(&expectedUser, nil)
 
-	var resp struct {
-		CreateUser struct {
-			ID    string `json:"id"`
-			Email string `json:"email"`
-			Phone string `json:"phone"`
-			Role  string `json:"role"`
-		}
-	}
-
-	// L'assertion pour vérifier que l'utilisateur est valide
-	assertExpectedUserEqual := func() {
-		require.Equal(t, expectedUserID.Hex(), resp.CreateUser.ID)
-		require.Equal(t, expectedUserEmail, resp.CreateUser.Email)
-		require.Equal(t, expectedUserPhone, resp.CreateUser.Phone)
-		require.Equal(t, expectedUserRole, resp.CreateUser.Role)
-	}
-
 	// Test la création d'un utilisateur
 	t.Run("create a new user", func(t *testing.T) {
+		var resp struct {
+			CreateUser struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Phone string `json:"phone"`
+				Role  string `json:"role"`
+			}
+		}
+
 		q := fmt.Sprintf(`
 			mutation {
 				createUser(input: {
@@ -107,11 +97,23 @@ func TestMutationResolver_CreateUser(t *testing.T) {
 		`, expectedUserEmail, expectedUserPhone)
 
 		c.MustPost(q, &resp)
-		assertExpectedUserEqual()
+		require.Equal(t, expectedUserID.Hex(), resp.CreateUser.ID)
+		require.Equal(t, expectedUserEmail, resp.CreateUser.Email)
+		require.Equal(t, expectedUserPhone, resp.CreateUser.Phone)
+		require.Equal(t, expectedUserRole, resp.CreateUser.Role)
 	})
 
 	// Test la création d'un utilisateur avec un mail en majuscule
 	t.Run("create a new user with capital email", func(t *testing.T) {
+		var resp struct {
+			CreateUser struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Phone string `json:"phone"`
+				Role  string `json:"role"`
+			}
+		}
+
 		q := fmt.Sprintf(`
 			mutation {
 				createUser(input: {
@@ -128,11 +130,23 @@ func TestMutationResolver_CreateUser(t *testing.T) {
 		`, strings.ToUpper(expectedUserEmail), expectedUserPhone)
 
 		c.MustPost(q, &resp)
-		assertExpectedUserEqual()
+		require.Equal(t, expectedUserID.Hex(), resp.CreateUser.ID)
+		require.Equal(t, expectedUserEmail, resp.CreateUser.Email)
+		require.Equal(t, expectedUserPhone, resp.CreateUser.Phone)
+		require.Equal(t, expectedUserRole, resp.CreateUser.Role)
 	})
 
 	// Test la création d'un utilisateur
 	t.Run("create an existing user", func(t *testing.T) {
+		var resp struct {
+			CreateUser struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Phone string `json:"phone"`
+				Role  string `json:"role"`
+			}
+		}
+
 		q := fmt.Sprintf(`
 			mutation {
 				createUser(input: {
@@ -155,6 +169,14 @@ func TestMutationResolver_CreateUser(t *testing.T) {
 
 	// Test la création d'un utilisateur
 	t.Run("create an existing user with capital email", func(t *testing.T) {
+		var resp struct {
+			CreateUser struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Phone string `json:"phone"`
+				Role  string `json:"role"`
+			}
+		}
 		q := fmt.Sprintf(`
 			mutation {
 				createUser(input: {
@@ -177,6 +199,15 @@ func TestMutationResolver_CreateUser(t *testing.T) {
 
 	// Test la création d'un utilisateur invalide
 	t.Run("create a user with invalid email", func(t *testing.T) {
+		var resp struct {
+			CreateUser struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Phone string `json:"phone"`
+				Role  string `json:"role"`
+			}
+		}
+
 		q := fmt.Sprintf(`
 			mutation {
 				createUser(input: {
@@ -229,12 +260,12 @@ func TestMutationResolver_Login(t *testing.T) {
 	}).Return(true)
 	testUsersService.On("Authenticate", mock.AnythingOfType("model.Login")).Return(false)
 
-	var resp struct {
-		Login string
-	}
-
 	// Tests de l'authentication réussi
 	t.Run("login user", func(t *testing.T) {
+		var resp struct {
+			Login string
+		}
+
 		q := fmt.Sprintf(`
 			mutation {
 				login(input: {
@@ -249,6 +280,10 @@ func TestMutationResolver_Login(t *testing.T) {
 
 	// Tests de l'authentication mauvais mot de passe
 	t.Run("login user wrong password", func(t *testing.T) {
+		var resp struct {
+			Login string
+		}
+
 		q := fmt.Sprintf(`
 			mutation {
 				login(input: {
@@ -264,6 +299,10 @@ func TestMutationResolver_Login(t *testing.T) {
 
 	// Tests de l'authentication mauvais email
 	t.Run("login user wrong email", func(t *testing.T) {
+		var resp struct {
+			Login string
+		}
+
 		q := fmt.Sprintf(`
 			mutation {
 				login(input: {
@@ -385,25 +424,17 @@ func TestQueryResolver_User(t *testing.T) {
 		PasswordHash: userPassword,
 	}
 
-	var resp struct {
-		User struct {
-			ID    string `json:"id"`
-			Email string `json:"email"`
-			Phone string `json:"phone"`
-			Role  string `json:"role"`
-		}
-	}
-
-	// L'assertion pour vérifier que l'utilisateur est valide
-	assertUserEqual := func() {
-		require.Equal(t, userID.Hex(), resp.User.ID)
-		require.Equal(t, userEmail, resp.User.Email)
-		require.Equal(t, userPhone, resp.User.Phone)
-		require.Equal(t, userRole, resp.User.Role)
-	}
-
 	// Les tests
 	t.Run("query authenticated user", func(t *testing.T) {
+		var resp struct {
+			User struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Phone string `json:"phone"`
+				Role  string `json:"role"`
+			}
+		}
+
 		testUsersService := new(mocks.UsersService)
 		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
@@ -431,10 +462,22 @@ func TestQueryResolver_User(t *testing.T) {
 		)
 
 		testUsersService.AssertNotCalled(t, "GetUserById", userID.Hex())
-		assertUserEqual()
+		require.Equal(t, userID.Hex(), resp.User.ID)
+		require.Equal(t, userEmail, resp.User.Email)
+		require.Equal(t, userPhone, resp.User.Phone)
+		require.Equal(t, userRole, resp.User.Role)
 	})
 
 	t.Run("query authenticated user without authentication", func(t *testing.T) {
+		var resp struct {
+			User struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Phone string `json:"phone"`
+				Role  string `json:"role"`
+			}
+		}
+
 		testUsersService := new(mocks.UsersService)
 		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
@@ -465,6 +508,15 @@ func TestQueryResolver_User(t *testing.T) {
 	})
 
 	t.Run("query a user by its id", func(t *testing.T) {
+		var resp struct {
+			User struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Phone string `json:"phone"`
+				Role  string `json:"role"`
+			}
+		}
+
 		testUsersService := new(mocks.UsersService)
 		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
@@ -491,10 +543,22 @@ func TestQueryResolver_User(t *testing.T) {
 		)
 
 		testUsersService.AssertCalled(t, "GetUserById", userID.Hex())
-		assertUserEqual()
+		require.Equal(t, userID.Hex(), resp.User.ID)
+		require.Equal(t, userEmail, resp.User.Email)
+		require.Equal(t, userPhone, resp.User.Phone)
+		require.Equal(t, userRole, resp.User.Role)
 	})
 
 	t.Run("query with authentified by its id", func(t *testing.T) {
+		var resp struct {
+			User struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Phone string `json:"phone"`
+				Role  string `json:"role"`
+			}
+		}
+
 		testUsersService := new(mocks.UsersService)
 		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
@@ -522,10 +586,22 @@ func TestQueryResolver_User(t *testing.T) {
 		)
 
 		testUsersService.AssertCalled(t, "GetUserById", userID.Hex())
-		assertUserEqual()
+		require.Equal(t, userID.Hex(), resp.User.ID)
+		require.Equal(t, userEmail, resp.User.Email)
+		require.Equal(t, userPhone, resp.User.Phone)
+		require.Equal(t, userRole, resp.User.Role)
 	})
 
 	t.Run("query non existant user", func(t *testing.T) {
+		var resp struct {
+			User struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Phone string `json:"phone"`
+				Role  string `json:"role"`
+			}
+		}
+
 		testUsersService := new(mocks.UsersService)
 		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(
@@ -556,6 +632,15 @@ func TestQueryResolver_User(t *testing.T) {
 	})
 
 	t.Run("query with authentified non existant user", func(t *testing.T) {
+		var resp struct {
+			User struct {
+				ID    string `json:"id"`
+				Email string `json:"email"`
+				Phone string `json:"phone"`
+				Role  string `json:"role"`
+			}
+		}
+
 		testUsersService := new(mocks.UsersService)
 		resolvers := resolvers.Resolver{UsersService: testUsersService}
 		c := client.New(

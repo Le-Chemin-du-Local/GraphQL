@@ -96,7 +96,9 @@ type UsersService interface {
 func NewUsersService(
 	commercesService commerces.CommercesService,
 ) *userService {
-	return &userService{}
+	return &userService{
+		CommercesService: commercesService,
+	}
 }
 
 // Createur de base de données

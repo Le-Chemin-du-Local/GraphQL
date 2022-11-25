@@ -17,6 +17,9 @@ type Config struct {
 	Maps struct {
 		Key string `yaml:"key"`
 	} `yaml:"maps"`
+	SendGrid struct {
+		Key string `yaml:"key"`
+	} `yaml:"sendgrid"`
 	Stripe struct {
 		Key string `yaml:"key"`
 	} `yaml:"stripe"`
@@ -75,6 +78,8 @@ func InitFromEnv() {
 
 	Cfg.Stripe.Key = os.Getenv("STRIPE_KEY")
 
+	Cfg.SendGrid.Key = os.Getenv("SENDGRID_KEY")
+
 	Cfg.Trello.Key = os.Getenv("TRELLO_KEY")
 	Cfg.Trello.Token = os.Getenv("TRELLO_TOKEN")
 	Cfg.Trello.ListID = os.Getenv("TRELLO_LISTID")
@@ -95,4 +100,6 @@ func InitFromEnv() {
 	Cfg.Database.Collections.CCCommands = os.Getenv("COLLECTION_CCCOMMANDS")
 	Cfg.Database.Collections.PanierCommands = os.Getenv("COLLECTION_PANIERCOMMANDS")
 	Cfg.Database.Collections.Paniers = os.Getenv("COLLECTION_PANIERS")
+
+	fmt.Println("Config initialized")
 }

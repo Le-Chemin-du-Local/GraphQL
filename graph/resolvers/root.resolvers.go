@@ -25,6 +25,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/users"
 	"chemin-du-local.bzh/graphql/pkg/geojson"
 	"chemin-du-local.bzh/graphql/pkg/jwt"
+	"chemin-du-local.bzh/graphql/pkg/notifications"
 	"chemin-du-local.bzh/graphql/pkg/utils"
 	"github.com/99designs/gqlgen/graphql"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -54,6 +55,18 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 
 	if err != nil {
 		return nil, err
+	}
+
+	if input.Commerce != nil {
+		notifications.SendMailWelcomeStoreKeeper(
+			input.FirstName,
+			input.Email,
+		)
+	} else {
+		notifications.SendMailWelcome(
+			input.FirstName,
+			input.Email,
+		)
 	}
 
 	user := databaseUser.ToModel()

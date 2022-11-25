@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"chemin-du-local.bzh/graphql/internal/config"
@@ -23,6 +24,7 @@ var CollectionPaniers *mongo.Collection
 // Initialise la base de données à partir des informations données
 // dans la configuration
 func Init(shouldDrop *bool) {
+	fmt.Println("Initialising Database connection...")
 	// Toutes les informations sont récupérés dans la configuration
 	// pour éviter de se retrouver avec des identifiants secrets présent
 	// dans le code

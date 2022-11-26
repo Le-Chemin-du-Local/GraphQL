@@ -16,6 +16,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/services/commands"
 	"chemin-du-local.bzh/graphql/internal/services/paniers"
 	"chemin-du-local.bzh/graphql/internal/users"
+	"chemin-du-local.bzh/graphql/pkg/notifications"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/customer"
 	"github.com/stripe/stripe-go/v72/paymentintent"
@@ -88,6 +89,7 @@ func order(
 	ccCommandsService commands.CCCommandsService,
 	panierCommandsService commands.PanierCommandsService,
 ) error {
+	price := 0
 	databaseCommand, err := commandsService.Create(model.NewCommand{
 		CreationDate: time.Now(),
 		User:         user.ID.Hex(),
@@ -98,12 +100,13 @@ func order(
 	}
 
 	for _, commerce := range basket.Commerces {
-		price, priceClickAndCollect, pricePaniers, err := calculateOrderAmountForCommerce(
+		calculatedPrice, priceClickAndCollect, pricePaniers, err := calculateOrderAmountForCommerce(
 			*commerce,
 			commercesService,
 			productsService,
 			paniersService,
 		)
+		price = int(calculatedPrice)
 
 		if err != nil {
 			return err
@@ -114,7 +117,7 @@ func order(
 			CommerceID:           commerce.CommerceID,
 			PickupDate:           *commerce.PickupDate,
 			PaymentMethod:        paymentMethod,
-			Price:                int(price),
+			Price:                price,
 			PriceClickAndCollect: priceClickAndCollect,
 			PricePaniers:         pricePaniers,
 		}, databaseCommand.ID)
@@ -158,6 +161,17 @@ func order(
 			}
 		}
 	}
+
+	notifications.SendMailNewCommand(
+		user.FirstName,
+		user.Email,
+		basket,
+		databaseCommand.ID.Hex(),
+		price,
+		commercesService,
+		productsService,
+		paniersService,
+	)
 
 	return nil
 }

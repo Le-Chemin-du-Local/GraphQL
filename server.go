@@ -97,6 +97,15 @@ func main() {
 		return next(ctx)
 	}
 
+	// Test de l'envoie d'email
+	// fmt.Println("Envoie d'email...")
+	// string := "Victor"
+	// err := notifications.SendMailWelcome(
+	// 	&string,
+	// 	"victordenis01@gmail.com",
+	// )
+	// fmt.Println(err)
+
 	// Creation des taches régulières
 	cron := cron.New()
 

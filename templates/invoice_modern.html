@@ -21,18 +21,18 @@
             vertical-align: top;
         }
 
-        html { font: 16px/1 'Rubik', 'Open Sans', sans-serif; overflow: auto; width: 100%; height: 100%; }
+        html { font: 16px/1 'Rubik', 'Open Sans', sans-serif; overflow: auto; width: 8.3in; height: 11.7in;}
 
-        body { box-sizing: border-box; overflow: hidden; padding: 0; }
-        body { border-radius: 1px; box-shadow: 0 0 1in -0.25in rgba(0, 0, 0, 0.5); }
+        body { position: relative; box-sizing: border-box; overflow: hidden; padding: 0; }
+        body { background: #FFF; border-radius: 1px; box-shadow: 0 0 1in -0.25in rgba(0, 0, 0, 0.5); }
         body { border-top: 1.7em #ff8c60 solid;}
 
         /* Le contenue */
-        #main { padding: 4em 4em !important; }
+        main { position: relative; width: 7.4in; height: 100%; margin: 0.5in auto; }
 
-        #header { display: -webkit-box; /* wkhtmltopdf uses this one */ -webkit-box-pack: justify; }
-        #header img { width: 200px; object-fit: contain; }
-        #header .content { text-align: end;}
+        #header { width: 100%; display: flex;}
+        #header img { width: 200px; object-fit: contain; margin-top: -50px; }
+        #header .content { width: 100%; text-align: end;}
 
         /* Les infos du Chemin du Local */
         #cdl-info { margin: 2em auto;}
@@ -44,7 +44,7 @@
         #billed-services { width: 100%; margin: 2em auto; }
 
         table { border-collapse: separate; }
-        th, td { padding: 0.5em !important; position: relative; text-align: left; }
+        th, td { padding: 0.5em; position: relative; text-align: left; }
         table { clear: both; width: 100%;}
         table th { color: #ff8c60; background-color: white; font-size: 20px; font-weight: bold;}
         table tr:nth-child(odd) { background-color: #f2f2f2;}
@@ -54,20 +54,23 @@
         table td:nth-child(6) { text-align: right; font-weight: bold;}
 
         /* Le résumé */
-        #footer-summary { position: absolute; bottom: 150px; left: 5em; right: 4em; }
-        #footer-summary { display: -webkit-box; -webkit-box-pack: justify;}
+        #footer-summary { width: 100%; position: absolute; bottom: 0; }
+        #footer-summary { display: flex; justify-content: space-between;}
 
-        #footer-summary .section-2 { display: -webkit-box; }
+        #footer-summary .section-1 { margin: 0 0 0 3em;}
+        
+        #footer-summary .section-2 { display: flex;}
         #footer-summary .section-2 h3 { margin: 12px 0;}
         #footer-summary .section-2 .column-1 { margin: 0 1em; }
         #footer-summary .section-2 .column-2 { text-align: end; }
 
         /* Footer */
-        /* footer { height: 1in; background-color: #ff8c60; color: white; font-size: 12px; } */
-        footer #footer-1 { text-align: center; color: white; font-size: 12px; padding: 2em 0; } 
-        footer #footer-1 { position: absolute; right: 0; bottom: 0; left: 0; background-color: #ff8c60;}
+        footer { position: relative; height: 1in; background-color: #ff8c60; color: white; font-size: 12px; }
+        footer #footer-1 { display: flex; flex-direction: column; text-align: center; justify-content: center; align-items: center; }
+        footer #footer-1 { position: absolute; top: 0; right: 0; bottom: 0; left: 0;}
         footer #footer-1 p { margin: 0.2em 0;}
-        footer img { position: absolute; bottom: 2em; right: 4em; bottom: 0; }
+        footer #footer-2 { display: flex; justify-content: end; align-items: center; }
+        footer #footer-2 { position: absolute; top: 0; right: 0.3in; bottom: 0; left: 0.3in;}
         footer img { width: 164px; height: auto; }
 
         /* Les espaces */
@@ -82,10 +85,10 @@
         .weight-normal { font-weight: normal;}
     </style>
     <body>
-        <div id="main">
+        <main>
             <!-- Le header -->
             <div id="header">
-                <img src="https://chemin-du-local.bzh/images/logo.png" alt="Logo du Chemin du Local" />
+                <img src="./logo_orange.png" alt="Logo du Chemin du Local" />
                 <div class="content">
                     <h1>Facture du {{.Day}}{{.Month}}/{{.Year}}</h1>
                     <div class="spacing-4"></div>
@@ -129,7 +132,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{.ServicesContent}}
+                        <tr>
+                            <td>Click&Collect</td>
+                            <td>Mensuel</td>
+                            <td>1</td>
+                            <td>80€</td>
+                            <td>20%</td>
+                            <td>96€</td>
+                        </tr>
+                        <tr>
+                            <td>Paniers</td>
+                            <td>Consommation</td>
+                            <td>1</td>
+                            <td>20€</td>
+                            <td>20%</td>
+                            <td>24€</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -159,13 +177,15 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
         <footer>
             <div id="footer-1">
                 <p>Le Chemin du Local, SAS au capital social de 1000 €</p>
                 <p>Immatriculé au numéro RCS Lorient B 908 046 808</p>
             </div>
-            <img src="https://chemin-du-local.bzh/images/logo.png" alt="Logo du Chemin du Local" />
+            <div id="footer-2">
+                <img src="./logo_white.png" alt="Logo du Chemin du Local" />
+            </div>
         </footer>
     </body>
 </html>

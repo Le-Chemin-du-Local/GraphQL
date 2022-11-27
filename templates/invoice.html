@@ -1,0 +1,191 @@
+<html>
+    <head>
+        <link href='https://fonts.googleapis.com/css?family=Rubik' rel='stylesheet'>
+        <meta charset="utf-8">
+    </head>
+    <style>
+        /* Les basiques */
+        *{
+            border: 0;
+            box-sizing: content-box;
+            color: inherit;
+            font-family: inherit;
+            font-size: inherit;
+            font-style: inherit;
+            font-weight: inherit;
+            line-height: inherit;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            text-decoration: none;
+            vertical-align: top;
+        }
+
+        html { font: 16px/1 'Rubik', 'Open Sans', sans-serif; overflow: auto; width: 8.3in; height: 11.7in;}
+
+        body { position: relative; box-sizing: border-box; overflow: hidden; padding: 0; }
+        body { background: #FFF; border-radius: 1px; box-shadow: 0 0 1in -0.25in rgba(0, 0, 0, 0.5); }
+        body { border-top: 1.7em #ff8c60 solid;}
+
+        /* Le contenue */
+        main { position: relative; width: 7.4in; height: 100%; margin: 0.5in auto; }
+
+        #header { width: 100%; display: flex;}
+        #header img { width: 200px; object-fit: contain; margin-top: -50px; }
+        #header .content { width: 100%; text-align: end;}
+
+        /* Les infos du Chemin du Local */
+        #cdl-info { margin: 2em auto;}
+
+        /* Les infos du commerce */
+        #store-info { margin: 2em auto; text-align: end;}
+
+        /* Les services facturés */
+        #billed-services { width: 100%; margin: 2em auto; }
+
+        table { border-collapse: separate; }
+        th, td { padding: 0.5em; position: relative; text-align: left; }
+        table { clear: both; width: 100%;}
+        table th { color: #ff8c60; background-color: white; font-size: 20px; font-weight: bold;}
+        table tr:nth-child(odd) { background-color: #f2f2f2;}
+        table td:nth-child(3) { text-align: right;}
+        table td:nth-child(4) { text-align: right;}
+        table td:nth-child(5) { text-align: right;}
+        table td:nth-child(6) { text-align: right; font-weight: bold;}
+
+        /* Le résumé */
+        #footer-summary { width: 100%; position: absolute; bottom: 0; }
+        #footer-summary { display: flex; justify-content: space-between;}
+
+        #footer-summary .section-1 { margin: 0 0 0 3em;}
+        
+        #footer-summary .section-2 { display: flex;}
+        #footer-summary .section-2 h3 { margin: 12px 0;}
+        #footer-summary .section-2 .column-1 { margin: 0 1em; }
+        #footer-summary .section-2 .column-2 { text-align: end; }
+
+        /* Footer */
+        footer { position: relative; height: 1in; background-color: #ff8c60; color: white; font-size: 12px; }
+        footer #footer-1 { display: flex; flex-direction: column; text-align: center; justify-content: center; align-items: center; }
+        footer #footer-1 { position: absolute; top: 0; right: 0; bottom: 0; left: 0;}
+        footer #footer-1 p { margin: 0.2em 0;}
+        footer #footer-2 { display: flex; justify-content: end; align-items: center; }
+        footer #footer-2 { position: absolute; top: 0; right: 0.3in; bottom: 0; left: 0.3in;}
+        footer img { width: 164px; height: auto; }
+
+        /* Les espaces */
+        .spacing-4 { height: 2em; }
+        .spacing-2 { height: 1em; }
+
+        /* Les titres et textes */
+        a { color: #0563c1; font-weight: bold; text-decoration: underline;}
+        h1 { color: #ff5858; font-size: 24px; font-weight: bold;}
+        h3 { color: #ff5858; font-size: 18px; font-weight: bold; margin: 4px 0;}
+        .black { color: #0e0e0e !important; font-size: 18px; font-weight: bold;}
+        .weight-normal { font-weight: normal;}
+    </style>
+    <body>
+        <main>
+            <!-- Le header -->
+            <div id="header">
+                <img src="./logo_orange.png" alt="Logo du Chemin du Local" />
+                <div class="content">
+                    <h1>Facture du {{.Day}}{{.Month}}/{{.Year}}</h1>
+                    <div class="spacing-4"></div>
+                    <h3>Numéro de facture</h3>
+                    <h3 class="black">{{.InvoiceNumber}}</h3>
+                </div>
+            </div>
+
+            <!-- Les infos du Chemin du Local -->
+            <div id="cdl-info">
+                <h3>Le Chemin du Local SAS</h3>
+                <h3 class="black">N° SIREN : 908046808</h3>
+                <h3 class="black">10, résidence de la mer</h3>
+                <h3 class="black">65680 PLOUHINEC</h3>
+                <h3 class="black">Capital social : 1000€</h3>
+                <h3 class="black">N° TVA : FR02908046808</h3>
+                <a href="mailto:contact@chemin-du-local.bzh">contact@chemin-du-local.bzh</a>
+            </div>
+
+            <!-- Les infos du commerce -->
+            <div id="store-info">
+                <h3>{{.StoreName}}</h3>
+                <h3 class="black">N° SIREN : {{.StoreSIREN}}</h3>
+                <h3 class="black">{{.StoreAddress1}}</h3>
+                <h3 class="black">{{.StoreAddress2}}</h3>
+                <h3 class="black">N° TVA : {{.StoreTVA}}</h3>
+                <a href="mailto:{{.StoreEmail}}">{{.StoreEmail}}</a>
+            </div>
+
+            <!-- La liste des services facturés -->
+            <div id="billed-services">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom du service</th>
+                            <th>Type de tarif</th>
+                            <th>Quantité</th>
+                            <th>Prix unitaire (HT)</th>
+                            <th>TVA</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Click&Collect</td>
+                            <td>Mensuel</td>
+                            <td>1</td>
+                            <td>80€</td>
+                            <td>20%</td>
+                            <td>96€</td>
+                        </tr>
+                        <tr>
+                            <td>Paniers</td>
+                            <td>Consommation</td>
+                            <td>1</td>
+                            <td>20€</td>
+                            <td>20%</td>
+                            <td>24€</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Le résumé -->
+            <div id="footer-summary">
+                <div class="section-1">
+                    <h3>Date de paiement</h2>
+                    <h3 class="black">{{.BilledDate}}</h3>
+                    <div class="spacing-2"></div>
+                    <h3>Mode de reglement</h3>
+                    <h3 class="black">{{.Card}}</h3>
+                </div>
+            
+                <div class="section-2">
+                    <div class="column-1">
+                        <h3 class="black">Total HT</h3>
+                        <h3 class="black">Total TVA</h3>
+                        <h3 class="weight-normal">Montant Total</h3>
+                        <h3 class="weight-normal">Reste à payer</h3>
+                    </div>
+                    <div class="column-2">
+                        <h3 class="black">84€</h3>
+                        <h3 class="black">17€</h3>
+                        <h3 class="weight-normal">102€</h3>
+                        <h3 class="weight-normal">0€</h3>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer>
+            <div id="footer-1">
+                <p>Le Chemin du Local, SAS au capital social de 1000 €</p>
+                <p>Immatriculé au numéro RCS Lorient B 908 046 808</p>
+            </div>
+            <div id="footer-2">
+                <img src="./logo_white.png" alt="Logo du Chemin du Local" />
+            </div>
+        </footer>
+    </body>
+</html>

@@ -227,6 +227,11 @@ func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, change
 
 					databaseCommerce.ProductsAvailableForClickAndCollect = productsId
 				}
+
+				notifications.SendMailServicesSubscription(
+					&databaseCommerce.Name, databaseCommerce.Email,
+					"", nextBillingTime.Format("02/01/2006"),
+				)
 			}
 
 			if castedServiceChange.UpdateType == "UPDATE" {

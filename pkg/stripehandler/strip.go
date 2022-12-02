@@ -160,9 +160,17 @@ func order(
 				return err
 			}
 		}
+
+		databaseCommerce, err := commercesService.GetById(commerce.CommerceID)
+
+		if err != nil {
+			notifications.SendMailNewCommand(
+				&databaseCommerce.Name, databaseCommerce.Email,
+			)
+		}
 	}
 
-	notifications.SendMailNewCommand(
+	notifications.SendMailCommandConfirmation(
 		user.FirstName,
 		user.Email,
 		basket,

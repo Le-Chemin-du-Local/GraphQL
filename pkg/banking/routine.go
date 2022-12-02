@@ -11,6 +11,7 @@ import (
 	"chemin-du-local.bzh/graphql/internal/commerces"
 	"chemin-du-local.bzh/graphql/internal/config"
 	"chemin-du-local.bzh/graphql/pkg/htmltopdf"
+	"chemin-du-local.bzh/graphql/pkg/notifications"
 	"chemin-du-local.bzh/graphql/pkg/stripehandler"
 	"github.com/adlio/trello"
 )
@@ -119,12 +120,12 @@ func getServicesPayment() {
 			continue
 		}
 
-		y1, m1, d1 := commerce.LastBilledDate.AddDate(0, 0, 30).Date()
-		y2, m2, d2 := time.Now().Date()
+		// y1, m1, d1 := commerce.LastBilledDate.AddDate(0, 0, 30).Date()
+		// y2, m2, d2 := time.Now().Date()
 
-		if y1 != y2 || m1 != m2 || d1 != d2 {
-			continue
-		}
+		// if y1 != y2 || m1 != m2 || d1 != d2 {
+		// 	continue
+		// }
 
 		billedServicesString := ""
 		totalToBill := 0.0
@@ -194,8 +195,8 @@ func getServicesPayment() {
 				fmt.Println("Impossible de mettre à jour le commerce " + commerce.Name)
 			}
 
-			// Ensuite on génère la facture
-			htmltopdf.InvoiceToPDF(commerce.ID.Hex(), htmltopdf.InvoiceData{
+			// Ensuite on génère la facture et le mail
+			invoiceData := htmltopdf.InvoiceData{
 				Day:             strconv.Itoa(time.Now().Day()),
 				Month:           strconv.Itoa(int(time.Now().Month())),
 				Year:            strconv.Itoa(time.Now().Year()),
@@ -216,7 +217,24 @@ func getServicesPayment() {
 				TotalHT:  fmt.Sprintf("%.2f", math.Round(totalToBill*100)/100),
 				TotalTVA: fmt.Sprintf("%.2f", math.Round(totalToBill*20)/100),
 				TotalTTC: fmt.Sprintf("%.2f", math.Round(totalToBill*120)/100),
-			})
+			}
+
+			htmltopdf.InvoiceToPDF(commerce.ID.Hex(), invoiceData)
+
+			notifications.SendMailBillStoreServices(
+				&commerce.Name,
+				commerce.Email,
+				invoiceData.Month,
+				invoiceData.Year,
+				invoiceData.BilledDate,
+				commerce.ID.Hex(),
+				invoiceData.StoreSIREN,
+				invoiceData.StoreAddress1+", "+invoiceData.StoreAddress2,
+				invoiceData.TotalHT,
+				invoiceData.TotalTVA,
+				invoiceData.TotalTTC,
+				billedServicesString,
+			)
 		}
 	}
 

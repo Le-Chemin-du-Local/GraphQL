@@ -47,36 +47,42 @@ type Commerce struct {
 	DefaultPaymentMethodID              *string             `bson:"defaultPaymentMethodID"`
 	LastBilledDate                      *time.Time          `bson:"lastBilledDate"`
 	Balance                             float64             `bson:"balance"`
-	DueBalance                          float64             `bson:"dueBalance"`
+	DueBalanceClickAndCollectC          float64             `bson:"dueBalanceClickAndCollectC"`
+	DueBalanceClickAndCollectM          float64             `bson:"dueBalanceClickAndCollectM"`
+	DueBalancePaniersC                  float64             `bson:"dueBalancePaniersC"`
+	DueBalancePaniersM                  float64             `bson:"dueBalancePaniersM"`
 	Transferts                          []model.Transfert   `bson:"transferts"`
 }
 
 func (commerce *Commerce) ToModel() *model.Commerce {
 	return &model.Commerce{
-		ID:                   commerce.ID.Hex(),
-		StorekeeperID:        commerce.StorekeeperID.Hex(),
-		Siret:                commerce.Siret,
-		Name:                 commerce.Name,
-		Description:          commerce.Description,
-		StorekeeperWord:      commerce.StorekeeperWord,
-		Address:              *commerce.Address.ToModel(),
-		Latitude:             commerce.AddressGeo.Coordinates[1],
-		Longitude:            commerce.AddressGeo.Coordinates[0],
-		Phone:                commerce.Phone,
-		Email:                commerce.Email,
-		IBANOwner:            commerce.IBANOwner,
-		IBAN:                 commerce.IBAN,
-		BIC:                  commerce.BIC,
-		Facebook:             commerce.Facebook,
-		Twitter:              commerce.Twitter,
-		Instagram:            commerce.Instagram,
-		BusinessHours:        commerce.BusinessHours,
-		ClickAndCollectHours: commerce.ClickAndCollectHours,
-		Services:             commerce.Services,
-		LastBilledDate:       commerce.LastBilledDate,
-		Balance:              commerce.Balance,
-		DueBalance:           commerce.DueBalance,
-		Transferts:           commerce.Transferts,
+		ID:                         commerce.ID.Hex(),
+		StorekeeperID:              commerce.StorekeeperID.Hex(),
+		Siret:                      commerce.Siret,
+		Name:                       commerce.Name,
+		Description:                commerce.Description,
+		StorekeeperWord:            commerce.StorekeeperWord,
+		Address:                    *commerce.Address.ToModel(),
+		Latitude:                   commerce.AddressGeo.Coordinates[1],
+		Longitude:                  commerce.AddressGeo.Coordinates[0],
+		Phone:                      commerce.Phone,
+		Email:                      commerce.Email,
+		IBANOwner:                  commerce.IBANOwner,
+		IBAN:                       commerce.IBAN,
+		BIC:                        commerce.BIC,
+		Facebook:                   commerce.Facebook,
+		Twitter:                    commerce.Twitter,
+		Instagram:                  commerce.Instagram,
+		BusinessHours:              commerce.BusinessHours,
+		ClickAndCollectHours:       commerce.ClickAndCollectHours,
+		Services:                   commerce.Services,
+		LastBilledDate:             commerce.LastBilledDate,
+		Balance:                    commerce.Balance,
+		DueBalanceClickAndCollectC: commerce.DueBalanceClickAndCollectC,
+		DueBalanceClickAndCollectM: commerce.DueBalanceClickAndCollectM,
+		DueBalancePaniersC:         commerce.DueBalanceClickAndCollectC,
+		DueBalancePaniersM:         commerce.DueBalanceClickAndCollectM,
+		Transferts:                 commerce.Transferts,
 	}
 }
 
@@ -282,16 +288,18 @@ func (c *commercesService) UpdateBalancesForOrder(commerceID string, price int, 
 	}
 
 	for _, service := range commerce.Services {
+		// Ici historiquement le T est pour transaction, qui
+		// plus tard a été remplacé par C pour consommation
 		if strings.Contains(service, "CLICKANDCOLLECT_T") {
 			clickandcollectInfo := servicesinfo.ClickAndCollect()
 			priceToAdd := math.Round(clickandcollectInfo.TransactionPercentage*priceClickAndCollect) / 100
 
-			commerce.DueBalance = commerce.DueBalance + priceToAdd
+			commerce.DueBalanceClickAndCollectC = commerce.DueBalanceClickAndCollectC + priceToAdd
 		} else if strings.Contains(service, "PANIERS_T") {
 			paniersInfo := servicesinfo.Paniers()
 			priceToAdd := math.Round(paniersInfo.TransactionPercentage*pricePaniers) / 100
 
-			commerce.DueBalance = commerce.DueBalance + priceToAdd
+			commerce.DueBalancePaniersC = commerce.DueBalancePaniersC + priceToAdd
 		}
 	}
 

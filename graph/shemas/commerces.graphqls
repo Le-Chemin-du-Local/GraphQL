@@ -90,6 +90,10 @@ type Commerce { # Ici on utilise le nom "Commerce"
   lastBilledDate: Time
   balance: Float!
   dueBalance: Float!
+  dueBalanceClickAndCollectC: Float!
+  dueBalanceClickAndCollectM: Float!
+  dueBalancePaniersC: Float!
+  dueBalancePaniersM: Float!
 
   transferts: [Transfert!]!
 

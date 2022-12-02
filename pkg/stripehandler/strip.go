@@ -569,6 +569,27 @@ func HandleCompleteOrder(
 
 }
 
+func BillStoresServices(price int, paymentMethod string, customer string) (bool, error) {
+	apiKey := config.Cfg.Stripe.Key
+	stripe.Key = apiKey
+
+	// Create a PaymentIntent with amount and currency
+	confirm := true
+	confirmationMethode := "automatic"
+	params := &stripe.PaymentIntentParams{
+		Amount:             stripe.Int64(int64(price)),
+		Currency:           stripe.String(string(stripe.CurrencyEUR)),
+		PaymentMethod:      &paymentMethod,
+		Confirm:            &confirm,
+		ConfirmationMethod: &confirmationMethode,
+		Customer:           &customer,
+	}
+
+	pi, err := paymentintent.New(params)
+
+	return pi.Status == stripe.PaymentIntentStatusSucceeded, err
+}
+
 func writeJSON(w http.ResponseWriter, v interface{}) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(v); err != nil {

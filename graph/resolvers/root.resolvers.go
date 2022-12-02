@@ -206,7 +206,11 @@ func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, change
 
 			if castedServiceChange.UpdateType == "ADD" {
 				if castedServiceChange.ServiceID[len(castedServiceChange.ServiceID)-1:] == "M" {
-					databaseCommerce.DueBalance = databaseCommerce.DueBalance + remainingPriceRounded
+					if strings.Contains(castedServiceChange.ServiceID, "CLICKANDCOLLECT") {
+						databaseCommerce.DueBalanceClickAndCollectM = databaseCommerce.DueBalanceClickAndCollectC + remainingPriceRounded
+					} else if strings.Contains(castedServiceChange.ServiceID, "PANIERS") {
+						databaseCommerce.DueBalancePaniersM = databaseCommerce.DueBalancePaniersM + remainingPriceRounded
+					}
 				}
 
 				databaseCommerce.Services = append(databaseCommerce.Services, castedServiceChange.ServiceID)
@@ -230,7 +234,11 @@ func (r *mutationResolver) UpdateCommerce(ctx context.Context, id string, change
 					if strings.Contains(databaseService, strings.Split(castedServiceChange.ServiceID, "_")[0]) {
 						if strings.Split(castedServiceChange.ServiceID, "_")[1] == "M" {
 							if !strings.Contains(databaseService, "_UPDATE") {
-								databaseCommerce.DueBalance = databaseCommerce.DueBalance + remainingPriceRounded
+								if strings.Contains(databaseService, "CLICKANDCOLLECT") {
+									databaseCommerce.DueBalanceClickAndCollectM = databaseCommerce.DueBalanceClickAndCollectC + remainingPriceRounded
+								} else if strings.Contains(databaseService, "PANIERS") {
+									databaseCommerce.DueBalancePaniersM = databaseCommerce.DueBalancePaniersM + remainingPriceRounded
+								}
 							}
 
 							databaseCommerce.Services[index] = castedServiceChange.ServiceID

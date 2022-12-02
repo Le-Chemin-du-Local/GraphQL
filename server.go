@@ -106,10 +106,14 @@ func main() {
 	// )
 	// fmt.Println(err)
 
+	// Test de la génération de PDF
+	// fmt.Println("Test de la génération HTML...")
+	// htmltopdf.InvoiceToPDF()
+
 	// Creation des taches régulières
 	cron := cron.New()
 
-	cron.AddFunc("0 0 1 * * *", banking.SendBalance)
+	cron.AddFunc("0 0 1 * * *", banking.ExecutreBankingRoutine)
 	cron.Start()
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(c))

@@ -132,6 +132,10 @@ type ComplexityRoot struct {
 		DefaultPaymentMethod                func(childComplexity int) int
 		Description                         func(childComplexity int) int
 		DueBalance                          func(childComplexity int) int
+		DueBalanceClickAndCollectC          func(childComplexity int) int
+		DueBalanceClickAndCollectM          func(childComplexity int) int
+		DueBalancePaniersC                  func(childComplexity int) int
+		DueBalancePaniersM                  func(childComplexity int) int
 		Email                               func(childComplexity int) int
 		Facebook                            func(childComplexity int) int
 		IBAN                                func(childComplexity int) int
@@ -363,6 +367,8 @@ type CommerceResolver interface {
 
 	ProductsAvailableForClickAndCollect(ctx context.Context, obj *model.Commerce) ([]*model.Product, error)
 	DefaultPaymentMethod(ctx context.Context, obj *model.Commerce) (*model.RegisteredPaymentMethod, error)
+
+	DueBalance(ctx context.Context, obj *model.Commerce) (float64, error)
 
 	Paniers(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.PanierFilter) (*model.PanierConnection, error)
 }
@@ -735,6 +741,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Commerce.DueBalance(childComplexity), true
+
+	case "Commerce.dueBalanceClickAndCollectC":
+		if e.complexity.Commerce.DueBalanceClickAndCollectC == nil {
+			break
+		}
+
+		return e.complexity.Commerce.DueBalanceClickAndCollectC(childComplexity), true
+
+	case "Commerce.dueBalanceClickAndCollectM":
+		if e.complexity.Commerce.DueBalanceClickAndCollectM == nil {
+			break
+		}
+
+		return e.complexity.Commerce.DueBalanceClickAndCollectM(childComplexity), true
+
+	case "Commerce.dueBalancePaniersC":
+		if e.complexity.Commerce.DueBalancePaniersC == nil {
+			break
+		}
+
+		return e.complexity.Commerce.DueBalancePaniersC(childComplexity), true
+
+	case "Commerce.dueBalancePaniersM":
+		if e.complexity.Commerce.DueBalancePaniersM == nil {
+			break
+		}
+
+		return e.complexity.Commerce.DueBalancePaniersM(childComplexity), true
 
 	case "Commerce.email":
 		if e.complexity.Commerce.Email == nil {
@@ -2159,6 +2193,10 @@ type Commerce { # Ici on utilise le nom "Commerce"
   lastBilledDate: Time
   balance: Float!
   dueBalance: Float!
+  dueBalanceClickAndCollectC: Float!
+  dueBalanceClickAndCollectM: Float!
+  dueBalancePaniersC: Float!
+  dueBalancePaniersM: Float!
 
   transferts: [Transfert!]!
 
@@ -3617,6 +3655,14 @@ func (ec *executionContext) fieldContext_BasketCommerce_commerce(ctx context.Con
 				return ec.fieldContext_Commerce_balance(ctx, field)
 			case "dueBalance":
 				return ec.fieldContext_Commerce_dueBalance(ctx, field)
+			case "dueBalanceClickAndCollectC":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectC(ctx, field)
+			case "dueBalanceClickAndCollectM":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectM(ctx, field)
+			case "dueBalancePaniersC":
+				return ec.fieldContext_Commerce_dueBalancePaniersC(ctx, field)
+			case "dueBalancePaniersM":
+				return ec.fieldContext_Commerce_dueBalancePaniersM(ctx, field)
 			case "transferts":
 				return ec.fieldContext_Commerce_transferts(ctx, field)
 			case "paniers":
@@ -6255,7 +6301,7 @@ func (ec *executionContext) _Commerce_dueBalance(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DueBalance, nil
+		return ec.resolvers.Commerce().DueBalance(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6273,6 +6319,182 @@ func (ec *executionContext) _Commerce_dueBalance(ctx context.Context, field grap
 }
 
 func (ec *executionContext) fieldContext_Commerce_dueBalance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Commerce_dueBalanceClickAndCollectC(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Commerce_dueBalanceClickAndCollectC(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DueBalanceClickAndCollectC, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Commerce_dueBalanceClickAndCollectC(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Commerce_dueBalanceClickAndCollectM(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Commerce_dueBalanceClickAndCollectM(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DueBalanceClickAndCollectM, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Commerce_dueBalanceClickAndCollectM(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Commerce_dueBalancePaniersC(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Commerce_dueBalancePaniersC(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DueBalancePaniersC, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Commerce_dueBalancePaniersC(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Commerce",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Commerce_dueBalancePaniersM(ctx context.Context, field graphql.CollectedField, obj *model.Commerce) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Commerce_dueBalancePaniersM(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DueBalancePaniersM, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Commerce_dueBalancePaniersM(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Commerce",
 		Field:      field,
@@ -6537,6 +6759,14 @@ func (ec *executionContext) fieldContext_CommerceCommand_commerce(ctx context.Co
 				return ec.fieldContext_Commerce_balance(ctx, field)
 			case "dueBalance":
 				return ec.fieldContext_Commerce_dueBalance(ctx, field)
+			case "dueBalanceClickAndCollectC":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectC(ctx, field)
+			case "dueBalanceClickAndCollectM":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectM(ctx, field)
+			case "dueBalancePaniersC":
+				return ec.fieldContext_Commerce_dueBalancePaniersC(ctx, field)
+			case "dueBalancePaniersM":
+				return ec.fieldContext_Commerce_dueBalancePaniersM(ctx, field)
 			case "transferts":
 				return ec.fieldContext_Commerce_transferts(ctx, field)
 			case "paniers":
@@ -7473,6 +7703,14 @@ func (ec *executionContext) fieldContext_CommerceEdge_node(ctx context.Context, 
 				return ec.fieldContext_Commerce_balance(ctx, field)
 			case "dueBalance":
 				return ec.fieldContext_Commerce_dueBalance(ctx, field)
+			case "dueBalanceClickAndCollectC":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectC(ctx, field)
+			case "dueBalanceClickAndCollectM":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectM(ctx, field)
+			case "dueBalancePaniersC":
+				return ec.fieldContext_Commerce_dueBalancePaniersC(ctx, field)
+			case "dueBalancePaniersM":
+				return ec.fieldContext_Commerce_dueBalancePaniersM(ctx, field)
 			case "transferts":
 				return ec.fieldContext_Commerce_transferts(ctx, field)
 			case "paniers":
@@ -7958,6 +8196,14 @@ func (ec *executionContext) fieldContext_Mutation_createCommerce(ctx context.Con
 				return ec.fieldContext_Commerce_balance(ctx, field)
 			case "dueBalance":
 				return ec.fieldContext_Commerce_dueBalance(ctx, field)
+			case "dueBalanceClickAndCollectC":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectC(ctx, field)
+			case "dueBalanceClickAndCollectM":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectM(ctx, field)
+			case "dueBalancePaniersC":
+				return ec.fieldContext_Commerce_dueBalancePaniersC(ctx, field)
+			case "dueBalancePaniersM":
+				return ec.fieldContext_Commerce_dueBalancePaniersM(ctx, field)
 			case "transferts":
 				return ec.fieldContext_Commerce_transferts(ctx, field)
 			case "paniers":
@@ -8097,6 +8343,14 @@ func (ec *executionContext) fieldContext_Mutation_updateCommerce(ctx context.Con
 				return ec.fieldContext_Commerce_balance(ctx, field)
 			case "dueBalance":
 				return ec.fieldContext_Commerce_dueBalance(ctx, field)
+			case "dueBalanceClickAndCollectC":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectC(ctx, field)
+			case "dueBalanceClickAndCollectM":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectM(ctx, field)
+			case "dueBalancePaniersC":
+				return ec.fieldContext_Commerce_dueBalancePaniersC(ctx, field)
+			case "dueBalancePaniersM":
+				return ec.fieldContext_Commerce_dueBalancePaniersM(ctx, field)
 			case "transferts":
 				return ec.fieldContext_Commerce_transferts(ctx, field)
 			case "paniers":
@@ -10969,6 +11223,14 @@ func (ec *executionContext) fieldContext_Query_commerce(ctx context.Context, fie
 				return ec.fieldContext_Commerce_balance(ctx, field)
 			case "dueBalance":
 				return ec.fieldContext_Commerce_dueBalance(ctx, field)
+			case "dueBalanceClickAndCollectC":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectC(ctx, field)
+			case "dueBalanceClickAndCollectM":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectM(ctx, field)
+			case "dueBalancePaniersC":
+				return ec.fieldContext_Commerce_dueBalancePaniersC(ctx, field)
+			case "dueBalancePaniersM":
+				return ec.fieldContext_Commerce_dueBalancePaniersM(ctx, field)
 			case "transferts":
 				return ec.fieldContext_Commerce_transferts(ctx, field)
 			case "paniers":
@@ -13174,6 +13436,14 @@ func (ec *executionContext) fieldContext_User_commerce(ctx context.Context, fiel
 				return ec.fieldContext_Commerce_balance(ctx, field)
 			case "dueBalance":
 				return ec.fieldContext_Commerce_dueBalance(ctx, field)
+			case "dueBalanceClickAndCollectC":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectC(ctx, field)
+			case "dueBalanceClickAndCollectM":
+				return ec.fieldContext_Commerce_dueBalanceClickAndCollectM(ctx, field)
+			case "dueBalancePaniersC":
+				return ec.fieldContext_Commerce_dueBalancePaniersC(ctx, field)
+			case "dueBalancePaniersM":
+				return ec.fieldContext_Commerce_dueBalancePaniersM(ctx, field)
 			case "transferts":
 				return ec.fieldContext_Commerce_transferts(ctx, field)
 			case "paniers":
@@ -17238,8 +17508,49 @@ func (ec *executionContext) _Commerce(ctx context.Context, sel ast.SelectionSet,
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "dueBalance":
+			field := field
 
-			out.Values[i] = ec._Commerce_dueBalance(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Commerce_dueBalance(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "dueBalanceClickAndCollectC":
+
+			out.Values[i] = ec._Commerce_dueBalanceClickAndCollectC(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "dueBalanceClickAndCollectM":
+
+			out.Values[i] = ec._Commerce_dueBalanceClickAndCollectM(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "dueBalancePaniersC":
+
+			out.Values[i] = ec._Commerce_dueBalancePaniersC(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "dueBalancePaniersM":
+
+			out.Values[i] = ec._Commerce_dueBalancePaniersM(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)

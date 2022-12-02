@@ -173,6 +173,22 @@ func (r *commerceResolver) DefaultPaymentMethod(ctx context.Context, obj *model.
 	return details, nil
 }
 
+// DueBalance is the resolver for the dueBalance field.
+func (r *commerceResolver) DueBalance(ctx context.Context, obj *model.Commerce) (float64, error) {
+	databaseCommerce, err := r.CommercesService.GetById(obj.ID)
+
+	if err != nil {
+		return 0, err
+	}
+
+	dueBalance := databaseCommerce.DueBalanceClickAndCollectC +
+		databaseCommerce.DueBalanceClickAndCollectM +
+		databaseCommerce.DueBalancePaniersC +
+		databaseCommerce.DueBalancePaniersM
+
+	return dueBalance, nil
+}
+
 // Paniers is the resolver for the paniers field.
 func (r *commerceResolver) Paniers(ctx context.Context, obj *model.Commerce, first *int, after *string, filters *model.PanierFilter) (*model.PanierConnection, error) {
 	var decodedCursor *string

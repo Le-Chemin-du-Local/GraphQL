@@ -8,6 +8,8 @@ type Product {
   description: String!
   price: Float!
   unit: String!
+  perUnitQuantity: Float! # La quantité en kg/l/...
+  perUnitQuantityUnit: String!
   tva: Float!
   isBreton: Boolean!
   hasGluten: Boolean!
@@ -39,6 +41,8 @@ input NewProduct {
   description: String!
   price: Float!
   unit: String!
+  perUnitQuantity: Float! # La quantité en kg/l/...
+  perUnitQuantityUnit: String!
   tva: Float!
   isBreton: Boolean!
   hasGluten: Boolean!
@@ -55,6 +59,8 @@ input ChangesProduct {
   description: String
   price: Float
   unit: String
+  perUnitQuantity: Float # La quantité en kg/l/...
+  perUnitQuantityUnit: String
   tva: Float
   isBreton: Boolean
   hasGluten: Boolean

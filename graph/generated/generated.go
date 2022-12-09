@@ -257,17 +257,19 @@ type ComplexityRoot struct {
 	}
 
 	Product struct {
-		Allergens   func(childComplexity int) int
-		Categories  func(childComplexity int) int
-		Description func(childComplexity int) int
-		HasGluten   func(childComplexity int) int
-		ID          func(childComplexity int) int
-		IsBreton    func(childComplexity int) int
-		Name        func(childComplexity int) int
-		Price       func(childComplexity int) int
-		Tags        func(childComplexity int) int
-		Tva         func(childComplexity int) int
-		Unit        func(childComplexity int) int
+		Allergens           func(childComplexity int) int
+		Categories          func(childComplexity int) int
+		Description         func(childComplexity int) int
+		HasGluten           func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		IsBreton            func(childComplexity int) int
+		Name                func(childComplexity int) int
+		PerUnitQuantity     func(childComplexity int) int
+		PerUnitQuantityUnit func(childComplexity int) int
+		Price               func(childComplexity int) int
+		Tags                func(childComplexity int) int
+		Tva                 func(childComplexity int) int
+		Unit                func(childComplexity int) int
 	}
 
 	ProductConnection struct {
@@ -1421,6 +1423,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Product.Name(childComplexity), true
 
+	case "Product.perUnitQuantity":
+		if e.complexity.Product.PerUnitQuantity == nil {
+			break
+		}
+
+		return e.complexity.Product.PerUnitQuantity(childComplexity), true
+
+	case "Product.perUnitQuantityUnit":
+		if e.complexity.Product.PerUnitQuantityUnit == nil {
+			break
+		}
+
+		return e.complexity.Product.PerUnitQuantityUnit(childComplexity), true
+
 	case "Product.price":
 		if e.complexity.Product.Price == nil {
 			break
@@ -2436,6 +2452,8 @@ type Product {
   description: String!
   price: Float!
   unit: String!
+  perUnitQuantity: Float! # La quantité en kg/l/...
+  perUnitQuantityUnit: String!
   tva: Float!
   isBreton: Boolean!
   hasGluten: Boolean!
@@ -2467,6 +2485,8 @@ input NewProduct {
   description: String!
   price: Float!
   unit: String!
+  perUnitQuantity: Float! # La quantité en kg/l/...
+  perUnitQuantityUnit: String!
   tva: Float!
   isBreton: Boolean!
   hasGluten: Boolean!
@@ -2483,6 +2503,8 @@ input ChangesProduct {
   description: String
   price: Float
   unit: String
+  perUnitQuantity: Float # La quantité en kg/l/...
+  perUnitQuantityUnit: String
   tva: Float
   isBreton: Boolean
   hasGluten: Boolean
@@ -3883,6 +3905,10 @@ func (ec *executionContext) fieldContext_BasketProduct_product(ctx context.Conte
 				return ec.fieldContext_Product_price(ctx, field)
 			case "unit":
 				return ec.fieldContext_Product_unit(ctx, field)
+			case "perUnitQuantity":
+				return ec.fieldContext_Product_perUnitQuantity(ctx, field)
+			case "perUnitQuantityUnit":
+				return ec.fieldContext_Product_perUnitQuantityUnit(ctx, field)
 			case "tva":
 				return ec.fieldContext_Product_tva(ctx, field)
 			case "isBreton":
@@ -4418,6 +4444,10 @@ func (ec *executionContext) fieldContext_CCProduct_product(ctx context.Context, 
 				return ec.fieldContext_Product_price(ctx, field)
 			case "unit":
 				return ec.fieldContext_Product_unit(ctx, field)
+			case "perUnitQuantity":
+				return ec.fieldContext_Product_perUnitQuantity(ctx, field)
+			case "perUnitQuantityUnit":
+				return ec.fieldContext_Product_perUnitQuantityUnit(ctx, field)
 			case "tva":
 				return ec.fieldContext_Product_tva(ctx, field)
 			case "isBreton":
@@ -6132,6 +6162,10 @@ func (ec *executionContext) fieldContext_Commerce_productsAvailableForClickAndCo
 				return ec.fieldContext_Product_price(ctx, field)
 			case "unit":
 				return ec.fieldContext_Product_unit(ctx, field)
+			case "perUnitQuantity":
+				return ec.fieldContext_Product_perUnitQuantity(ctx, field)
+			case "perUnitQuantityUnit":
+				return ec.fieldContext_Product_perUnitQuantityUnit(ctx, field)
 			case "tva":
 				return ec.fieldContext_Product_tva(ctx, field)
 			case "isBreton":
@@ -8446,6 +8480,10 @@ func (ec *executionContext) fieldContext_Mutation_createProduct(ctx context.Cont
 				return ec.fieldContext_Product_price(ctx, field)
 			case "unit":
 				return ec.fieldContext_Product_unit(ctx, field)
+			case "perUnitQuantity":
+				return ec.fieldContext_Product_perUnitQuantity(ctx, field)
+			case "perUnitQuantityUnit":
+				return ec.fieldContext_Product_perUnitQuantityUnit(ctx, field)
 			case "tva":
 				return ec.fieldContext_Product_tva(ctx, field)
 			case "isBreton":
@@ -8549,6 +8587,10 @@ func (ec *executionContext) fieldContext_Mutation_createProducts(ctx context.Con
 				return ec.fieldContext_Product_price(ctx, field)
 			case "unit":
 				return ec.fieldContext_Product_unit(ctx, field)
+			case "perUnitQuantity":
+				return ec.fieldContext_Product_perUnitQuantity(ctx, field)
+			case "perUnitQuantityUnit":
+				return ec.fieldContext_Product_perUnitQuantityUnit(ctx, field)
 			case "tva":
 				return ec.fieldContext_Product_tva(ctx, field)
 			case "isBreton":
@@ -8652,6 +8694,10 @@ func (ec *executionContext) fieldContext_Mutation_updateProduct(ctx context.Cont
 				return ec.fieldContext_Product_price(ctx, field)
 			case "unit":
 				return ec.fieldContext_Product_unit(ctx, field)
+			case "perUnitQuantity":
+				return ec.fieldContext_Product_perUnitQuantity(ctx, field)
+			case "perUnitQuantityUnit":
+				return ec.fieldContext_Product_perUnitQuantityUnit(ctx, field)
 			case "tva":
 				return ec.fieldContext_Product_tva(ctx, field)
 			case "isBreton":
@@ -8755,6 +8801,10 @@ func (ec *executionContext) fieldContext_Mutation_updateProducts(ctx context.Con
 				return ec.fieldContext_Product_price(ctx, field)
 			case "unit":
 				return ec.fieldContext_Product_unit(ctx, field)
+			case "perUnitQuantity":
+				return ec.fieldContext_Product_perUnitQuantity(ctx, field)
+			case "perUnitQuantityUnit":
+				return ec.fieldContext_Product_perUnitQuantityUnit(ctx, field)
 			case "tva":
 				return ec.fieldContext_Product_tva(ctx, field)
 			case "isBreton":
@@ -10067,6 +10117,10 @@ func (ec *executionContext) fieldContext_PanierProduct_product(ctx context.Conte
 				return ec.fieldContext_Product_price(ctx, field)
 			case "unit":
 				return ec.fieldContext_Product_unit(ctx, field)
+			case "perUnitQuantity":
+				return ec.fieldContext_Product_perUnitQuantity(ctx, field)
+			case "perUnitQuantityUnit":
+				return ec.fieldContext_Product_perUnitQuantityUnit(ctx, field)
 			case "tva":
 				return ec.fieldContext_Product_tva(ctx, field)
 			case "isBreton":
@@ -10294,6 +10348,94 @@ func (ec *executionContext) _Product_unit(ctx context.Context, field graphql.Col
 }
 
 func (ec *executionContext) fieldContext_Product_unit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_perUnitQuantity(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Product_perUnitQuantity(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerUnitQuantity, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Product_perUnitQuantity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_perUnitQuantityUnit(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Product_perUnitQuantityUnit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerUnitQuantityUnit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Product_perUnitQuantityUnit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Product",
 		Field:      field,
@@ -10756,6 +10898,10 @@ func (ec *executionContext) fieldContext_ProductEdge_node(ctx context.Context, f
 				return ec.fieldContext_Product_price(ctx, field)
 			case "unit":
 				return ec.fieldContext_Product_unit(ctx, field)
+			case "perUnitQuantity":
+				return ec.fieldContext_Product_perUnitQuantity(ctx, field)
+			case "perUnitQuantityUnit":
+				return ec.fieldContext_Product_perUnitQuantityUnit(ctx, field)
 			case "tva":
 				return ec.fieldContext_Product_tva(ctx, field)
 			case "isBreton":
@@ -11302,6 +11448,10 @@ func (ec *executionContext) fieldContext_Query_product(ctx context.Context, fiel
 				return ec.fieldContext_Product_price(ctx, field)
 			case "unit":
 				return ec.fieldContext_Product_unit(ctx, field)
+			case "perUnitQuantity":
+				return ec.fieldContext_Product_perUnitQuantity(ctx, field)
+			case "perUnitQuantityUnit":
+				return ec.fieldContext_Product_perUnitQuantityUnit(ctx, field)
 			case "tva":
 				return ec.fieldContext_Product_tva(ctx, field)
 			case "isBreton":
@@ -16505,7 +16655,7 @@ func (ec *executionContext) unmarshalInputNewProduct(ctx context.Context, obj in
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "price", "unit", "tva", "isBreton", "hasGluten", "tags", "allergens", "categories", "image"}
+	fieldsInOrder := [...]string{"name", "description", "price", "unit", "perUnitQuantity", "perUnitQuantityUnit", "tva", "isBreton", "hasGluten", "tags", "allergens", "categories", "image"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -16541,6 +16691,22 @@ func (ec *executionContext) unmarshalInputNewProduct(ctx context.Context, obj in
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("unit"))
 			it.Unit, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "perUnitQuantity":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perUnitQuantity"))
+			it.PerUnitQuantity, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "perUnitQuantityUnit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perUnitQuantityUnit"))
+			it.PerUnitQuantityUnit, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -18419,6 +18585,20 @@ func (ec *executionContext) _Product(ctx context.Context, sel ast.SelectionSet, 
 		case "unit":
 
 			out.Values[i] = ec._Product_unit(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "perUnitQuantity":
+
+			out.Values[i] = ec._Product_perUnitQuantity(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "perUnitQuantityUnit":
+
+			out.Values[i] = ec._Product_perUnitQuantityUnit(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

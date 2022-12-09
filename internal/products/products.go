@@ -15,33 +15,37 @@ import (
 )
 
 type Product struct {
-	ID          primitive.ObjectID `bson:"_id"`
-	CommerceID  primitive.ObjectID `bson:"commerceID"`
-	Name        string             `bson:"name"`
-	Description string             `bson:"description"`
-	Price       float64            `bson:"price"`
-	Unit        string             `bson:"unit"`
-	Tva         float64            `bson:"tva"`
-	IsBreton    bool               `bson:"isBreton"`
-	Tags        []string           `bson:"tags"`
-	HasGluten   bool               `bson:"hasGlutted"`
-	Allergens   []string           `bson:"allergens"`
-	Categories  []string           `bson:"categories"`
+	ID                  primitive.ObjectID `bson:"_id"`
+	CommerceID          primitive.ObjectID `bson:"commerceID"`
+	Name                string             `bson:"name"`
+	Description         string             `bson:"description"`
+	Price               float64            `bson:"price"`
+	Unit                string             `bson:"unit"`
+	PerUnitQuantity     float64            `bson:"perUnitQuantity"`
+	PerUnitQuantityUnit string             `bson:"perUnitQuantityUnit"`
+	Tva                 float64            `bson:"tva"`
+	IsBreton            bool               `bson:"isBreton"`
+	Tags                []string           `bson:"tags"`
+	HasGluten           bool               `bson:"hasGlutted"`
+	Allergens           []string           `bson:"allergens"`
+	Categories          []string           `bson:"categories"`
 }
 
 func (product *Product) ToModel() *model.Product {
 	return &model.Product{
-		ID:          product.ID.Hex(),
-		Name:        product.Name,
-		Description: product.Description,
-		Price:       product.Price,
-		Unit:        product.Unit,
-		Tva:         product.Tva,
-		IsBreton:    product.IsBreton,
-		HasGluten:   product.HasGluten,
-		Tags:        product.Tags,
-		Allergens:   product.Allergens,
-		Categories:  product.Categories,
+		ID:                  product.ID.Hex(),
+		Name:                product.Name,
+		Description:         product.Description,
+		Price:               product.Price,
+		Unit:                product.Unit,
+		PerUnitQuantity:     product.PerUnitQuantity,
+		PerUnitQuantityUnit: product.PerUnitQuantityUnit,
+		Tva:                 product.Tva,
+		IsBreton:            product.IsBreton,
+		HasGluten:           product.HasGluten,
+		Tags:                product.Tags,
+		Allergens:           product.Allergens,
+		Categories:          product.Categories,
 	}
 }
 
@@ -98,18 +102,20 @@ func (p *productsService) Create(commerceID string, input model.NewProduct) (*Pr
 
 	productObjectID := primitive.NewObjectID()
 	databaseProduct := Product{
-		ID:          productObjectID,
-		CommerceID:  commerceObjectID,
-		Name:        input.Name,
-		Description: input.Description,
-		Price:       input.Price,
-		Unit:        input.Unit,
-		Tva:         input.Tva,
-		IsBreton:    input.IsBreton,
-		HasGluten:   input.HasGluten,
-		Tags:        input.Tags,
-		Allergens:   input.Allergens,
-		Categories:  input.Categories,
+		ID:                  productObjectID,
+		CommerceID:          commerceObjectID,
+		Name:                input.Name,
+		Description:         input.Description,
+		Price:               input.Price,
+		Unit:                input.Unit,
+		PerUnitQuantity:     input.PerUnitQuantity,
+		PerUnitQuantityUnit: input.PerUnitQuantityUnit,
+		Tva:                 input.Tva,
+		IsBreton:            input.IsBreton,
+		HasGluten:           input.HasGluten,
+		Tags:                input.Tags,
+		Allergens:           input.Allergens,
+		Categories:          input.Categories,
 	}
 
 	_, err = database.CollectionProducts.InsertOne(database.MongoContext, databaseProduct)

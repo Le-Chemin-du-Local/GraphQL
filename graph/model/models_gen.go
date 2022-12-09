@@ -251,17 +251,19 @@ type NewPanierProduct struct {
 }
 
 type NewProduct struct {
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Price       float64         `json:"price"`
-	Unit        string          `json:"unit"`
-	Tva         float64         `json:"tva"`
-	IsBreton    bool            `json:"isBreton"`
-	HasGluten   bool            `json:"hasGluten"`
-	Tags        []string        `json:"tags"`
-	Allergens   []string        `json:"allergens"`
-	Categories  []string        `json:"categories"`
-	Image       *graphql.Upload `json:"image"`
+	Name                string          `json:"name"`
+	Description         string          `json:"description"`
+	Price               float64         `json:"price"`
+	Unit                string          `json:"unit"`
+	PerUnitQuantity     float64         `json:"perUnitQuantity"`
+	PerUnitQuantityUnit string          `json:"perUnitQuantityUnit"`
+	Tva                 float64         `json:"tva"`
+	IsBreton            bool            `json:"isBreton"`
+	HasGluten           bool            `json:"hasGluten"`
+	Tags                []string        `json:"tags"`
+	Allergens           []string        `json:"allergens"`
+	Categories          []string        `json:"categories"`
+	Image               *graphql.Upload `json:"image"`
 }
 
 type NewUser struct {
@@ -302,17 +304,19 @@ type PanierProduct struct {
 }
 
 type Product struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Price       float64  `json:"price"`
-	Unit        string   `json:"unit"`
-	Tva         float64  `json:"tva"`
-	IsBreton    bool     `json:"isBreton"`
-	HasGluten   bool     `json:"hasGluten"`
-	Tags        []string `json:"tags"`
-	Allergens   []string `json:"allergens"`
-	Categories  []string `json:"categories"`
+	ID                  string   `json:"id"`
+	Name                string   `json:"name"`
+	Description         string   `json:"description"`
+	Price               float64  `json:"price"`
+	Unit                string   `json:"unit"`
+	PerUnitQuantity     float64  `json:"perUnitQuantity"`
+	PerUnitQuantityUnit string   `json:"perUnitQuantityUnit"`
+	Tva                 float64  `json:"tva"`
+	IsBreton            bool     `json:"isBreton"`
+	HasGluten           bool     `json:"hasGluten"`
+	Tags                []string `json:"tags"`
+	Allergens           []string `json:"allergens"`
+	Categories          []string `json:"categories"`
 }
 
 type ProductConnection struct {

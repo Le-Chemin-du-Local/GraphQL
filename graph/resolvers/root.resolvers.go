@@ -101,6 +101,13 @@ func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string
 		return "", err
 	}
 
+	// On vérifie que ce n'est pas un commerçant attendant validation
+	databaseCommerce, _ := r.CommercesService.GetForUser(user.ID.Hex())
+
+	if databaseCommerce != nil && user.Role == users.USERROLE_USER {
+		return "WAITINGVALIDATION", nil
+	}
+
 	token, err := jwt.GenerateToken(user.ID.Hex())
 
 	if err != nil {

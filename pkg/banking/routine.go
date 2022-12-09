@@ -120,12 +120,12 @@ func getServicesPayment() {
 			continue
 		}
 
-		// y1, m1, d1 := commerce.LastBilledDate.AddDate(0, 0, 30).Date()
-		// y2, m2, d2 := time.Now().Date()
+		y1, m1, d1 := commerce.LastBilledDate.AddDate(0, 0, 30).Date()
+		y2, m2, d2 := time.Now().Date()
 
-		// if y1 != y2 || m1 != m2 || d1 != d2 {
-		// 	continue
-		// }
+		if y1 != y2 || m1 != m2 || d1 != d2 {
+			continue
+		}
 
 		billedServicesString := ""
 		totalToBill := 0.0

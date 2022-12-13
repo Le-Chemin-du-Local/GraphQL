@@ -357,17 +357,17 @@ type ScheduleInput struct {
 }
 
 type ServiceInfo struct {
-	ID                                  string   `json:"id"`
-	Name                                string   `json:"name"`
-	ShortDescription                    string   `json:"shortDescription"`
-	LongDescription                     string   `json:"longDescription"`
-	MonthPrice                          float64  `json:"monthPrice"`
-	MonthMinimumAllowedCa               float64  `json:"monthMinimumAllowedCA"`
-	MonthRangePercentage                float64  `json:"monthRangePercentage"`
-	MonthAugmentationPerRangePercentage float64  `json:"monthAugmentationPerRangePercentage"`
-	MonthAdvantages                     []string `json:"monthAdvantages"`
-	TransactionPercentage               float64  `json:"transactionPercentage"`
-	TransactionAdvantages               []string `json:"transactionAdvantages"`
+	ID                       string   `json:"id"`
+	Name                     string   `json:"name"`
+	ShortDescription         string   `json:"shortDescription"`
+	LongDescription          string   `json:"longDescription"`
+	MonthPrice               float64  `json:"monthPrice"`
+	MonthMinimumAllowedCa    float64  `json:"monthMinimumAllowedCA"`
+	MonthCARange             float64  `json:"monthCARange"`
+	MonthCAPriceAugmentation float64  `json:"monthCAPriceAugmentation"`
+	MonthAdvantages          []string `json:"monthAdvantages"`
+	TransactionPercentage    float64  `json:"transactionPercentage"`
+	TransactionAdvantages    []string `json:"transactionAdvantages"`
 }
 
 type Transfert struct {

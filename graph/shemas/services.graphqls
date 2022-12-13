@@ -10,8 +10,8 @@ type ServiceInfo {
 
   monthPrice: Float!
   monthMinimumAllowedCA: Float!
-  monthRangePercentage: Float!
-  monthAugmentationPerRangePercentage: Float!
+  monthCARange: Float!
+  monthCAPriceAugmentation: Float!
   monthAdvantages: [String!]!
 
   transactionPercentage: Float!

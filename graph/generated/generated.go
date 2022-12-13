@@ -315,17 +315,17 @@ type ComplexityRoot struct {
 	}
 
 	ServiceInfo struct {
-		ID                                  func(childComplexity int) int
-		LongDescription                     func(childComplexity int) int
-		MonthAdvantages                     func(childComplexity int) int
-		MonthAugmentationPerRangePercentage func(childComplexity int) int
-		MonthMinimumAllowedCa               func(childComplexity int) int
-		MonthPrice                          func(childComplexity int) int
-		MonthRangePercentage                func(childComplexity int) int
-		Name                                func(childComplexity int) int
-		ShortDescription                    func(childComplexity int) int
-		TransactionAdvantages               func(childComplexity int) int
-		TransactionPercentage               func(childComplexity int) int
+		ID                       func(childComplexity int) int
+		LongDescription          func(childComplexity int) int
+		MonthAdvantages          func(childComplexity int) int
+		MonthCAPriceAugmentation func(childComplexity int) int
+		MonthCARange             func(childComplexity int) int
+		MonthMinimumAllowedCa    func(childComplexity int) int
+		MonthPrice               func(childComplexity int) int
+		Name                     func(childComplexity int) int
+		ShortDescription         func(childComplexity int) int
+		TransactionAdvantages    func(childComplexity int) int
+		TransactionPercentage    func(childComplexity int) int
 	}
 
 	Transfert struct {
@@ -1699,12 +1699,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceInfo.MonthAdvantages(childComplexity), true
 
-	case "ServiceInfo.monthAugmentationPerRangePercentage":
-		if e.complexity.ServiceInfo.MonthAugmentationPerRangePercentage == nil {
+	case "ServiceInfo.monthCAPriceAugmentation":
+		if e.complexity.ServiceInfo.MonthCAPriceAugmentation == nil {
 			break
 		}
 
-		return e.complexity.ServiceInfo.MonthAugmentationPerRangePercentage(childComplexity), true
+		return e.complexity.ServiceInfo.MonthCAPriceAugmentation(childComplexity), true
+
+	case "ServiceInfo.monthCARange":
+		if e.complexity.ServiceInfo.MonthCARange == nil {
+			break
+		}
+
+		return e.complexity.ServiceInfo.MonthCARange(childComplexity), true
 
 	case "ServiceInfo.monthMinimumAllowedCA":
 		if e.complexity.ServiceInfo.MonthMinimumAllowedCa == nil {
@@ -1719,13 +1726,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ServiceInfo.MonthPrice(childComplexity), true
-
-	case "ServiceInfo.monthRangePercentage":
-		if e.complexity.ServiceInfo.MonthRangePercentage == nil {
-			break
-		}
-
-		return e.complexity.ServiceInfo.MonthRangePercentage(childComplexity), true
 
 	case "ServiceInfo.name":
 		if e.complexity.ServiceInfo.Name == nil {
@@ -2577,8 +2577,8 @@ type ServiceInfo {
 
   monthPrice: Float!
   monthMinimumAllowedCA: Float!
-  monthRangePercentage: Float!
-  monthAugmentationPerRangePercentage: Float!
+  monthCARange: Float!
+  monthCAPriceAugmentation: Float!
   monthAdvantages: [String!]!
 
   transactionPercentage: Float!
@@ -11782,10 +11782,10 @@ func (ec *executionContext) fieldContext_Query_allServicesInfo(ctx context.Conte
 				return ec.fieldContext_ServiceInfo_monthPrice(ctx, field)
 			case "monthMinimumAllowedCA":
 				return ec.fieldContext_ServiceInfo_monthMinimumAllowedCA(ctx, field)
-			case "monthRangePercentage":
-				return ec.fieldContext_ServiceInfo_monthRangePercentage(ctx, field)
-			case "monthAugmentationPerRangePercentage":
-				return ec.fieldContext_ServiceInfo_monthAugmentationPerRangePercentage(ctx, field)
+			case "monthCARange":
+				return ec.fieldContext_ServiceInfo_monthCARange(ctx, field)
+			case "monthCAPriceAugmentation":
+				return ec.fieldContext_ServiceInfo_monthCAPriceAugmentation(ctx, field)
 			case "monthAdvantages":
 				return ec.fieldContext_ServiceInfo_monthAdvantages(ctx, field)
 			case "transactionPercentage":
@@ -11850,10 +11850,10 @@ func (ec *executionContext) fieldContext_Query_serviceInfo(ctx context.Context, 
 				return ec.fieldContext_ServiceInfo_monthPrice(ctx, field)
 			case "monthMinimumAllowedCA":
 				return ec.fieldContext_ServiceInfo_monthMinimumAllowedCA(ctx, field)
-			case "monthRangePercentage":
-				return ec.fieldContext_ServiceInfo_monthRangePercentage(ctx, field)
-			case "monthAugmentationPerRangePercentage":
-				return ec.fieldContext_ServiceInfo_monthAugmentationPerRangePercentage(ctx, field)
+			case "monthCARange":
+				return ec.fieldContext_ServiceInfo_monthCARange(ctx, field)
+			case "monthCAPriceAugmentation":
+				return ec.fieldContext_ServiceInfo_monthCAPriceAugmentation(ctx, field)
 			case "monthAdvantages":
 				return ec.fieldContext_ServiceInfo_monthAdvantages(ctx, field)
 			case "transactionPercentage":
@@ -12606,8 +12606,8 @@ func (ec *executionContext) fieldContext_ServiceInfo_monthMinimumAllowedCA(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _ServiceInfo_monthRangePercentage(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceInfo_monthRangePercentage(ctx, field)
+func (ec *executionContext) _ServiceInfo_monthCARange(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceInfo_monthCARange(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -12620,7 +12620,7 @@ func (ec *executionContext) _ServiceInfo_monthRangePercentage(ctx context.Contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.MonthRangePercentage, nil
+		return obj.MonthCARange, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12637,7 +12637,7 @@ func (ec *executionContext) _ServiceInfo_monthRangePercentage(ctx context.Contex
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ServiceInfo_monthRangePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ServiceInfo_monthCARange(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ServiceInfo",
 		Field:      field,
@@ -12650,8 +12650,8 @@ func (ec *executionContext) fieldContext_ServiceInfo_monthRangePercentage(ctx co
 	return fc, nil
 }
 
-func (ec *executionContext) _ServiceInfo_monthAugmentationPerRangePercentage(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceInfo_monthAugmentationPerRangePercentage(ctx, field)
+func (ec *executionContext) _ServiceInfo_monthCAPriceAugmentation(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceInfo_monthCAPriceAugmentation(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -12664,7 +12664,7 @@ func (ec *executionContext) _ServiceInfo_monthAugmentationPerRangePercentage(ctx
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.MonthAugmentationPerRangePercentage, nil
+		return obj.MonthCAPriceAugmentation, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12681,7 +12681,7 @@ func (ec *executionContext) _ServiceInfo_monthAugmentationPerRangePercentage(ctx
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ServiceInfo_monthAugmentationPerRangePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ServiceInfo_monthCAPriceAugmentation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ServiceInfo",
 		Field:      field,
@@ -19181,16 +19181,16 @@ func (ec *executionContext) _ServiceInfo(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "monthRangePercentage":
+		case "monthCARange":
 
-			out.Values[i] = ec._ServiceInfo_monthRangePercentage(ctx, field, obj)
+			out.Values[i] = ec._ServiceInfo_monthCARange(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "monthAugmentationPerRangePercentage":
+		case "monthCAPriceAugmentation":
 
-			out.Values[i] = ec._ServiceInfo_monthAugmentationPerRangePercentage(ctx, field, obj)
+			out.Values[i] = ec._ServiceInfo_monthCAPriceAugmentation(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
